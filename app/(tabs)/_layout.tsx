@@ -1,57 +1,102 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import React from "react";
+import { Tabs } from "expo-router";
+import { View, useColorScheme } from "react-native";
+import MaterialIconsRound from "@/components/MaterialIconsRound";
+import { useTranslation } from "react-i18next";
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import { primary, tealBase } from "@/constants/Colors";
+import useThemeStore from "@/stores/useThemeStore";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { t } = useTranslation();
+  const systemColorScheme = useColorScheme();
+  const { mode: themeMode } = useThemeStore();
+
+  const isDark =
+    themeMode === "dark" ||
+    (themeMode === "system" && systemColorScheme === "dark");
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        tabBarActiveTintColor: primary,
+        tabBarInactiveTintColor: isDark ? "#64748B" : "#94A3B8",
+        tabBarStyle: {
+          backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
+          borderTopColor: isDark ? "#334155" : "#E2E8F0",
+          height: 80,
+          paddingBottom: 20,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: "500",
+          fontFamily: "Outfit_500Medium",
+        },
+        headerShown: false,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+          title: t("nav.home"),
+          tabBarIcon: ({ color }) => (
+            <MaterialIconsRound name="home" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="qibla"
+        options={{
+          title: t("nav.qibla"),
+          tabBarIcon: ({ color }) => (
+            <MaterialIconsRound name="explore" size={22} color={color} />
+          ),
+        }}
+      />
+      {/* Bouton central Coran/Lecture */}
+      <Tabs.Screen
+        name="quran"
+        options={{
+          title: "",
+          tabBarIcon: () => (
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                marginTop: -24,
+                borderRadius: 28,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: tealBase,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 5,
+              }}
+            >
+              <MaterialIconsRound name="book" size={26} color="#ffffff" />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: t("nav.tracking"),
+          tabBarIcon: ({ color }) => (
+            <MaterialIconsRound name="analytics" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t("nav.profile"),
+          tabBarIcon: ({ color }) => (
+            <MaterialIconsRound name="person" size={22} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -1,21 +1,37 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import "../global.css";
+import "@/lib/i18n"; // Initialiser i18n
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect, useState } from "react";
+import "react-native-reanimated";
+import { MaterialIcons } from "@expo/vector-icons";
+import {
+  Outfit_300Light,
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Outfit_700Bold,
+} from "@expo-google-fonts/outfit";
+import { loadSavedLanguage } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
+import useAuthStore from "@/stores/useAuthStore";
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from "@/components/useColorScheme";
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
-} from 'expo-router';
+} from "expo-router";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: "index",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -23,8 +39,12 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
+    Outfit_300Light,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+    ...MaterialIcons.font,
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -34,7 +54,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      // Charger la langue sauvegardée
+      loadSavedLanguage().then(() => {
+        SplashScreen.hideAsync();
+      });
     }
   }, [loaded]);
 
@@ -47,12 +70,85 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const { isAuthenticated } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
+
+  // Vérifier l'état d'authentification au démarrage
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        if (supabase) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user) {
+            // Mettre à jour le store si session Supabase existe
+            const { isAuthenticated: storeAuth } = useAuthStore.getState();
+            if (!storeAuth) {
+              useAuthStore.getState().login({
+                id: session.user.id,
+                name: session.user.user_metadata?.first_name || "Utilisateur",
+                email: session.user.email || "",
+                memberSince:
+                  session.user.created_at || new Date().toISOString(),
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erreur vérification auth:", error);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    checkAuth();
+
+    // Écouter les changements d'auth Supabase
+    if (supabase) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === "SIGNED_OUT") {
+          useAuthStore.getState().logout();
+        }
+      });
+
+      return () => subscription.unsubscribe();
+    }
+  }, []);
+
+  // Redirection basée sur l'authentification
+  useEffect(() => {
+    if (!isReady) return;
+
+    const inAuthGroup = segments[0] === "(tabs)";
+    const inAuth = segments[0] === "auth";
+    const inIndex = segments[0] === undefined || segments.length === 0;
+
+    if (isAuthenticated && (inAuth || inIndex)) {
+      // Utilisateur connecté sur auth ou index -> rediriger vers l'app
+      router.replace("/(tabs)");
+    } else if (!isAuthenticated && inAuthGroup) {
+      // Utilisateur non connecté dans l'app -> rediriger vers welcome
+      router.replace("/auth/welcome");
+    }
+  }, [isAuthenticated, segments, isReady]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="support" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );

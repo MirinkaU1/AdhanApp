@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Qibla Compass</title>
+<!-- Font: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#115f5a",
+              "background-light": "#f6f8f8",
+              "background-dark": "#12201f",
+              "gold": "#D4AF37",
+            },
+            fontFamily: {
+              "display": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+            animation: {
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .compass-shadow {
+            box-shadow: 0 20px 50px -12px rgba(17, 95, 90, 0.25);
+        }
+        .dark .compass-shadow {
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#0f1a19] dark:text-[#f8fbfb] min-h-screen flex flex-col overflow-hidden transition-colors duration-300">
+<!-- Background Decoration -->
+<div class="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20" style="background-image: radial-gradient(circle at 50% 50%, #115f5a 0%, transparent 60%); filter: blur(100px);"></div>
+<!-- Top App Bar -->
+<div class="relative z-10 flex items-center justify-between p-4 pt-12">
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-white/50 dark:bg-black/20 backdrop-blur-md text-primary dark:text-white hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<h2 class="text-lg font-bold tracking-tight text-primary dark:text-white/90">
+            Boussole Qibla
+        </h2>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-white/50 dark:bg-black/20 backdrop-blur-md text-primary dark:text-white hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-md mx-auto px-6">
+<!-- Compass Component -->
+<div class="relative mb-10 mt-4">
+<!-- Outer Glow/Ripple for "Premium" feel -->
+<div class="absolute inset-0 rounded-full border border-primary/10 dark:border-white/5 scale-125"></div>
+<div class="absolute inset-0 rounded-full border border-primary/5 dark:border-white/5 scale-150"></div>
+<!-- The Compass Body -->
+<div class="relative w-72 h-72 sm:w-80 sm:h-80 bg-white dark:bg-[#1a2c2b] rounded-full compass-shadow border-[6px] border-gold flex items-center justify-center">
+<!-- Inner Gradient & Texture -->
+<div class="absolute inset-2 rounded-full bg-gradient-to-br from-gray-50 to-gray-200 dark:from-[#152322] dark:to-[#0f1918] opacity-50"></div>
+<!-- Compass Dial SVG -->
+<svg class="absolute inset-0 w-full h-full p-4 pointer-events-none" viewbox="0 0 100 100">
+<!-- Cardinal Directions -->
+<text class="dark:fill-white" fill="#115f5a" font-family="Manrope" font-size="5" font-weight="800" text-anchor="middle" x="50" y="14">N</text>
+<text fill="#94a3b8" font-family="Manrope" font-size="4" font-weight="600" text-anchor="middle" x="50" y="92">S</text>
+<text fill="#94a3b8" font-family="Manrope" font-size="4" font-weight="600" text-anchor="middle" x="90" y="52">E</text>
+<text fill="#94a3b8" font-family="Manrope" font-size="4" font-weight="600" text-anchor="middle" x="10" y="52">W</text>
+<!-- Ticks -->
+<circle class="dark:stroke-white/10" cx="50" cy="50" fill="none" r="42" stroke="#e2e8f0" stroke-dasharray="1 3" stroke-width="0.5"></circle>
+<circle class="dark:stroke-white/5" cx="50" cy="50" fill="none" r="34" stroke="#e2e8f0" stroke-width="0.2"></circle>
+</svg>
+<!-- Rotating Needle Assembly -->
+<!-- Hardcoded rotation to 112deg for the design -->
+<div class="relative w-full h-full flex items-center justify-center transition-transform duration-1000 ease-out" style="transform: rotate(112deg);">
+<!-- The Needle -->
+<div class="absolute w-4 h-56 flex flex-col items-center justify-between pointer-events-none filter drop-shadow-lg">
+<!-- North Tip (Pointing to Qibla) -->
+<div class="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[90px] border-l-transparent border-r-transparent border-b-primary relative">
+<!-- Kaaba Icon Floating at tip -->
+<div class="absolute -top-[34px] left-1/2 -translate-x-1/2 transform -rotate-[112deg]">
+<svg fill="none" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<rect class="dark:fill-black" fill="#1F2937" height="14" rx="2" width="16" x="4" y="6"></rect>
+<path d="M4 11H20" stroke="#D4AF37" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- South Tip -->
+<div class="w-0 h-0 border-l-[8px] border-r-[8px] border-t-[90px] border-l-transparent border-r-transparent border-t-gray-300 dark:border-t-slate-600 opacity-80"></div>
+</div>
+<!-- Center Cap -->
+<div class="z-20 w-8 h-8 rounded-full bg-gradient-to-br from-gold to-[#b08d2b] shadow-md border-2 border-white dark:border-[#1a2c2b] flex items-center justify-center">
+<div class="w-2 h-2 bg-white/50 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Text Readout -->
+<div class="flex flex-col items-center text-center space-y-2 z-20">
+<!-- Degree -->
+<h1 class="text-5xl font-extrabold text-primary dark:text-[#5eead4] tracking-tight drop-shadow-sm">
+                112° SE
+            </h1>
+<!-- Distance -->
+<p class="text-base font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-gold" style="font-size: 18px;">location_on</span>
+                4,500 km vers La Mecque
+            </p>
+</div>
+<!-- Spacing -->
+<div class="h-12"></div>
+<!-- Instructions / Status -->
+<div class="mb-8 w-full flex justify-center">
+<div class="bg-white/80 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 pl-3 pr-5 py-2.5 rounded-full shadow-sm flex items-center gap-3 animate-fade-in-up">
+<div class="bg-primary/10 dark:bg-primary/20 p-1.5 rounded-full">
+<span class="material-symbols-outlined text-primary dark:text-[#5eead4] text-lg animate-pulse-slow">screen_rotation</span>
+</div>
+<span class="text-slate-600 dark:text-slate-300 text-sm font-semibold">Alignez votre téléphone</span>
+</div>
+</div>
+</main>
+<!-- Footer spacer if needed for safe area -->
+<div class="h-6 w-full"></div>
+</body></html>

@@ -1,0 +1,205 @@
+export default {
+  // Navigation
+  nav: {
+    home: "Accueil",
+    qibla: "Qibla",
+    quran: "Coran",
+    tracking: "Suivi",
+    profile: "Profil",
+    settings: "Paramètres",
+  },
+
+  // Onboarding
+  onboarding: {
+    tagline: "Votre compagnon spirituel",
+    welcome: "Bienvenue 👋",
+    subtitle: "Commencez votre voyage spirituel",
+    firstNamePlaceholder: "Votre Prénom",
+    start: "Commencer",
+    or: "ou",
+    haveAccount: "Vous avez déjà un compte ?",
+    login: "Se connecter",
+    terms: "En continuant, vous acceptez nos",
+    termsOfService: "Conditions d'utilisation",
+    and: "et notre",
+    privacyPolicy: "Politique de confidentialité",
+  },
+
+  // Common
+  common: {
+    loading: "Chargement...",
+    error: "Erreur",
+    retry: "Réessayer",
+    cancel: "Annuler",
+    save: "Enregistrer",
+    back: "Retour",
+    next: "Suivant",
+    done: "Terminé",
+    yes: "Oui",
+    no: "Non",
+  },
+
+  // Home / Dashboard
+  home: {
+    salam: "Salam",
+    nextPrayer: "Prochaine prière",
+    next: "Prochaine",
+    inTime: "dans {{time}}",
+    inMinutes: "Dans {{minutes}} min",
+    inHoursMinutes: "Dans {{hours}}h {{minutes}}min",
+    inHours: "Dans {{hours}}h",
+    now: "Maintenant",
+    prayerTimes: "Horaires de prière",
+    fajr: "Fajr",
+    sunrise: "Shuruk",
+    dhuhr: "Dhuhr",
+    asr: "Asr",
+    maghrib: "Maghrib",
+    isha: "Isha",
+    dailyTracking: "Suivi du Jour",
+    prayersCompleted: "{{count}}/5 Prières accomplies",
+    prayerIn: "{{prayer}} dans",
+    minutes: "minutes",
+    hadithOfDay: "Hadith du jour",
+    locating: "Localisation...",
+    unknownLocation: "Position inconnue",
+    loadingHijri: "Chargement...",
+    goodMorning: "Bonjour",
+    goodAfternoon: "Bon après-midi",
+    goodEvening: "Bonsoir",
+    guest: "Invité",
+    level: "Niveau",
+  },
+
+  // Qibla Compass
+  qibla: {
+    title: "Boussole Qibla",
+    direction: "Direction de la Qibla",
+    alignPhone: "Alignez votre téléphone",
+    distanceToMecca: "{{distance}} km vers La Mecque",
+    metalWarning: "Éloignez-vous des objets métalliques pour plus de précision",
+    calibrate: "Calibrer la boussole",
+    calibrateHint: "Faites tourner votre téléphone en forme de 8",
+    lowAccuracy: "Faible précision détectée",
+    permissionDenied: "Permission de localisation refusée",
+    permissionDeniedDesc:
+      "Activez la localisation pour afficher la direction de la Qibla",
+    grantPermission: "Autoriser la localisation",
+    aligned: "Aligné avec la Qibla !",
+    north: "N",
+    south: "S",
+    east: "E",
+    west: "O",
+  },
+
+  // Settings
+  settings: {
+    title: "Paramètres",
+    profile: "Profil",
+    notConnected: "Non connecté",
+    loginPrompt: "Connectez-vous pour synchroniser vos données",
+    login: "Se connecter",
+    logout: "Se déconnecter",
+
+    // Guest account
+    guestAccountTitle: "Mode invité",
+    guestAccountSubtitle: "Synchronisez vos données",
+    guestAccountDescription:
+      "Créez un compte pour sauvegarder votre progression et la retrouver sur tous vos appareils.",
+    createAccount: "Créer un compte",
+    loginExisting: "J'ai déjà un compte",
+
+    // Sections
+    prayerSection: "Prières & Rappels",
+    appSection: "Application",
+    aboutSection: "Compte & Support",
+
+    // Items
+    notifications: "Notifications",
+    notificationsDesc: "Rappels de prière",
+    goals: "Objectifs",
+    goalsDesc: "Suivi des prières",
+    hijriCalendar: "Calendrier Hijri",
+    hijriCalendarDesc: "Ajustement de date",
+    location: "Localisation",
+    locationDesc: "Ville actuelle",
+    language: "Langue",
+    languageDesc: "Choisir la langue",
+    theme: "Thème",
+    themeDesc: "Apparence de l'app",
+    support: "Soutenir l'app",
+    supportDeveloper: "Soutenir le développeur",
+    supportDesc: "Faire un don",
+    share: "Partager l'app",
+    shareDesc: "Recommander à un ami",
+    rate: "Noter l'app",
+    rateDesc: "Laisser un avis",
+    version: "Version",
+    totalPrayers: "Total prières",
+    streak: "Série actuelle",
+    days: "jours",
+  },
+
+  // Language
+  language: {
+    title: "Langue",
+    subtitle: "Choisissez votre langue préférée",
+    info: "La langue sélectionnée sera utilisée pour l'interface de l'application. Les noms des prières et les textes islamiques restent en arabe.",
+    french: "Français",
+    english: "Anglais",
+  },
+
+  // Theme
+  theme: {
+    title: "Thème",
+    subtitle: "Personnalisez l'apparence",
+    light: "Clair",
+    lightDesc: "Thème clair classique",
+    dark: "Sombre",
+    darkDesc: "Thème sombre pour vos yeux",
+    system: "Système",
+    systemDesc: "Suivre les paramètres de l'appareil",
+  },
+
+  // Support / Donation
+  support: {
+    title: "Soutenir le Développeur",
+    subtitle: "Cette application est gratuite et sans publicité.",
+    intro:
+      "Si MaPrière vous est utile dans votre quotidien, vous pouvez soutenir son développement par un don. Chaque contribution aide à maintenir l'application gratuite pour tous. 💚",
+    chooseDonation: "Choisissez votre don",
+    whySupport: "Pourquoi soutenir ?",
+    serverCosts: "Coûts Serveurs",
+    serverCostsDesc: "Rapidité et fiabilité des horaires.",
+    development: "Développement",
+    developmentDesc: "Nouvelles fonctionnalités.",
+    sadaqah: "Sadaqah Jariyah",
+    sadaqahDesc: "Gratuit pour ceux dans le besoin.",
+    bronze: "Bronze",
+    bronzeDesc: "Un petit geste qui fait la différence",
+    silver: "Silver",
+    silverDesc: "Un soutien généreux",
+    gold: "Gold",
+    goldDesc: "Un don exceptionnel",
+    thankYou: "Jazak'Allah Khair ! 🤲",
+    thankYouDesc: "Merci infiniment pour votre générosité et votre soutien.",
+    errorOccurred: "Une erreur est survenue. Veuillez réessayer.",
+    securePayment: "Paiement sécurisé via",
+    appStorePlay: "l'App Store / Google Play",
+  },
+
+  // Auth
+  auth: {
+    login: "Connexion",
+    register: "Inscription",
+    email: "Adresse email",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    forgotPassword: "Mot de passe oublié ?",
+    noAccount: "Pas encore de compte ?",
+    hasAccount: "Déjà un compte ?",
+    orContinueWith: "Ou continuer avec",
+    loginButton: "Se connecter",
+    registerButton: "S'inscrire",
+  },
+};
