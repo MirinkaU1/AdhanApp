@@ -10,7 +10,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
-import { useColorScheme as useSystemColorScheme } from "react-native";
+import { useColorScheme as useSystemColorScheme, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
   Outfit_300Light,
@@ -23,6 +23,8 @@ import { loadSavedLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
 import useThemeStore from "@/stores/useThemeStore";
+import XpToast from "@/components/XpToast";
+import LevelUpToast from "@/components/LevelUpToast";
 
 import { useColorScheme } from "nativewind";
 
@@ -141,7 +143,7 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(tabs)";
     const inAuth = segments[0] === "auth";
-    const inIndex = segments[0] === undefined || segments.length === 0;
+    const inIndex = segments[0] === undefined;
 
     if (isAuthenticated && (inAuth || inIndex)) {
       // Utilisateur connecté sur auth ou index -> rediriger vers l'app
@@ -154,17 +156,25 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen name="support" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", headerShown: false }}
-        />
-      </Stack>
+      <View style={{ flex: 1 }}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
+          <Stack.Screen name="support" options={{ headerShown: false }} />
+          <Stack.Screen name="quests" options={{ headerShown: false }} />
+          <Stack.Screen name="levels" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", headerShown: false }}
+          />
+        </Stack>
+        {/* Toast XP global */}
+        <XpToast />
+        {/* Toast Level Up */}
+        <LevelUpToast />
+      </View>
     </ThemeProvider>
   );
 }

@@ -51,6 +51,7 @@ export default {
     inHoursMinutes: "In {{hours}}h {{minutes}}min",
     inHours: "In {{hours}}h",
     now: "Now",
+    tomorrow: "Tomorrow",
     prayerTimes: "Prayer times",
     fajr: "Fajr",
     sunrise: "Sunrise",
@@ -208,6 +209,24 @@ export default {
     info: "Your streak increases every day you reach your goal. Stay consistent to maintain your progress!",
   },
 
+  // Statistics
+  stats: {
+    title: "Statistics",
+    subtitle: "Track your spiritual progress",
+    thisMonth: "This month",
+    thisWeek: "This week",
+    prayers: "prayers",
+    days: "days",
+    currentStreak: "Current streak",
+    bestStreak: "Best streak",
+    totalPrayers: "Total prayers",
+    completionRate: "Completion rate",
+    byPrayer: "By prayer",
+    perfectDays: "perfect days",
+    partial: "Partial",
+    today: "Today",
+  },
+
   // Hijri Calendar
   hijri: {
     title: "Hijri Adjustment",
@@ -264,6 +283,36 @@ export default {
     asr: "Asr",
     maghrib: "Maghrib",
     isha: "Isha",
+  },
+
+  // Levels Page
+  levels: {
+    title: "Levels",
+    subtitle: "Your spiritual journey",
+    currentLevel: "Current level",
+    toNextLevel: "to next level",
+    totalXp: "Total XP",
+    unlockedLevels: "Unlocked levels",
+    path: "Level path",
+    current: "Current",
+    info: "Earn XP by completing your daily prayers and quests. Each level represents a step in your spiritual journey.",
+    desc: {
+      beginner: "You're starting your spiritual journey",
+      apprentice: "You're learning the basics of practice",
+      practitioner: "You practice your prayers regularly",
+      dedicated: "You show sincere commitment",
+      devoted: "Your devotion is remarkable",
+      pious: "You cultivate piety daily",
+      virtuous: "Your virtues shine around you",
+      exemplary: "You are an example for others",
+      wise: "You have acquired spiritual wisdom",
+      master: "You have mastered the art of prayer",
+      scholar: "Your spiritual knowledge is deep",
+      guide: "You guide others on the path",
+      light: "You are a light for your community",
+      star: "Your radiance inspires others",
+      legend: "You have reached the spiritual summit",
+    },
   },
 
   // Support / Donation
@@ -349,5 +398,62 @@ export default {
       moonsightingCommittee: "Moonsighting Committee",
       moonsightingCommitteeDesc: "Fajr 18°, Isha 18° — Lunar observation",
     },
+  },
+
+  // Quests and Gamification
+  quests: {
+    title: "Quests",
+    subtitle: "Complete daily challenges",
+    level: "Level",
+    totalXp: "Total XP",
+    todayProgress: "Today's Progress",
+    dailyQuests: "Daily Quests",
+    achievements: "Achievements",
+    claim: "Claim",
+    completed: "Completed",
+    claimed: "Claimed",
+    info: "Earn XP by completing your prayers and taking on daily challenges.",
+    xpToNextLevel: "{{xp}} XP to level {{level}}",
+    // Quests
+    firstPrayer: {
+      title: "First Steps",
+      description: "Complete your first prayer of the day",
+    },
+    prayFajr: {
+      title: "Early Bird",
+      description: "Pray Fajr today",
+    },
+    prayAll5: {
+      title: "Perfect Day",
+      description: "Complete all 5 prayers today",
+    },
+    prayOnTime: {
+      title: "On Time",
+      description: "Pray 3 times on time today",
+    },
+    streak3: {
+      title: "3-Day Streak",
+      description: "Maintain a 3-day streak",
+    },
+    streak7: {
+      title: "Week Streak",
+      description: "Maintain a 7-day streak",
+    },
+  },
+
+  // XP Notifications
+  xp: {
+    prayerCompleted: "Prayer completed",
+    allPrayersCompleted: "All prayers for the day!",
+    fajrBonus: "Fajr bonus!",
+    streakBonus: "Streak bonus!",
+    questCompleted: "Quest completed!",
+    levelUp: "Level up!",
+  },
+
+  // Level Up
+  levelUp: {
+    congrats: "Congratulations!",
+    newLevel: "Level",
   },
 };

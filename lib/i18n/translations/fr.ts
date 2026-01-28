@@ -51,6 +51,7 @@ export default {
     inHoursMinutes: "Dans {{hours}}h {{minutes}}min",
     inHours: "Dans {{hours}}h",
     now: "Maintenant",
+    tomorrow: "Demain",
     prayerTimes: "Horaires de prière",
     fajr: "Fajr",
     sunrise: "Shuruk",
@@ -210,6 +211,24 @@ export default {
     info: "Votre série augmente chaque jour où vous atteignez votre objectif. Restez régulier pour maintenir votre progression !",
   },
 
+  // Statistics
+  stats: {
+    title: "Statistiques",
+    subtitle: "Suivez votre progression spirituelle",
+    thisMonth: "Ce mois-ci",
+    thisWeek: "Cette semaine",
+    prayers: "prières",
+    days: "jours",
+    currentStreak: "Série actuelle",
+    bestStreak: "Meilleure série",
+    totalPrayers: "Total prières",
+    completionRate: "Taux de complétion",
+    byPrayer: "Par prière",
+    perfectDays: "jours parfaits",
+    partial: "Partiel",
+    today: "Aujourd'hui",
+  },
+
   // Hijri Calendar
   hijri: {
     title: "Ajustement Hijri",
@@ -267,6 +286,36 @@ export default {
     asr: "Asr",
     maghrib: "Maghrib",
     isha: "Isha",
+  },
+
+  // Levels Page
+  levels: {
+    title: "Niveaux",
+    subtitle: "Votre parcours spirituel",
+    currentLevel: "Niveau actuel",
+    toNextLevel: "pour le niveau suivant",
+    totalXp: "XP Total",
+    unlockedLevels: "Niveaux débloqués",
+    path: "Chemin des niveaux",
+    current: "Actuel",
+    info: "Gagnez de l'XP en accomplissant vos prières quotidiennes et en complétant des quêtes. Chaque niveau représente une étape dans votre parcours spirituel.",
+    desc: {
+      beginner: "Vous commencez votre voyage spirituel",
+      apprentice: "Vous apprenez les bases de la pratique",
+      practitioner: "Vous pratiquez régulièrement vos prières",
+      dedicated: "Vous montrez un engagement sincère",
+      devoted: "Votre dévotion est remarquable",
+      pious: "Vous cultivez la piété au quotidien",
+      virtuous: "Vos vertus rayonnent autour de vous",
+      exemplary: "Vous êtes un exemple pour les autres",
+      wise: "Vous avez acquis la sagesse spirituelle",
+      master: "Vous maîtrisez l'art de la prière",
+      scholar: "Votre savoir spirituel est profond",
+      guide: "Vous guidez les autres sur le chemin",
+      light: "Vous êtes une lumière pour votre communauté",
+      star: "Votre éclat inspire les autres",
+      legend: "Vous avez atteint le sommet spirituel",
+    },
   },
 
   // Support / Donation
@@ -352,5 +401,62 @@ export default {
       moonsightingCommittee: "Moonsighting Committee",
       moonsightingCommitteeDesc: "Fajr 18°, Isha 18° — Observation lunaire",
     },
+  },
+
+  // Quêtes et Gamification
+  quests: {
+    title: "Quêtes",
+    subtitle: "Accomplissez des défis quotidiens",
+    level: "Niveau",
+    totalXp: "XP Total",
+    todayProgress: "Progression du jour",
+    dailyQuests: "Quêtes Journalières",
+    achievements: "Accomplissements",
+    claim: "Réclamer",
+    completed: "Complété",
+    claimed: "Réclamé",
+    info: "Gagnez de l'XP en accomplissant vos prières et en relevant des défis quotidiens.",
+    xpToNextLevel: "{{xp}} XP pour le niveau {{level}}",
+    // Quêtes
+    firstPrayer: {
+      title: "Premier pas",
+      description: "Accomplissez votre première prière du jour",
+    },
+    prayFajr: {
+      title: "Lève-tôt",
+      description: "Priez Fajr aujourd'hui",
+    },
+    prayAll5: {
+      title: "Journée parfaite",
+      description: "Accomplissez les 5 prières du jour",
+    },
+    prayOnTime: {
+      title: "À l'heure",
+      description: "Priez 3 fois à l'heure aujourd'hui",
+    },
+    streak3: {
+      title: "Série de 3 jours",
+      description: "Maintenez une série de 3 jours consécutifs",
+    },
+    streak7: {
+      title: "Série d'une semaine",
+      description: "Maintenez une série de 7 jours consécutifs",
+    },
+  },
+
+  // Notifications XP
+  xp: {
+    prayerCompleted: "Prière accomplie",
+    allPrayersCompleted: "Toutes les prières du jour !",
+    fajrBonus: "Bonus Fajr !",
+    streakBonus: "Bonus série !",
+    questCompleted: "Quête accomplie !",
+    levelUp: "Niveau supérieur !",
+  },
+
+  // Level Up
+  levelUp: {
+    congrats: "Félicitations !",
+    newLevel: "Niveau",
   },
 };

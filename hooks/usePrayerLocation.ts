@@ -196,23 +196,23 @@ export function usePrayerLocation(): UsePrayerLocationResult {
 
   // Auto-sync with API when online and location is available
   useEffect(() => {
-    if (location?.coords && isOnline) {
+    if (activeLocation?.coords && isOnline) {
       syncWithApi();
     }
-  }, [location?.coords, isOnline, syncWithApi]);
+  }, [activeLocation?.coords, isOnline, syncWithApi]);
 
   // =====================================================
   // Refresh next prayer every minute
   // =====================================================
 
   useEffect(() => {
-    if (!location?.coords) {
+    if (!activeLocation?.coords) {
       return;
     }
 
     const updateNextPrayer = () => {
       const result = calculatePrayerTimes(
-        location.coords,
+        activeLocation.coords,
         new Date(),
         calculationMethod,
       );
@@ -223,7 +223,7 @@ export function usePrayerLocation(): UsePrayerLocationResult {
     const interval = setInterval(updateNextPrayer, 60_000);
 
     return () => clearInterval(interval);
-  }, [location?.coords, calculationMethod, setNextPrayer]);
+  }, [activeLocation?.coords, calculationMethod, setNextPrayer]);
 
   return {
     location: activeLocation,

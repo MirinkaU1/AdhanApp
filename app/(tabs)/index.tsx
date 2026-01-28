@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,7 +29,9 @@ import {
 import { useIsDark } from "@/components/useColorScheme";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore, { PrayerName } from "@/stores/usePrayerStore";
+import useQuestStore from "@/stores/useQuestStore";
 import { usePrayerLocation } from "@/hooks/usePrayerLocation";
+import { useGamification } from "@/hooks/useGamification";
 import { useTranslation } from "react-i18next";
 import { AppText } from "@/components/ui";
 
@@ -74,6 +77,7 @@ const HADITHS = [
 export default function DashboardScreen() {
   const { t } = useTranslation();
   const [now, setNow] = useState(() => new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isDark = useIsDark();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
 
@@ -89,6 +93,53 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { times, status, hijriDate, togglePrayer } = usePrayerStore();
+  const {
+    level,
+    xp,
+    xpToNextLevel,
+    getUnclaimedQuestsCount,
+    checkAndResetDailyQuests,
+    getLevelFromXp,
+  } = useQuestStore();
+  const { onPrayerCompleted, checkPrayerOnTime } = useGamification();
+
+  // Nombre de quêtes à réclamer
+  const unclaimedQuests = getUnclaimedQuestsCount();
+
+  // XP dans le niveau actuel
+  const { xpInLevel } = getLevelFromXp(xp);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      // Actualiser la date
+      setNow(new Date());
+      // Actualiser la localisation et les horaires
+      await refreshLocation();
+      // Reset les quêtes si nouveau jour
+      checkAndResetDailyQuests();
+    } catch (error) {
+      console.error("Erreur lors du refresh:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshLocation, checkAndResetDailyQuests]);
+
+  // Handler pour toggle prière avec gamification
+  const handlePrayerToggle = useCallback(
+    (prayerName: PrayerName) => {
+      const wasCompleted = !status[prayerName]; // Il va être complété
+      togglePrayer(prayerName);
+      onPrayerCompleted(prayerName, wasCompleted);
+
+      // Vérifier si la prière est faite à l'heure (dans les 30 min après son début)
+      if (wasCompleted && times) {
+        checkPrayerOnTime(times[prayerName]);
+      }
+    },
+    [togglePrayer, onPrayerCompleted, checkPrayerOnTime, status, times],
+  );
 
   // Salutation
   const greeting = t("home.salam");
@@ -111,49 +162,69 @@ export default function DashboardScreen() {
   const PRAYER_GRACE_PERIOD = 30;
 
   // Trouver la prière en cours ou la prochaine
-  const { nextPrayer, nextPrayerTime, isInGracePeriod } = useMemo(() => {
-    if (!times) {
+  const { nextPrayer, nextPrayerTime, isInGracePeriod, isWaitingForMidnight } =
+    useMemo(() => {
+      if (!times) {
+        return {
+          nextPrayer: "fajr" as PrayerName,
+          nextPrayerTime: null,
+          isInGracePeriod: false,
+          isWaitingForMidnight: false,
+        };
+      }
+
+      // Vérifier si on est dans la période de grâce d'une prière
+      for (let i = PRAYER_KEYS.length - 1; i >= 0; i--) {
+        const key = PRAYER_KEYS[i];
+        const prayerTime = times[key];
+        const graceEndTime = addMinutes(prayerTime, PRAYER_GRACE_PERIOD);
+
+        // Si on est entre l'heure de la prière et la fin de la période de grâce
+        if (isAfter(now, prayerTime) && isBefore(now, graceEndTime)) {
+          return {
+            nextPrayer: key,
+            nextPrayerTime: prayerTime,
+            isInGracePeriod: true,
+            isWaitingForMidnight: false,
+          };
+        }
+      }
+
+      // Sinon, chercher la prochaine prière future
+      for (const key of PRAYER_KEYS) {
+        if (isAfter(times[key], now)) {
+          return {
+            nextPrayer: key,
+            nextPrayerTime: times[key],
+            isInGracePeriod: false,
+            isWaitingForMidnight: false,
+          };
+        }
+      }
+
+      // Toutes les prières sont passées (après Isha + grâce)
+      // Vérifier si on est avant ou après minuit
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0); // Minuit ce soir
+
+      if (isBefore(now, midnight)) {
+        // Avant minuit : on attend minuit, Fajr n'est pas encore "la prochaine"
+        return {
+          nextPrayer: "fajr" as PrayerName,
+          nextPrayerTime: times.fajr ? addHours(times.fajr, 24) : null,
+          isInGracePeriod: false,
+          isWaitingForMidnight: true,
+        };
+      }
+
+      // Après minuit : Fajr est la prochaine prière normalement
       return {
         nextPrayer: "fajr" as PrayerName,
-        nextPrayerTime: null,
+        nextPrayerTime: times.fajr,
         isInGracePeriod: false,
+        isWaitingForMidnight: false,
       };
-    }
-
-    // Vérifier si on est dans la période de grâce d'une prière
-    for (let i = PRAYER_KEYS.length - 1; i >= 0; i--) {
-      const key = PRAYER_KEYS[i];
-      const prayerTime = times[key];
-      const graceEndTime = addMinutes(prayerTime, PRAYER_GRACE_PERIOD);
-
-      // Si on est entre l'heure de la prière et la fin de la période de grâce
-      if (isAfter(now, prayerTime) && isBefore(now, graceEndTime)) {
-        return {
-          nextPrayer: key,
-          nextPrayerTime: prayerTime,
-          isInGracePeriod: true,
-        };
-      }
-    }
-
-    // Sinon, chercher la prochaine prière future
-    for (const key of PRAYER_KEYS) {
-      if (isAfter(times[key], now)) {
-        return {
-          nextPrayer: key,
-          nextPrayerTime: times[key],
-          isInGracePeriod: false,
-        };
-      }
-    }
-
-    // Toutes les prières sont passées (après Isha + grâce), la prochaine est Fajr demain
-    return {
-      nextPrayer: "fajr" as PrayerName,
-      nextPrayerTime: times.fajr ? addHours(times.fajr, 24) : null,
-      isInGracePeriod: false,
-    };
-  }, [times, now]);
+    }, [times, now]);
 
   // Compteur de prières accomplies
   const completedCount = useMemo(
@@ -165,15 +236,17 @@ export default function DashboardScreen() {
   const progressCircumference = 2 * Math.PI * progressRadius;
   const progressOffset = progressCircumference * (1 - progressPercent / 100);
 
-  // Countdown en minutes (null si dans la période de grâce)
+  // Countdown en minutes (null si dans la période de grâce ou avant minuit)
   const countdownMinutes = useMemo(() => {
     if (isInGracePeriod) return null; // Pas de countdown pendant la période de grâce
+    if (isWaitingForMidnight) return null; // Pas de countdown avant minuit
     if (!nextPrayerTime || isAfter(now, nextPrayerTime)) return null;
     return differenceInMinutes(nextPrayerTime, now);
-  }, [now, nextPrayerTime, isInGracePeriod]);
+  }, [now, nextPrayerTime, isInGracePeriod, isWaitingForMidnight]);
 
   const nextPrayerMessage = useMemo(() => {
     if (isInGracePeriod) return t("home.now"); // "Maintenant" pendant la période de grâce
+    if (isWaitingForMidnight) return t("home.tomorrow"); // "Demain" avant minuit
     if (countdownMinutes === null) return "";
     if (countdownMinutes <= 0) return t("home.now");
     if (countdownMinutes < 60)
@@ -184,12 +257,15 @@ export default function DashboardScreen() {
       return t("home.inHoursMinutes", { hours, minutes });
     }
     return t("home.inHours", { hours });
-  }, [countdownMinutes, isInGracePeriod, t]);
+  }, [countdownMinutes, isInGracePeriod, isWaitingForMidnight, t]);
 
   // Format du countdown pour le badge header
   const headerCountdown = useMemo(() => {
     if (isInGracePeriod) {
       return { value: t("home.now"), unit: "" }; // "Maintenant" pendant la période de grâce
+    }
+    if (isWaitingForMidnight) {
+      return { value: t("home.tomorrow"), unit: "" }; // "Demain" avant minuit
     }
     if (countdownMinutes === null) return null;
     if (countdownMinutes >= 60) {
@@ -236,6 +312,15 @@ export default function DashboardScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor="#115E59"
+            colors={["#115E59"]}
+            progressBackgroundColor={isDark ? "#1E293B" : "#FFFFFF"}
+          />
+        }
       >
         {/* ===== HEADER ===== */}
         <View
@@ -309,33 +394,51 @@ export default function DashboardScreen() {
               {greeting}, {user?.name || t("home.guest")} 👋
             </Text>
 
-            {/* Niveau et XP */}
+            {/* Niveau et XP - Badges séparés */}
             <View className="flex-row items-center justify-center gap-4 mb-4">
-              <View className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5">
+              {/* Badge Niveau - Cliquable pour aller aux niveaux */}
+              <Pressable
+                onPress={() => router.push("/levels")}
+                className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5 active:opacity-80"
+              >
                 <MaterialIconsRound name="star" size={16} color="#D97706" />
                 <Text
                   className="text-white font-outfit-semibold"
                   style={{ fontSize: 13 }}
                 >
-                  {t("home.level")} {user?.level || 1}
+                  {t("home.level")} {level}
                 </Text>
-              </View>
-              <View className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5">
+              </Pressable>
+
+              {/* Badge XP - Cliquable pour aller aux quêtes */}
+              <Pressable
+                onPress={() => router.push("/quests")}
+                className="relative flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5 active:opacity-80"
+              >
                 <MaterialIconsRound name="bolt" size={16} color="#22C55E" />
                 <Text
                   className="text-white font-outfit-semibold"
                   style={{ fontSize: 13 }}
                 >
-                  {user?.xp || 0} XP
+                  {xpInLevel}/{xpToNextLevel} XP
                 </Text>
-              </View>
+                {/* Badge de notification pour quêtes à réclamer */}
+                {unclaimedQuests > 0 && (
+                  <View className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full items-center justify-center border border-white/30">
+                    <Text className="text-white text-[9px] font-outfit-bold">
+                      {unclaimedQuests}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
             </View>
 
             {/* Badge prochaine prière */}
             {nextPrayer && headerCountdown && (
               <View className="self-center bg-black/25 px-4 py-2 rounded-full mb-5 flex-row items-center">
                 <Text className="text-white text-sm font-outfit-medium">
-                  {t(`home.${nextPrayer}`)} {t("home.inTime", { time: "" })}
+                  {t(`home.${nextPrayer}`)}{" "}
+                  {!isWaitingForMidnight && t("home.inTime", { time: "" })}
                 </Text>
                 <Text className="text-accent text-sm font-outfit-bold">
                   {headerCountdown.value} {headerCountdown.unit}
@@ -441,9 +544,9 @@ export default function DashboardScreen() {
               return (
                 <TouchableOpacity
                   key={prayer.key}
-                  onPress={() => togglePrayer(prayer.key)}
+                  onPress={() => handlePrayerToggle(prayer.key)}
                   {...(Platform.OS === "web"
-                    ? { onClick: () => togglePrayer(prayer.key) }
+                    ? { onClick: () => handlePrayerToggle(prayer.key) }
                     : {})}
                   activeOpacity={0.85}
                   className={`flex-row items-center justify-between p-4 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark overflow-hidden ${
