@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -14,25 +13,29 @@ import { useTranslation } from "react-i18next";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
-import { AlertDialog } from "@/components/ui";
-import useThemeStore from "@/stores/useThemeStore";
+import { AlertDialog, AppText, AppButtonGroup } from "@/components/ui";
+import type { ButtonGroupItem } from "@/components/ui/AppButtonGroup";
+import { useIsDark } from "@/components/useColorScheme";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
 
-// Configuration des préférences
 interface PreferenceItem {
   id: string;
   icon: MaterialIconName;
   iconBgColor: string;
   iconColor: string;
   labelKey: string;
-  valueKey?: string;
   isDestructive?: boolean;
-  section?: string;
 }
 
-// Section "Prières & Rappels"
 const PRAYER_PREFERENCES: PreferenceItem[] = [
+  {
+    id: "prayer",
+    icon: "calculate",
+    iconBgColor: "#D1FAE5",
+    iconColor: "#10B981",
+    labelKey: "settings.prayer",
+  },
   {
     id: "location",
     icon: "location-on",
@@ -56,7 +59,6 @@ const PRAYER_PREFERENCES: PreferenceItem[] = [
   },
 ];
 
-// Section "Application"
 const APP_PREFERENCES: PreferenceItem[] = [
   {
     id: "language",
@@ -74,7 +76,6 @@ const APP_PREFERENCES: PreferenceItem[] = [
   },
 ];
 
-// Section "Compte & Support"
 const ACCOUNT_PREFERENCES: PreferenceItem[] = [
   {
     id: "account",
@@ -100,29 +101,46 @@ const ACCOUNT_PREFERENCES: PreferenceItem[] = [
   },
 ];
 
+/**
+ * Section avec titre et AppButtonGroup
+ */
+function SettingsSection({
+  title,
+  items,
+  onItemPress,
+}: {
+  title: string;
+  items: PreferenceItem[];
+  onItemPress: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  const buttonGroupItems: ButtonGroupItem[] = items.map((item) => ({
+    id: item.id,
+    icon: item.icon,
+    iconBgColor: item.iconBgColor,
+    iconColor: item.iconColor,
+    label: t(item.labelKey),
+    isDestructive: item.isDestructive,
+    onPress: () => onItemPress(item.id),
+  }));
+
+  return (
+    <View className="mb-6">
+      <AppText variant="label" className="mb-3 px-1">
+        {title}
+      </AppText>
+      <AppButtonGroup items={buttonGroupItems} />
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const isDark = useIsDark();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#F1F5F9",
-    accent: "#D97706",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
-
-  // Stats utilisateur (depuis le store)
   const prayerStore = usePrayerStore();
   const stats = {
     currentStreak: prayerStore.getStreak ? prayerStore.getStreak() : 0,
@@ -133,14 +151,14 @@ export default function ProfileScreen() {
 
   const handlePreferencePress = async (id: string) => {
     switch (id) {
+      case "prayer":
+        router.push("/settings/prayer");
+        break;
       case "notifications":
         router.push("/settings/notifications");
         break;
       case "goals":
         router.push("/settings/goals");
-        break;
-      case "hijri":
-        router.push("/settings/hijri");
         break;
       case "location":
         router.push("/settings/location");
@@ -176,23 +194,19 @@ export default function ProfileScreen() {
   // Rendu pour utilisateur NON connecté
   if (!isAuthenticated) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View className="flex-1 bg-bg-light dark:bg-bg-dark">
         <ScrollView
-          style={{ flex: 1 }}
+          className="flex-1"
           contentContainerStyle={{ paddingBottom: 50 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Header non connecté */}
           <View
-            style={{
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              overflow: "hidden",
-              minHeight: 320,
-            }}
+            className="rounded-b-4xl overflow-hidden"
+            style={{ minHeight: 320 }}
           >
             <LinearGradient
-              colors={[colors.tealDark, colors.tealDeep]}
+              colors={["#115E59", "#0d4542"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -205,29 +219,9 @@ export default function ProfileScreen() {
               resizeMode="cover"
             />
 
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 16,
-                paddingTop: 48,
-              }}
-            >
+            <View className="flex-1 items-center justify-center px-4 pt-12">
               {/* Icône utilisateur */}
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                  borderWidth: 2,
-                  borderColor: "rgba(255,255,255,0.2)",
-                }}
-              >
+              <View className="w-25 h-25 rounded-full bg-white/10 items-center justify-center mb-4 border-2 border-white/20">
                 <MaterialIconsRound
                   name="person"
                   size={50}
@@ -236,374 +230,98 @@ export default function ProfileScreen() {
               </View>
 
               {/* Statut */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(239, 68, 68, 0.2)",
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: "#EF4444",
-                  }}
-                />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontFamily: "Outfit_600SemiBold",
-                    color: "#FCA5A5",
-                  }}
-                >
+              <View className="flex-row items-center bg-red-500/20 px-4 py-2 rounded-full gap-2 mb-3">
+                <View className="w-2 h-2 rounded-full bg-red-500" />
+                <Text className="text-sm font-outfit-semibold text-red-300">
                   {t("settings.notConnected")}
                 </Text>
               </View>
 
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: "rgba(255,255,255,0.6)",
-                  textAlign: "center",
-                }}
-              >
+              <Text className="text-sm font-outfit-regular text-white/60 text-center">
                 {t("settings.loginPrompt")}
               </Text>
             </View>
           </View>
 
           {/* Contenu principal */}
-          <View style={{ paddingHorizontal: 16, marginTop: -20 }}>
-            {/* Carte de connexion */}
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: 24,
-                padding: 24,
-                marginBottom: 24,
-                borderWidth: 1,
-                borderColor: colors.border,
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 12,
-                elevation: 3,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.textPrimary,
-                  marginBottom: 8,
-                }}
-              >
-                {t("auth.login")}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                  marginBottom: 20,
-                  lineHeight: 20,
-                }}
-              >
-                {t("settings.loginPrompt")}
-              </Text>
-
-              {/* Bouton de connexion */}
-              <Pressable
-                onPress={() => router.push("/auth/login")}
-                style={{
-                  backgroundColor: colors.accent,
-                  paddingVertical: 16,
-                  borderRadius: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                }}
-              >
-                <MaterialIconsRound name="login" size={22} color="#fff" />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "Outfit_600SemiBold",
-                    color: "#fff",
-                  }}
-                >
-                  {t("settings.login")}
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Préférences - Prières & Rappels */}
-            <Text
-              style={{
-                fontSize: 18,
-                fontFamily: "Outfit_700Bold",
-                color: colors.textPrimary,
-                marginBottom: 16,
-              }}
-            >
-              {t("settings.prayerSection")}
-            </Text>
-
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: 24,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: colors.border,
-                marginBottom: 24,
-              }}
-            >
-              {PRAYER_PREFERENCES.map((pref, index) => (
-                <Pressable
-                  key={pref.id}
-                  onPress={() => handlePreferencePress(pref.id)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 16,
-                    borderBottomWidth:
-                      index < PRAYER_PREFERENCES.length - 1 ? 1 : 0,
-                    borderBottomColor: colors.border,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: isDark ? "#334155" : pref.iconBgColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <MaterialIconsRound
-                        name={pref.icon}
-                        size={22}
-                        color={pref.iconColor}
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontFamily: "Outfit_500Medium",
-                        color: colors.textPrimary,
-                      }}
-                    >
-                      {t(pref.labelKey)}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {pref.valueKey && (
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontFamily: "Outfit_400Regular",
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {t(pref.valueKey)}
-                      </Text>
-                    )}
-                    <MaterialIconsRound
-                      name="chevron-right"
-                      size={20}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Préférences - Application */}
-            <Text
-              style={{
-                fontSize: 18,
-                fontFamily: "Outfit_700Bold",
-                color: colors.textPrimary,
-                marginBottom: 16,
-              }}
-            >
-              {t("settings.appSection")}
-            </Text>
-
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: 24,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: colors.border,
-                marginBottom: 24,
-              }}
-            >
-              {APP_PREFERENCES.map((pref, index) => (
-                <Pressable
-                  key={pref.id}
-                  onPress={() => handlePreferencePress(pref.id)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 16,
-                    borderBottomWidth:
-                      index < APP_PREFERENCES.length - 1 ? 1 : 0,
-                    borderBottomColor: colors.border,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: isDark ? "#334155" : pref.iconBgColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <MaterialIconsRound
-                        name={pref.icon}
-                        size={22}
-                        color={pref.iconColor}
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontFamily: "Outfit_500Medium",
-                        color: colors.textPrimary,
-                      }}
-                    >
-                      {t(pref.labelKey)}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {pref.valueKey && (
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontFamily: "Outfit_400Regular",
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {t(pref.valueKey)}
-                      </Text>
-                    )}
-                    <MaterialIconsRound
-                      name="chevron-right"
-                      size={20}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Support */}
-            <Pressable
-              onPress={() => router.push("/support")}
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: 24,
-                padding: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
+          <View className="px-4 -mt-5">
+            {/* Carte invité avec deux boutons */}
+            {user?.isGuest && (
               <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
+                className="bg-white dark:bg-slate-800 rounded-3xl p-6 mb-6 border border-accent"
+                style={{
+                  shadowColor: "#D97706",
+                  shadowOpacity: 0.15,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowRadius: 12,
+                  elevation: 3,
+                }}
               >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: isDark ? "#334155" : "#FCE7F3",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                {/* En-tête avec icône */}
+                <View className="flex-row items-center mb-3 gap-3">
+                  <View className="w-11 h-11 rounded-full bg-amber-100 items-center justify-center">
+                    <MaterialIconsRound
+                      name="person-add"
+                      size={24}
+                      color="#D97706"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <AppText variant="h3" className="mb-0.5">
+                      {t("settings.guestAccountTitle")}
+                    </AppText>
+                    <AppText
+                      variant="caption"
+                      className="text-text-secondary-light dark:text-text-secondary-dark"
+                    >
+                      {t("settings.guestAccountSubtitle")}
+                    </AppText>
+                  </View>
+                </View>
+
+                {/* Description */}
+                <AppText variant="caption" className="mb-5 leading-5">
+                  {t("settings.guestAccountDescription")}
+                </AppText>
+
+                {/* Bouton Créer un compte */}
+                <Pressable
+                  onPress={() => router.push("/auth/register")}
+                  className="bg-accent px-6 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5 mb-3 active:opacity-80"
                 >
                   <MaterialIconsRound
-                    name="favorite"
-                    size={22}
-                    color="#EC4899"
+                    name="person-add"
+                    size={20}
+                    color="#fff"
                   />
-                </View>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "Outfit_500Medium",
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {t("settings.supportDeveloper")}
-                </Text>
-              </View>
-              <MaterialIconsRound
-                name="chevron-right"
-                size={20}
-                color={colors.textSecondary}
-              />
-            </Pressable>
+                  <Text className="text-white font-outfit-semibold text-base">
+                    {t("settings.createAccount")}
+                  </Text>
+                </Pressable>
 
-            {/* Version */}
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 12,
-                fontFamily: "Outfit_400Regular",
-                color: colors.textSecondary,
-                marginTop: 32,
-              }}
-            >
-              MaPrière v2.4.1
-            </Text>
+                {/* Bouton Se connecter */}
+                <Pressable
+                  onPress={() => router.push("/auth/login")}
+                  className="bg-transparent px-6 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5 border border-border-light dark:border-border-dark active:opacity-60"
+                >
+                  <MaterialIconsRound
+                    name="login"
+                    size={20}
+                    color={isDark ? "#F8FAFC" : "#12201F"}
+                  />
+                  <Text className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold text-base">
+                    {t("settings.loginExisting")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Préférences disponibles */}
+            <SettingsSection
+              title={t("settings.application")}
+              items={APP_PREFERENCES}
+              onItemPress={handlePreferencePress}
+            />
           </View>
         </ScrollView>
       </View>
@@ -611,48 +329,20 @@ export default function ProfileScreen() {
   }
 
   // Rendu pour utilisateur CONNECTÉ
-
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Modal de déconnexion */}
-      <AlertDialog
-        visible={showLogoutModal}
-        title={t("settings.logout")}
-        message="Êtes-vous sûr de vouloir vous déconnecter de votre compte ?"
-        icon="logout"
-        iconColor="#EF4444"
-        onDismiss={() => setShowLogoutModal(false)}
-        buttons={[
-          {
-            text: "Annuler",
-            onPress: () => setShowLogoutModal(false),
-            style: "default",
-          },
-          {
-            text: "Déconnexion",
-            onPress: handleLogoutConfirm,
-            style: "destructive",
-          },
-        ]}
-      />
-
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 50 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header avec photo de profil */}
+        {/* Header connecté */}
         <View
-          style={{
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            overflow: "hidden",
-            minHeight: 320,
-            paddingTop: 36,
-          }}
+          className="rounded-b-4xl overflow-hidden"
+          style={{ minHeight: 320, paddingTop: 36 }}
         >
           <LinearGradient
-            colors={[colors.tealDark, colors.tealDeep]}
+            colors={["#115E59", "#0d4542"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -665,65 +355,48 @@ export default function ProfileScreen() {
             resizeMode="cover"
           />
 
-          {/* Photo et infos */}
-          <View style={{ alignItems: "center", paddingVertical: 20 }}>
-            {/* Avatar avec bordure */}
+          <View className="items-center py-5">
+            {/* Avatar avec bordure accent et bouton edit */}
             <View
+              className="mb-3"
               style={{
                 width: 100,
                 height: 100,
                 borderRadius: 50,
                 borderWidth: 2,
-                borderColor: `${colors.accent}80`,
+                borderColor: "rgba(217,119,6,0.5)",
                 padding: 3,
-                marginBottom: 12,
               }}
             >
-              {user?.avatar ? (
-                <Image
-                  source={{ uri: user.avatar }}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 50,
-                    borderWidth: 2,
-                    borderColor: colors.tealDark,
-                  }}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 50,
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 2,
-                    borderColor: colors.tealDark,
-                  }}
-                >
+              <View
+                className="w-full h-full rounded-full bg-white/10 items-center justify-center"
+                style={{ borderWidth: 2, borderColor: "#115E59" }}
+              >
+                {user?.avatar ? (
+                  <Image
+                    source={{ uri: user.avatar }}
+                    style={{ width: "100%", height: "100%", borderRadius: 50 }}
+                  />
+                ) : (
                   <MaterialIconsRound
                     name="person"
                     size={40}
                     color="rgba(255,255,255,0.7)"
                   />
-                </View>
-              )}
+                )}
+              </View>
               {/* Bouton edit */}
               <Pressable
+                className="absolute items-center justify-center"
                 style={{
-                  position: "absolute",
                   bottom: 0,
                   right: 0,
                   width: 28,
                   height: 28,
                   borderRadius: 14,
-                  backgroundColor: colors.accent,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  backgroundColor: "#D97706",
                   borderWidth: 2,
-                  borderColor: colors.tealDark,
+                  borderColor: "#115E59",
                 }}
               >
                 <MaterialIconsRound name="edit" size={14} color="#fff" />
@@ -732,626 +405,144 @@ export default function ProfileScreen() {
 
             {/* Nom */}
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-                marginBottom: 4,
-              }}
+              className="text-white font-outfit-bold mb-4 text-center"
+              style={{ fontSize: 24 }}
             >
-              {user?.name || "Utilisateur"}
+              {user?.name || t("settings.guest")}
             </Text>
 
-            {/* Membre depuis */}
-            <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_300Light",
-                color: "rgba(255,255,255,0.6)",
-                marginBottom: 16,
-              }}
-            >
-              Membre depuis {user?.memberSince || "aujourd'hui"}
-            </Text>
-
-            {/* Bouton modifier */}
+            {/* Bouton modifier le profil */}
             <Pressable
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.1)",
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 25,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
-                gap: 8,
-              }}
+              onPress={() => router.push("/settings/profile")}
+              className="flex-row items-center bg-white/10 px-5 py-2.5 rounded-full border border-white/20 gap-2 active:opacity-70"
             >
               <MaterialIconsRound name="edit-note" size={18} color="#fff" />
               <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_500Medium",
-                  color: "#fff",
-                }}
+                className="text-white font-outfit-medium"
+                style={{ fontSize: 14 }}
               >
-                Modifier le profil
+                {t("settings.editProfile")}
               </Text>
             </Pressable>
           </View>
         </View>
 
+        {/* Cartes de statistiques */}
+        <View className="px-4 -mt-10 flex-row gap-4 mb-6">
+          {/* Série actuelle */}
+          <View
+            className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-4 items-center border border-border-light dark:border-border-dark"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 8,
+              elevation: 2,
+            }}
+          >
+            <View
+              className="w-11 h-11 rounded-full items-center justify-center mb-2"
+              style={{ backgroundColor: isDark ? "#334155" : "#FFF7ED" }}
+            >
+              <MaterialIconsRound
+                name="local-fire-department"
+                size={24}
+                color="#EA580C"
+              />
+            </View>
+            <Text
+              className="text-text-secondary-light font-outfit-regular dark:text-text-secondary-dark uppercase mb-1"
+              style={{ fontSize: 10, letterSpacing: 1 }}
+            >
+              {t("settings.streak")}
+            </Text>
+            <Text className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold text-2xl">
+              {stats.currentStreak}{" "}
+              <Text className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular text-xs">
+                {t("settings.days")}
+              </Text>
+            </Text>
+          </View>
+
+          {/* Total prières */}
+          <View
+            className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-4 items-center border border-border-light dark:border-border-dark"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 8,
+              elevation: 2,
+            }}
+          >
+            <View
+              className="w-11 h-11 rounded-full items-center justify-center mb-2"
+              style={{ backgroundColor: isDark ? "#334155" : "#ECFDF5" }}
+            >
+              <MaterialIconsRound
+                name="check-circle"
+                size={24}
+                color="#14B8A6"
+              />
+            </View>
+            <Text
+              className="text-text-secondary-light font-outfit-regular dark:text-text-secondary-dark uppercase mb-1"
+              style={{ fontSize: 10, letterSpacing: 1 }}
+            >
+              {t("settings.totalPrayers")}
+            </Text>
+            <Text className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold text-2xl">
+              {stats.totalPrayers}
+            </Text>
+          </View>
+        </View>
+
         {/* Contenu principal */}
-        <View style={{ paddingHorizontal: 16, marginTop: -20 }}>
-          {/* Statistiques */}
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 16,
-              marginBottom: 24,
-            }}
-          >
-            {/* Série actuelle */}
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: colors.card,
-                borderRadius: 20,
-                padding: 16,
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: colors.border,
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 2 },
-                shadowRadius: 8,
-                elevation: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: "#FFF7ED",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <MaterialIconsRound
-                  name="local-fire-department"
-                  size={24}
-                  color="#EA580C"
-                />
-              </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontFamily: "Outfit_500Medium",
-                  color: colors.textSecondary,
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  marginBottom: 4,
-                }}
-              >
-                {t("settings.streak")}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.textPrimary,
-                }}
-              >
-                {stats.currentStreak}{" "}
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontFamily: "Outfit_400Regular",
-                    color: colors.textSecondary,
-                  }}
-                >
-                  {t("settings.days")}
-                </Text>
-              </Text>
-            </View>
+        <View className="px-4">
+          <SettingsSection
+            title={t("settings.prayersReminders")}
+            items={PRAYER_PREFERENCES}
+            onItemPress={handlePreferencePress}
+          />
 
-            {/* Total prières */}
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: colors.card,
-                borderRadius: 20,
-                padding: 16,
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: colors.border,
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 2 },
-                shadowRadius: 8,
-                elevation: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: "#ECFDF5",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <MaterialIconsRound
-                  name="check-circle"
-                  size={24}
-                  color="#14B8A6"
-                />
-              </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontFamily: "Outfit_500Medium",
-                  color: colors.textSecondary,
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  marginBottom: 4,
-                }}
-              >
-                {t("settings.totalPrayers")}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.textPrimary,
-                }}
-              >
-                {stats.totalPrayers}
-              </Text>
-            </View>
-          </View>
+          <SettingsSection
+            title={t("settings.application")}
+            items={APP_PREFERENCES}
+            onItemPress={handlePreferencePress}
+          />
 
-          {/* Section de connexion pour les invités */}
-          {user?.isGuest && (
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: 24,
-                padding: 24,
-                marginBottom: 24,
-                borderWidth: 1,
-                borderColor: colors.accent,
-                shadowColor: colors.accent,
-                shadowOpacity: 0.15,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 12,
-                elevation: 3,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 12,
-                  gap: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: "#FEF3C7",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <MaterialIconsRound
-                    name="person-add"
-                    size={24}
-                    color={colors.accent}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontFamily: "Outfit_700Bold",
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {t("settings.guestAccountTitle")}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontFamily: "Outfit_400Regular",
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {t("settings.guestAccountSubtitle")}
-                  </Text>
-                </View>
-              </View>
-
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                  marginBottom: 20,
-                  lineHeight: 20,
-                }}
-              >
-                {t("settings.guestAccountDescription")}
-              </Text>
-
-              {/* Bouton Créer un compte */}
-              <Pressable
-                onPress={() => router.push("/auth/register")}
-                style={{
-                  backgroundColor: colors.accent,
-                  paddingVertical: 14,
-                  borderRadius: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                }}
-              >
-                <MaterialIconsRound name="person-add" size={20} color="#fff" />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "Outfit_600SemiBold",
-                    color: "#fff",
-                  }}
-                >
-                  {t("settings.createAccount")}
-                </Text>
-              </Pressable>
-
-              {/* Bouton Se connecter */}
-              <Pressable
-                onPress={() => router.push("/auth/login")}
-                style={{
-                  backgroundColor: "transparent",
-                  paddingVertical: 14,
-                  borderRadius: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <MaterialIconsRound
-                  name="login"
-                  size={20}
-                  color={colors.textPrimary}
-                />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "Outfit_600SemiBold",
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {t("settings.loginExisting")}
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Préférences - Prières & Rappels */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontFamily: "Outfit_700Bold",
-              color: colors.textPrimary,
-              marginBottom: 16,
-            }}
-          >
-            {t("settings.prayerSection")}
-          </Text>
-
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              overflow: "hidden",
-              borderWidth: 1,
-              borderColor: colors.border,
-              marginBottom: 24,
-            }}
-          >
-            {PRAYER_PREFERENCES.map((pref, index) => (
-              <Pressable
-                key={pref.id}
-                onPress={() => handlePreferencePress(pref.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: 16,
-                  borderBottomWidth:
-                    index < PRAYER_PREFERENCES.length - 1 ? 1 : 0,
-                  borderBottomColor: colors.border,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: isDark ? "#334155" : pref.iconBgColor,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <MaterialIconsRound
-                      name={pref.icon}
-                      size={22}
-                      color={pref.iconColor}
-                    />
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontFamily: "Outfit_500Medium",
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {t(pref.labelKey)}
-                  </Text>
-                </View>
-
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                >
-                  {pref.valueKey && (
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontFamily: "Outfit_400Regular",
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      {t(pref.valueKey)}
-                    </Text>
-                  )}
-                  <MaterialIconsRound
-                    name="chevron-right"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* Préférences - Application */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontFamily: "Outfit_700Bold",
-              color: colors.textPrimary,
-              marginBottom: 16,
-            }}
-          >
-            {t("settings.appSection")}
-          </Text>
-
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              overflow: "hidden",
-              borderWidth: 1,
-              borderColor: colors.border,
-              marginBottom: 24,
-            }}
-          >
-            {APP_PREFERENCES.map((pref, index) => (
-              <Pressable
-                key={pref.id}
-                onPress={() => handlePreferencePress(pref.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: 16,
-                  borderBottomWidth: index < APP_PREFERENCES.length - 1 ? 1 : 0,
-                  borderBottomColor: colors.border,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: isDark ? "#334155" : pref.iconBgColor,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <MaterialIconsRound
-                      name={pref.icon}
-                      size={22}
-                      color={pref.iconColor}
-                    />
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontFamily: "Outfit_500Medium",
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {t(pref.labelKey)}
-                  </Text>
-                </View>
-
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                >
-                  {pref.valueKey && (
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontFamily: "Outfit_400Regular",
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      {t(pref.valueKey)}
-                    </Text>
-                  )}
-                  <MaterialIconsRound
-                    name="chevron-right"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* Préférences - Compte & Support */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontFamily: "Outfit_700Bold",
-              color: colors.textPrimary,
-              marginBottom: 16,
-            }}
-          >
-            {t("settings.aboutSection")}
-          </Text>
-
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              overflow: "hidden",
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            {ACCOUNT_PREFERENCES.map((pref, index) => (
-              <Pressable
-                key={pref.id}
-                onPress={() => handlePreferencePress(pref.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: 16,
-                  borderBottomWidth:
-                    index < ACCOUNT_PREFERENCES.length - 1 ? 1 : 0,
-                  borderBottomColor: colors.border,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: isDark ? "#334155" : pref.iconBgColor,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <MaterialIconsRound
-                      name={pref.icon}
-                      size={22}
-                      color={pref.iconColor}
-                    />
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontFamily: "Outfit_500Medium",
-                      color: pref.isDestructive
-                        ? "#EF4444"
-                        : colors.textPrimary,
-                    }}
-                  >
-                    {t(pref.labelKey)}
-                  </Text>
-                </View>
-
-                {!pref.isDestructive && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {pref.valueKey && (
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontFamily: "Outfit_400Regular",
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {t(pref.valueKey)}
-                      </Text>
-                    )}
-                    <MaterialIconsRound
-                      name="chevron-right"
-                      size={20}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-                )}
-              </Pressable>
-            ))}
-          </View>
+          <SettingsSection
+            title={t("settings.accountSupport")}
+            items={ACCOUNT_PREFERENCES}
+            onItemPress={handlePreferencePress}
+          />
 
           {/* Version */}
-          <Text
-            style={{
-              textAlign: "center",
-              fontSize: 12,
-              fontFamily: "Outfit_400Regular",
-              color: colors.textSecondary,
-              marginTop: 32,
-            }}
-          >
-            MaPrière v0.10.1
+          <Text className="text-center font-outfit-bold text-xs text-text-secondary-light dark:text-text-secondary-dark mt-6">
+            Version 0.10.0
           </Text>
         </View>
       </ScrollView>
+
+      {/* Modal de déconnexion */}
+      <AlertDialog
+        visible={showLogoutModal}
+        title={t("settings.confirmLogout")}
+        message={t("settings.confirmLogoutDesc")}
+        buttons={[
+          {
+            text: t("common.cancel"),
+            onPress: () => setShowLogoutModal(false),
+            style: "default",
+          },
+          {
+            text: t("common.confirm"),
+            onPress: handleLogoutConfirm,
+            style: "destructive",
+          },
+        ]}
+        onDismiss={() => setShowLogoutModal(false)}
+      />
     </View>
   );
 }

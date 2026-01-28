@@ -4,7 +4,6 @@ import {
   ScrollView,
   Text,
   View,
-  useColorScheme,
   StyleSheet,
   Image,
   Platform,
@@ -18,14 +17,22 @@ import Svg, { Circle } from "react-native-svg";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
-import { format, differenceInMinutes, isAfter, addHours } from "date-fns";
-import useThemeStore from "@/stores/useThemeStore";
+import {
+  format,
+  differenceInMinutes,
+  isAfter,
+  isBefore,
+  addHours,
+  addMinutes,
+} from "date-fns";
+import { useIsDark } from "@/components/useColorScheme";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore, { PrayerName } from "@/stores/usePrayerStore";
 import { usePrayerLocation } from "@/hooks/usePrayerLocation";
 import { useTranslation } from "react-i18next";
+import { AppText } from "@/components/ui";
 
-// Configuration des prières avec icônes Material (les labels seront traduits via i18n)
+// Configuration des prières avec icônes Material
 const PRAYER_ICONS: Record<string, MaterialIconName> = {
   fajr: "dark-mode",
   dhuhr: "wb-sunny",
@@ -36,7 +43,7 @@ const PRAYER_ICONS: Record<string, MaterialIconName> = {
 
 const PRAYER_KEYS: PrayerName[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
-// Les hadiths restent en langue originale (arabe traduit) - pas de traduction i18n pour le contenu religieux
+// Hadiths
 const HADITHS = [
   {
     text: "La prière est le pilier de la religion. Celui qui l'établit a établi la religion.",
@@ -67,11 +74,10 @@ const HADITHS = [
 export default function DashboardScreen() {
   const { t } = useTranslation();
   const [now, setNow] = useState(() => new Date());
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const isDark = useIsDark();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
 
-  // Location et horaires de prière (système hybride)
+  // Location et horaires de prière
   const {
     location,
     isLoadingLocation,
@@ -81,22 +87,13 @@ export default function DashboardScreen() {
   } = usePrayerLocation();
 
   const router = useRouter();
-
-  // Utilisateur
   const { user } = useAuthStore();
-
-  // Store de prière
   const { times, status, hijriDate, togglePrayer } = usePrayerStore();
 
-  // Salutation basée sur l'heure
-  const greeting = useMemo(() => {
-    const hour = now.getHours();
-    if (hour >= 5 && hour < 12) return t("home.goodMorning");
-    if (hour >= 12 && hour < 18) return t("home.goodAfternoon");
-    return t("home.goodEvening");
-  }, [now, t]);
+  // Salutation
+  const greeting = t("home.salam");
 
-  // Construire le nom de la ville pour l'affichage
+  // Construire le nom de la ville
   const cityDisplay = useMemo(() => {
     if (isLoadingLocation) return t("home.locating");
     if (!location) return t("home.unknownLocation");
@@ -104,29 +101,57 @@ export default function DashboardScreen() {
     return parts.join(", ") || t("home.unknownLocation");
   }, [location, isLoadingLocation, t]);
 
-  // Déterminer le thème effectif
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Trouver la prochaine prière (fallback si times pas encore chargé)
-  const { nextPrayer, nextPrayerTime } = useMemo(() => {
+  // Période de grâce après l'heure de prière (en minutes)
+  // Pendant cette période, la prière reste "active" avant de passer à la suivante
+  const PRAYER_GRACE_PERIOD = 30;
+
+  // Trouver la prière en cours ou la prochaine
+  const { nextPrayer, nextPrayerTime, isInGracePeriod } = useMemo(() => {
     if (!times) {
-      return { nextPrayer: "fajr" as PrayerName, nextPrayerTime: null };
+      return {
+        nextPrayer: "fajr" as PrayerName,
+        nextPrayerTime: null,
+        isInGracePeriod: false,
+      };
     }
-    for (const key of PRAYER_KEYS) {
-      if (isAfter(times[key], now)) {
-        return { nextPrayer: key, nextPrayerTime: times[key] };
+
+    // Vérifier si on est dans la période de grâce d'une prière
+    for (let i = PRAYER_KEYS.length - 1; i >= 0; i--) {
+      const key = PRAYER_KEYS[i];
+      const prayerTime = times[key];
+      const graceEndTime = addMinutes(prayerTime, PRAYER_GRACE_PERIOD);
+
+      // Si on est entre l'heure de la prière et la fin de la période de grâce
+      if (isAfter(now, prayerTime) && isBefore(now, graceEndTime)) {
+        return {
+          nextPrayer: key,
+          nextPrayerTime: prayerTime,
+          isInGracePeriod: true,
+        };
       }
     }
+
+    // Sinon, chercher la prochaine prière future
+    for (const key of PRAYER_KEYS) {
+      if (isAfter(times[key], now)) {
+        return {
+          nextPrayer: key,
+          nextPrayerTime: times[key],
+          isInGracePeriod: false,
+        };
+      }
+    }
+
+    // Toutes les prières sont passées (après Isha + grâce), la prochaine est Fajr demain
     return {
       nextPrayer: "fajr" as PrayerName,
       nextPrayerTime: times.fajr ? addHours(times.fajr, 24) : null,
+      isInGracePeriod: false,
     };
   }, [times, now]);
 
@@ -140,13 +165,15 @@ export default function DashboardScreen() {
   const progressCircumference = 2 * Math.PI * progressRadius;
   const progressOffset = progressCircumference * (1 - progressPercent / 100);
 
-  // Countdown en minutes
+  // Countdown en minutes (null si dans la période de grâce)
   const countdownMinutes = useMemo(() => {
+    if (isInGracePeriod) return null; // Pas de countdown pendant la période de grâce
     if (!nextPrayerTime || isAfter(now, nextPrayerTime)) return null;
     return differenceInMinutes(nextPrayerTime, now);
-  }, [now, nextPrayerTime]);
+  }, [now, nextPrayerTime, isInGracePeriod]);
 
   const nextPrayerMessage = useMemo(() => {
+    if (isInGracePeriod) return t("home.now"); // "Maintenant" pendant la période de grâce
     if (countdownMinutes === null) return "";
     if (countdownMinutes <= 0) return t("home.now");
     if (countdownMinutes < 60)
@@ -157,10 +184,13 @@ export default function DashboardScreen() {
       return t("home.inHoursMinutes", { hours, minutes });
     }
     return t("home.inHours", { hours });
-  }, [countdownMinutes, t]);
+  }, [countdownMinutes, isInGracePeriod, t]);
 
-  // Format du countdown pour le badge header (heures si >= 60min, sinon minutes)
+  // Format du countdown pour le badge header
   const headerCountdown = useMemo(() => {
+    if (isInGracePeriod) {
+      return { value: t("home.now"), unit: "" }; // "Maintenant" pendant la période de grâce
+    }
     if (countdownMinutes === null) return null;
     if (countdownMinutes >= 60) {
       const hours = Math.floor(countdownMinutes / 60);
@@ -171,7 +201,7 @@ export default function DashboardScreen() {
       return { value: hours.toString(), unit: "h" };
     }
     return { value: countdownMinutes.toString(), unit: t("home.minutes") };
-  }, [countdownMinutes, t]);
+  }, [countdownMinutes, isInGracePeriod, t]);
 
   const dailyHadith = useMemo(() => {
     const seed =
@@ -183,9 +213,6 @@ export default function DashboardScreen() {
     const index = seed % HADITHS.length;
     return HADITHS[index];
   }, [now]);
-
-  // Heure courante formatée
-  const currentTime = format(now, "HH:mm");
 
   // Liste des prières avec leurs données
   const prayerList = useMemo(() => {
@@ -201,40 +228,22 @@ export default function DashboardScreen() {
     }));
   }, [times, now, nextPrayer, status, t]);
 
-  // Couleurs selon le thème
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#E2E8F0",
-    accent: "#D97706",
-    accentBg: isDark ? "rgba(217,119,6,0.2)" : "#FEF3C7",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
-
-  const headerHeight = 380;
   const isSmallScreen = screenHeight < 700 || screenWidth < 360;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* ===== HEADER ===== */}
         <View
-          style={{
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            overflow: "hidden",
-            minHeight: headerHeight,
-          }}
+          className="rounded-b-4xl overflow-hidden"
+          style={{ minHeight: 360 }}
         >
           <LinearGradient
-            colors={[colors.tealDark, colors.tealDeep]}
+            colors={["#115E59", "#0d4542"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -250,240 +259,113 @@ export default function DashboardScreen() {
           {/* Icône notification en absolute */}
           <Pressable
             onPress={() => router.push("/settings/notifications")}
-            style={{
-              position: "absolute",
-              top: 48,
-              right: 24,
-              zIndex: 10,
-              padding: 8,
-            }}
+            className="absolute top-12 right-6 z-10 p-2"
           >
             <MaterialIconsRound
               name="notifications-none"
               size={26}
               color="#fff"
             />
-            <View
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                width: 8,
-                height: 8,
-                backgroundColor: colors.accent,
-                borderRadius: 4,
-                borderWidth: 1,
-                borderColor: colors.tealDark,
-              }}
-            />
+            <View className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full border border-teal-base" />
           </Pressable>
 
           {/* Contenu du header */}
-          <View
-            style={{ paddingHorizontal: 16, paddingTop: 48, paddingBottom: 24 }}
-          >
-            {/* Badge localisation - cliquable pour actualiser */}
+          <View className="px-4 pt-12 pb-4">
+            {/* Badge localisation */}
             <Pressable
               onPress={refreshLocation}
-              style={{
-                alignSelf: "flex-start",
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.10)",
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.10)",
-                marginBottom: 20,
-              }}
+              className="self-start flex-row items-center bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-5 active:opacity-70"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               {isLoadingLocation ? (
                 <ActivityIndicator
                   size="small"
-                  color={colors.accent}
+                  color="#D97706"
                   style={{ marginRight: 6 }}
                 />
               ) : (
                 <MaterialIconsRound
                   name="location-on"
                   size={16}
-                  color={colors.accent}
+                  color="#D97706"
                   style={{ marginRight: 6 }}
                 />
               )}
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: 12,
-                  fontFamily: "Outfit_500Medium",
-                }}
-              >
+              <Text className="text-white text-xs font-outfit-medium">
                 {cityDisplay}
               </Text>
             </Pressable>
 
             {/* Date Hijri */}
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 11,
-                fontFamily: "Outfit_400Regular",
-                textAlign: "center",
-                letterSpacing: 2,
-                marginBottom: 8,
-                textTransform: "uppercase",
-              }}
-            >
+            <Text className="text-white/70 text-[11px] font-outfit-regular text-center tracking-widest mb-2 uppercase">
               {hijriDate || t("home.loadingHijri")}
             </Text>
 
-            {/* Salutation avec prénom */}
+            {/* Salutation */}
             <Text
-              style={{
-                color: "#fff",
-                fontSize: isSmallScreen ? 28 : 32,
-                fontFamily: "Outfit_700Bold",
-                textAlign: "center",
-                marginBottom: 4,
-              }}
+              className="text-white font-outfit-bold text-center mb-1"
+              style={{ fontSize: isSmallScreen ? 28 : 32 }}
             >
               {greeting}, {user?.name || t("home.guest")} 👋
             </Text>
 
             {/* Niveau et XP */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 16,
-                marginBottom: 16,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 16,
-                  gap: 6,
-                }}
-              >
-                <MaterialIconsRound
-                  name="star"
-                  size={16}
-                  color={colors.accent}
-                />
+            <View className="flex-row items-center justify-center gap-4 mb-4">
+              <View className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5">
+                <MaterialIconsRound name="star" size={16} color="#D97706" />
                 <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 13,
-                    fontFamily: "Outfit_600SemiBold",
-                  }}
+                  className="text-white font-outfit-semibold"
+                  style={{ fontSize: 13 }}
                 >
                   {t("home.level")} {user?.level || 1}
                 </Text>
               </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 16,
-                  gap: 6,
-                }}
-              >
+              <View className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-2xl gap-1.5">
                 <MaterialIconsRound name="bolt" size={16} color="#22C55E" />
                 <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 13,
-                    fontFamily: "Outfit_600SemiBold",
-                  }}
+                  className="text-white font-outfit-semibold"
+                  style={{ fontSize: 13 }}
                 >
                   {user?.xp || 0} XP
                 </Text>
               </View>
             </View>
 
-            {/* Badge prochaine prière CENTRÉ */}
+            {/* Badge prochaine prière */}
             {nextPrayer && headerCountdown && (
-              <View
-                style={{
-                  alignSelf: "center",
-                  backgroundColor: "rgba(0,0,0,0.25)",
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  marginBottom: 20,
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 14,
-                    fontFamily: "Outfit_500Medium",
-                  }}
-                >
+              <View className="self-center bg-black/25 px-4 py-2 rounded-full mb-5 flex-row items-center">
+                <Text className="text-white text-sm font-outfit-medium">
                   {t(`home.${nextPrayer}`)} {t("home.inTime", { time: "" })}
                 </Text>
-                <Text
-                  style={{
-                    color: colors.accent,
-                    fontSize: 14,
-                    fontFamily: "Outfit_700Bold",
-                  }}
-                >
+                <Text className="text-accent text-sm font-outfit-bold">
                   {headerCountdown.value} {headerCountdown.unit}
                 </Text>
               </View>
             )}
 
             {/* Barre des 5 prières */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-              }}
-            >
+            <View className="flex-row justify-between items-end">
               {prayerList.map((prayer) => {
                 const isHighlighted = prayer.isNext;
                 return (
                   <View
                     key={prayer.key}
-                    style={{
-                      alignItems: "center",
-                      opacity: isHighlighted ? 1 : 0.6,
-                      flex: 1,
-                    }}
+                    className="items-center flex-1"
+                    style={{ opacity: isHighlighted ? 1 : 0.6 }}
                   >
                     <Text
-                      style={{
-                        fontSize: 10,
-                        textTransform: "uppercase",
-                        marginBottom: 4,
-                        color: isHighlighted ? colors.accent : "#fff",
-                        fontWeight: isHighlighted ? "700" : "400",
-                        fontFamily: "Outfit_500Medium",
-                      }}
+                      className={`text-[10px] uppercase mb-1 font-outfit-medium ${
+                        isHighlighted
+                          ? "text-accent font-outfit-bold"
+                          : "text-white"
+                      }`}
                     >
                       {prayer.label}
                     </Text>
                     <Text
-                      style={{
-                        fontWeight: "600",
-                        color: "#fff",
-                        fontSize: isHighlighted ? 20 : 13,
-                        fontFamily: "Outfit_600SemiBold",
-                      }}
+                      className={`font-outfit-semibold text-white ${
+                        isHighlighted ? "text-xl" : "text-sm"
+                      }`}
                     >
                       {format(prayer.time, "HH:mm")}
                     </Text>
@@ -491,20 +373,12 @@ export default function DashboardScreen() {
                       name={prayer.icon}
                       size={isHighlighted ? 24 : 18}
                       color={
-                        isHighlighted ? colors.accent : "rgba(255,255,255,0.7)"
+                        isHighlighted ? "#D97706" : "rgba(255,255,255,0.7)"
                       }
                       style={{ marginTop: 4 }}
                     />
                     {isHighlighted && (
-                      <View
-                        style={{
-                          width: 4,
-                          height: 4,
-                          backgroundColor: colors.accent,
-                          borderRadius: 2,
-                          marginTop: 6,
-                        }}
-                      />
+                      <View className="w-1 h-1 bg-accent rounded-sm mt-1.5" />
                     )}
                   </View>
                 );
@@ -513,52 +387,27 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Contenu principal */}
-        <View style={{ paddingTop: 24, paddingHorizontal: 16 }}>
-          {/* Suivi du jour */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              marginBottom: 20,
-            }}
-          >
+        {/* ===== CONTENU PRINCIPAL ===== */}
+        <View className="pt-6 px-4">
+          {/* Section Suivi du jour */}
+          <View className="flex-row justify-between items-end mb-5">
             <View>
-              <Text
-                style={{
-                  fontSize: 22,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.textPrimary,
-                }}
-              >
+              <AppText variant="h2" className="mb-1">
                 {t("home.dailyTracking")}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                  marginTop: 4,
-                }}
-              >
+              </AppText>
+              <AppText variant="caption">
                 {t("home.prayersCompleted", { count: completedCount })}
-              </Text>
+              </AppText>
             </View>
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+
+            {/* Cercle de progression */}
+            <View className="w-[52px] h-[52px] items-center justify-center">
               <Svg width={52} height={52} style={{ position: "absolute" }}>
                 <Circle
                   cx="26"
                   cy="26"
                   r={progressRadius}
-                  stroke={colors.border}
+                  stroke={isDark ? "#334155" : "#E2E8F0"}
                   strokeWidth={4}
                   fill="transparent"
                 />
@@ -566,7 +415,7 @@ export default function DashboardScreen() {
                   cx="26"
                   cy="26"
                   r={progressRadius}
-                  stroke={colors.accent}
+                  stroke="#D97706"
                   strokeWidth={4}
                   fill="transparent"
                   strokeDasharray={progressCircumference}
@@ -576,20 +425,14 @@ export default function DashboardScreen() {
                   origin="26,26"
                 />
               </Svg>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.textSecondary,
-                }}
-              >
+              <Text className="text-[11px] font-outfit-bold text-text-secondary-light dark:text-text-secondary-dark">
                 {progressPercent}%
               </Text>
             </View>
           </View>
 
           {/* Liste des prières */}
-          <View style={{ gap: 12 }}>
+          <View className="gap-3">
             {prayerList.map((prayer) => {
               const isNext = prayer.isNext;
               const isCompleted = prayer.isCompleted;
@@ -603,131 +446,96 @@ export default function DashboardScreen() {
                     ? { onClick: () => togglePrayer(prayer.key) }
                     : {})}
                   activeOpacity={0.85}
+                  className={`flex-row items-center justify-between p-4 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark overflow-hidden ${
+                    isPast && !isNext ? "opacity-85" : ""
+                  }`}
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 16,
                     borderRadius: 20,
-                    backgroundColor: colors.card,
-                    borderWidth: 1,
-                    borderColor: colors.border,
                     borderLeftWidth: isNext ? 4 : 1,
-                    borderLeftColor: isNext ? colors.accent : colors.border,
-                    shadowColor: isNext ? colors.accent : "#000",
+                    borderLeftColor: isNext ? "#D97706" : undefined,
+                    shadowColor: isNext ? "#D97706" : "#000",
                     shadowOpacity: isNext ? 0.15 : 0.05,
                     shadowOffset: { width: 0, height: 6 },
                     shadowRadius: isNext ? 12 : 6,
                     elevation: isNext ? 6 : 2,
-                    opacity: isPast && !isNext ? 0.85 : 1,
-                    overflow: "hidden",
-                    cursor: "pointer",
+                    cursor: "pointer" as any,
                   }}
                   accessibilityRole="button"
                 >
+                  {/* Background icon si isNext */}
                   {isNext && (
                     <View
                       pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        right: 8,
-                        top: 8,
-                        opacity: 0.07,
-                      }}
+                      className="absolute right-2 top-2 opacity-[0.07]"
                     >
                       <MaterialIconsRound
                         name="mosque"
                         size={90}
-                        color={colors.textSecondary}
+                        color={isDark ? "#94A3B8" : "#64748B"}
                       />
                     </View>
                   )}
 
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
+                  <View className="flex-row items-center gap-4">
+                    {/* Icon container */}
                     <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: isNext
-                          ? colors.accentBg
+                      className={`w-11 h-11 rounded-full items-center justify-center ${
+                        isNext
+                          ? isDark
+                            ? "bg-accent/20"
+                            : "bg-[#FEF3C7]"
                           : isDark
-                            ? "#334155"
-                            : "#f1f5f9",
-                      }}
+                            ? "bg-slate-700"
+                            : "bg-slate-100"
+                      }`}
                     >
                       <MaterialIconsRound
                         name={prayer.icon}
                         size={20}
-                        color={isNext ? colors.accent : colors.textSecondary}
+                        color={
+                          isNext ? "#D97706" : isDark ? "#94A3B8" : "#64748B"
+                        }
                       />
                     </View>
+
+                    {/* Prayer details */}
                     <View>
                       <Text
-                        style={{
-                          fontFamily: isNext
-                            ? "Outfit_700Bold"
-                            : "Outfit_600SemiBold",
-                          fontSize: 16,
-                          color: colors.textPrimary,
-                        }}
+                        className={`${
+                          isNext ? "font-outfit-bold" : "font-outfit-semibold"
+                        } text-base text-text-primary-light dark:text-text-primary-dark`}
                       >
                         {prayer.label}
                       </Text>
                       <Text
-                        style={{
-                          fontSize: 13,
-                          fontFamily: "Outfit_500Medium",
-                          color: isNext ? colors.accent : colors.textSecondary,
-                          marginTop: 2,
-                        }}
+                        className={`text-sm font-outfit-medium mt-0.5 ${
+                          isNext
+                            ? "text-accent"
+                            : "text-text-secondary-light dark:text-text-secondary-dark"
+                        }`}
                       >
                         {format(prayer.time, "HH:mm")}
                         {isNext && (
-                          <Text
-                            style={{
-                              color: colors.textSecondary,
-                              fontFamily: "Outfit_400Regular",
-                            }}
-                          >
+                          <Text className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular">
                             {" "}
                             • {t("home.next")}
                           </Text>
                         )}
                       </Text>
-                      {isNext && nextPrayerMessage ? (
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontFamily: "Outfit_400Regular",
-                            color: colors.textSecondary,
-                            marginTop: 2,
-                          }}
-                        >
+                      {isNext && nextPrayerMessage && (
+                        <Text className="text-xs font-outfit-regular text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
                           {nextPrayerMessage}
                         </Text>
-                      ) : null}
+                      )}
                     </View>
                   </View>
 
+                  {/* Checkbox/completed icon */}
                   {isCompleted ? (
                     <View
+                      className="w-8 h-8 rounded-full bg-accent items-center justify-center"
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: colors.accent,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        shadowColor: colors.accent,
+                        shadowColor: "#D97706",
                         shadowOpacity: 0.3,
                         shadowOffset: { width: 0, height: 4 },
                         shadowRadius: 6,
@@ -742,10 +550,8 @@ export default function DashboardScreen() {
                     </View>
                   ) : (
                     <View
+                      className="w-8 h-8 rounded-full"
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
                         borderWidth: 2,
                         borderColor: isDark ? "#475569" : "#cbd5e1",
                       }}
@@ -764,44 +570,26 @@ export default function DashboardScreen() {
             style={{
               marginTop: 24,
               borderRadius: 16,
+              padding: 20,
               borderWidth: 1,
               borderColor: isDark ? "#334155" : "#ccfbf1",
-              padding: 20,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                gap: 12,
-              }}
-            >
+            <View className="flex-row items-start gap-3">
               <MaterialIconsRound
                 name="format-quote"
                 size={20}
-                color={colors.accent}
+                color="#D97706"
                 style={{ marginTop: 2 }}
               />
-              <View style={{ flex: 1 }}>
+              <View className="flex-1">
                 <Text
-                  style={{
-                    fontSize: 14,
-                    color: isDark ? "#cbd5e1" : "#475569",
-                    lineHeight: 22,
-                    fontFamily: "Outfit_400Regular",
-                  }}
+                  className="text-sm leading-6 font-outfit-regular"
+                  style={{ color: isDark ? "#cbd5e1" : "#475569" }}
                 >
                   « {dailyHadith.text} »
                 </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    marginTop: 8,
-                    textAlign: "right",
-                    fontFamily: "Outfit_500Medium",
-                  }}
-                >
+                <Text className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2 text-right font-outfit-medium">
                   — {dailyHadith.source}
                 </Text>
               </View>

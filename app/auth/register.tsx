@@ -13,12 +13,9 @@ import { router } from "expo-router";
 import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
-import useThemeColors from "@/hooks/useThemeColors";
-import { fonts, fontSizes, spacing, borderRadius } from "@/constants/theme";
 import useAuthStore from "@/stores/useAuthStore";
 
 export default function RegisterScreen() {
-  const colors = useThemeColors();
   const { signUpWithEmail, isLoading } = useAuthStore();
 
   const [name, setName] = useState("");
@@ -31,7 +28,6 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     setErrorMessage("");
 
-    // Validations
     if (!name.trim()) {
       setErrorMessage("Veuillez entrer votre nom");
       return;
@@ -57,7 +53,6 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Inscription via Supabase
     const result = await signUpWithEmail(email.trim(), password, name.trim());
 
     if (result.success) {
@@ -67,7 +62,6 @@ export default function RegisterScreen() {
         [{ text: "OK", onPress: () => router.replace("/(tabs)") }],
       );
     } else {
-      // Traduire les erreurs Supabase courantes
       let errorMsg = result.error || "Une erreur est survenue";
       if (errorMsg.includes("already registered")) {
         errorMsg = "Cet email est déjà utilisé";
@@ -81,87 +75,48 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header */}
         <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
+          colors={["#115E59", "#0d4542"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{
-            paddingTop: spacing["5xl"],
-            paddingBottom: spacing["4xl"],
-            paddingHorizontal: spacing.xl,
-            position: "relative",
-          }}
+          className="pt-16 pb-12 px-6 relative"
         >
           {/* Pattern islamique */}
           <Image
             source={{
               uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDdQO7DmBVbuu03IH4BocFKDFkHmlUe2HE1SMJ8hEEP0N9z-aKcbbSzlGU3DVcXn-D1v-uxMZ2Q_WWZudOeijOi0hrg4Jk0GT83F2Mo31sUwByC3xc1deVXN2ubGgZVyVREHzB26yPLeEwviGWxhQcpIR25bjDWHkZbfz8f7Mbm_HNa368vc9k55RodXtXsFNZZm_u91vUH82knn_hPTGfdAi0dWm0qcPJBjs1uyWZUCGthXhCIpJKfERne5HKVvMzjBkZIEfHly_w",
             }}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              opacity: 0.08,
-            }}
+            className="absolute inset-0 opacity-[0.08]"
             resizeMode="cover"
           />
 
           {/* Bouton retour */}
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: borderRadius.xl,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: spacing.lg,
-            }}
+            className="w-10 h-10 rounded-2xl bg-white/10 items-center justify-center mb-4"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
 
-          <Text
-            style={{
-              fontSize: fontSizes["5xl"],
-              fontFamily: fonts.bold,
-              color: "#fff",
-            }}
-          >
+          <Text className="text-4xl font-outfit-bold text-white">
             Créer un compte
           </Text>
-          <Text
-            style={{
-              fontSize: fontSizes.md,
-              fontFamily: fonts.regular,
-              color: "rgba(255,255,255,0.7)",
-              marginTop: spacing.xs,
-            }}
-          >
+          <Text className="text-base font-outfit-regular text-white/70 mt-1">
             Commencez votre voyage spirituel
           </Text>
         </LinearGradient>
 
         {/* Formulaire */}
         <ScrollView
-          style={{
-            flex: 1,
-            backgroundColor: colors.bg,
-            borderTopLeftRadius: borderRadius["3xl"],
-            borderTopRightRadius: borderRadius["3xl"],
-            marginTop: -20,
-          }}
+          className="flex-1 bg-gray-100 dark:bg-slate-900 -mt-5 rounded-t-3xl"
           contentContainerStyle={{
-            padding: spacing.xl,
+            padding: 20,
             paddingBottom: 50,
           }}
           showsVerticalScrollIndicator={false}
@@ -174,7 +129,7 @@ export default function RegisterScreen() {
             placeholder="Entrez votre nom"
             value={name}
             onChangeText={setName}
-            containerStyle={{ marginBottom: spacing.base }}
+            containerClassName="mb-4"
           />
 
           {/* Email */}
@@ -186,7 +141,7 @@ export default function RegisterScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            containerStyle={{ marginBottom: spacing.base }}
+            containerClassName="mb-4"
           />
 
           {/* Mot de passe */}
@@ -197,7 +152,7 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             isPassword
-            containerStyle={{ marginBottom: spacing.base }}
+            containerClassName="mb-4"
           />
 
           {/* Confirmer mot de passe */}
@@ -208,53 +163,28 @@ export default function RegisterScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             isPassword
-            containerStyle={{ marginBottom: spacing.lg }}
+            containerClassName="mb-5"
           />
 
           {/* Conditions */}
           <Pressable
             onPress={() => setAcceptTerms(!acceptTerms)}
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              marginBottom: spacing.xl,
-            }}
+            className="flex-row items-start mb-6"
           >
             <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: borderRadius.sm,
-                borderWidth: 2,
-                borderColor: acceptTerms ? colors.primary : colors.inputBorder,
-                backgroundColor: acceptTerms ? colors.primary : "transparent",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: spacing.md,
-                marginTop: 2,
-              }}
+              className={`w-6 h-6 rounded-md border-2 items-center justify-center mr-3 mt-0.5 ${
+                acceptTerms
+                  ? "bg-teal-800 border-teal-800"
+                  : "bg-transparent border-gray-300 dark:border-slate-600"
+              }`}
             >
               {acceptTerms && (
                 <MaterialIconsRound name="check" size={16} color="#fff" />
               )}
             </View>
-            <Text
-              style={{
-                flex: 1,
-                fontSize: fontSizes.md,
-                fontFamily: fonts.medium,
-                color: colors.textSecondary,
-                lineHeight: 20,
-              }}
-            >
+            <Text className="flex-1 text-base font-outfit-medium text-gray-500 dark:text-slate-400 leading-5">
               J'accepte les{" "}
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontFamily: fonts.bold,
-                  textDecorationLine: "underline",
-                }}
-              >
+              <Text className="text-teal-800 font-outfit-bold underline">
                 conditions d'utilisation
               </Text>{" "}
               et la politique de confidentialité.
@@ -263,10 +193,7 @@ export default function RegisterScreen() {
 
           {/* Message d'erreur */}
           {errorMessage ? (
-            <ErrorMessage
-              message={errorMessage}
-              style={{ marginBottom: spacing.base }}
-            />
+            <ErrorMessage message={errorMessage} className="mb-4" />
           ) : null}
 
           {/* Bouton inscription */}
@@ -280,32 +207,12 @@ export default function RegisterScreen() {
           />
 
           {/* Lien connexion */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: spacing["3xl"],
-            }}
-          >
-            <Text
-              style={{
-                fontSize: fontSizes.md,
-                fontFamily: fonts.medium,
-                color: colors.textSecondary,
-              }}
-            >
+          <View className="flex-row justify-center items-center mt-8">
+            <Text className="text-base font-outfit-medium text-gray-500 dark:text-slate-400">
               Déjà un compte ?
             </Text>
             <Pressable onPress={() => router.back()}>
-              <Text
-                style={{
-                  fontSize: fontSizes.md,
-                  fontFamily: fonts.bold,
-                  color: colors.primary,
-                  marginLeft: spacing.sm,
-                }}
-              >
+              <Text className="text-base font-outfit-bold text-teal-800 ml-2">
                 Se connecter
               </Text>
             </Pressable>

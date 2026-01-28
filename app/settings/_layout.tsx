@@ -8,6 +8,7 @@ export default function SettingsLayout() {
         animation: "slide_from_right",
       }}
     >
+      <Stack.Screen name="profile" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="goals" />
       <Stack.Screen name="hijri" />

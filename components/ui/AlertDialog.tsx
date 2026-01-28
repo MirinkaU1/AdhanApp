@@ -1,15 +1,10 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
-import MaterialIconsRound from "@/components/MaterialIconsRound";
+import { Modal, View, Text, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
+import MaterialIconsRound, {
+  MaterialIconName,
+} from "@/components/MaterialIconsRound";
 import AppButton from "@/components/ui/AppButton";
-import useThemeColors from "@/hooks/useThemeColors";
 import { palette } from "@/constants/theme";
 
 type AlertDialogButton = {
@@ -22,7 +17,7 @@ type AlertDialogProps = {
   visible: boolean;
   title: string;
   message?: string;
-  icon?: keyof typeof MaterialIconsRound.glyphMap;
+  icon?: MaterialIconName;
   iconColor?: string;
   buttons?: AlertDialogButton[];
   onDismiss?: () => void;
@@ -34,10 +29,15 @@ export default function AlertDialog({
   message,
   icon,
   iconColor,
-  buttons = [{ text: "OK", style: "default" }],
+  buttons,
   onDismiss,
 }: AlertDialogProps) {
-  const colors = useThemeColors();
+  const { t } = useTranslation();
+
+  // Bouton par défaut avec traduction i18n
+  const resolvedButtons = buttons ?? [
+    { text: t("common.ok"), style: "default" as const },
+  ];
 
   const handleButtonPress = (button: AlertDialogButton) => {
     button.onPress?.();
@@ -65,25 +65,21 @@ export default function AlertDialog({
       onRequestClose={onDismiss}
       statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onDismiss} activeOpacity={1}>
-        <Pressable style={styles.dialogContainer} onPress={() => {}}>
-          <View
-            style={[
-              styles.dialog,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-          >
+      <Pressable
+        className="flex-1 bg-black/50 justify-center items-center"
+        onPress={onDismiss}
+      >
+        <Pressable className="w-[85%] max-w-[400px]" onPress={() => {}}>
+          <View className="bg-white dark:bg-slate-800 rounded-[20px] p-6 border border-border-light dark:border-border-dark shadow-lg">
             {/* Icône optionnelle */}
             {icon && (
               <View
-                style={[
-                  styles.iconContainer,
-                  {
-                    backgroundColor: iconColor
-                      ? `${iconColor}15`
-                      : palette.success.light,
-                  },
-                ]}
+                className="w-16 h-16 rounded-full items-center justify-center self-center mb-4"
+                style={{
+                  backgroundColor: iconColor
+                    ? `${iconColor}15`
+                    : palette.success.light,
+                }}
               >
                 <MaterialIconsRound
                   name={icon}
@@ -95,25 +91,21 @@ export default function AlertDialog({
 
             {/* Titre */}
             <Text
-              style={[
-                styles.title,
-                { color: colors.textPrimary },
-                !icon && styles.titleNoIcon,
-              ]}
+              className={`text-xl font-outfit-bold text-center text-text-primary-light dark:text-text-primary-dark ${icon ? "mb-2" : "mb-3"}`}
             >
               {title}
             </Text>
 
             {/* Message */}
             {message && (
-              <Text style={[styles.message, { color: colors.textSecondary }]}>
+              <Text className="text-[15px] font-outfit-regular text-center leading-[22px] mb-6 text-text-secondary-light dark:text-text-secondary-dark">
                 {message}
               </Text>
             )}
 
             {/* Boutons */}
-            <View style={styles.buttonsContainer}>
-              {buttons.map((button, index) => (
+            <View className="flex-row gap-3">
+              {resolvedButtons.map((button, index) => (
                 <AppButton
                   key={index}
                   title={button.text}
@@ -131,55 +123,3 @@ export default function AlertDialog({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dialogContainer: {
-    width: "85%",
-    maxWidth: 400,
-  },
-  dialog: {
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: "Outfit_700Bold",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  titleNoIcon: {
-    marginBottom: 12,
-  },
-  message: {
-    fontSize: 15,
-    fontFamily: "Outfit_400Regular",
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    gap: 12,
-  },
-});

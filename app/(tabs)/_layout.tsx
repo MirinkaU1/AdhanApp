@@ -1,25 +1,21 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { View, useColorScheme } from "react-native";
+import { View } from "react-native";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { useTranslation } from "react-i18next";
+import { useIsDark } from "@/components/useColorScheme";
 
-import { primary, tealBase } from "@/constants/Colors";
-import useThemeStore from "@/stores/useThemeStore";
+const ACCENT_COLOR = "#D97706"; // Amber
+const TEAL_BASE = "#115E59";
 
 export default function TabLayout() {
   const { t } = useTranslation();
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
+  const isDark = useIsDark();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: primary,
+        tabBarActiveTintColor: ACCENT_COLOR,
         tabBarInactiveTintColor: isDark ? "#64748B" : "#94A3B8",
         tabBarStyle: {
           backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
@@ -61,14 +57,9 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: () => (
             <View
+              className="w-14 h-14 -mt-6 rounded-full items-center justify-center"
               style={{
-                width: 56,
-                height: 56,
-                marginTop: -24,
-                borderRadius: 28,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: tealBase,
+                backgroundColor: TEAL_BASE,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,

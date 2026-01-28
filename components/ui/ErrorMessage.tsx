@@ -1,41 +1,23 @@
 import { View, Text } from "react-native";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useThemeColors from "@/hooks/useThemeColors";
-import { fonts, fontSizes, borderRadius, spacing } from "@/constants/theme";
 
 interface ErrorMessageProps {
   message: string;
-  style?: object;
+  className?: string;
 }
 
-export default function ErrorMessage({ message, style }: ErrorMessageProps) {
-  const colors = useThemeColors();
-
+export default function ErrorMessage({
+  message,
+  className = "",
+}: ErrorMessageProps) {
   if (!message) return null;
 
   return (
     <View
-      style={[
-        {
-          backgroundColor: colors.errorBg,
-          borderRadius: borderRadius.base,
-          padding: spacing.md + 2,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: spacing.sm + 2,
-        },
-        style,
-      ]}
+      className={`bg-red-100 dark:bg-red-900/30 rounded-lg py-3 px-4 flex-row items-center gap-2 ${className}`}
     >
-      <MaterialIconsRound name="error" size={20} color={colors.error} />
-      <Text
-        style={{
-          flex: 1,
-          fontSize: fontSizes.md,
-          fontFamily: fonts.medium,
-          color: colors.errorText,
-        }}
-      >
+      <MaterialIconsRound name="error" size={20} color="#EF4444" />
+      <Text className="flex-1 text-base font-outfit-medium text-red-600 dark:text-red-400">
         {message}
       </Text>
     </View>

@@ -1,35 +1,36 @@
-import { View, ViewStyle } from "react-native";
-import useThemeColors from "@/hooks/useThemeColors";
-import { borderRadius as br, spacing } from "@/constants/theme";
+import React from "react";
+import { View } from "react-native";
+import { cn } from "@/lib/utils"; // Helper pour merger les classes (optionnel)
 
 interface AppCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
-  padding?: number;
-  radius?: number;
+  /** Additional Tailwind classes */
+  className?: string;
+  /** Variant du card */
+  variant?: "default" | "elevated" | "outlined";
 }
 
+/**
+ * AppCard - Carte standard pour conteneurs
+ * Utilise NativeWind v4 pour le styling
+ */
 export default function AppCard({
   children,
-  style,
-  padding = spacing.lg,
-  radius = br.xl,
+  className = "",
+  variant = "default",
 }: AppCardProps) {
-  const colors = useThemeColors();
+  // Classes de base
+  const baseClasses = "bg-white dark:bg-slate-800 rounded-2xl p-4";
+
+  // Classes selon le variant
+  const variantClasses = {
+    default: "border border-border-light dark:border-border-dark",
+    elevated: "shadow-sm", // Nécessite shadow support in NativeWind
+    outlined: "border-2 border-accent",
+  };
 
   return (
-    <View
-      style={[
-        {
-          backgroundColor: colors.card,
-          borderRadius: radius,
-          padding,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        style,
-      ]}
-    >
+    <View className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
       {children}
     </View>
   );

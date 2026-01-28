@@ -12,12 +12,9 @@ import { router, useNavigation } from "expo-router";
 import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
-import useThemeColors from "@/hooks/useThemeColors";
-import { fonts, fontSizes, spacing, borderRadius } from "@/constants/theme";
 import useAuthStore from "@/stores/useAuthStore";
 
 export default function LoginScreen() {
-  const colors = useThemeColors();
   const { signInWithEmail, isLoading } = useAuthStore();
   const navigation = useNavigation();
 
@@ -25,13 +22,11 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Vérifier si on peut revenir en arrière (vient de settings)
   const canGoBack = navigation.canGoBack();
 
   const handleLogin = async () => {
     setErrorMessage("");
 
-    // Validations
     if (!email.trim()) {
       setErrorMessage("Veuillez entrer votre email");
       return;
@@ -41,13 +36,11 @@ export default function LoginScreen() {
       return;
     }
 
-    // Connexion via Supabase
     const result = await signInWithEmail(email.trim(), password);
 
     if (result.success) {
       router.replace("/(tabs)");
     } else {
-      // Traduire les erreurs Supabase courantes
       let errorMsg = result.error || "Une erreur est survenue";
       if (errorMsg.includes("Invalid login credentials")) {
         errorMsg = "Email ou mot de passe incorrect";
@@ -61,39 +54,23 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header avec logo */}
         <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
+          colors={["#115E59", "#0d4542"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{
-            height: "45%",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
+          className="h-[45%] items-center justify-center relative"
         >
-          {/* Bouton retour (seulement si on vient de settings) */}
+          {/* Bouton retour */}
           {canGoBack && (
             <Pressable
               onPress={() => router.back()}
-              style={{
-                position: "absolute",
-                top: 50,
-                left: spacing.base,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-              }}
+              className="absolute top-12 left-4 w-11 h-11 rounded-full bg-white/10 items-center justify-center z-10"
             >
               <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
             </Pressable>
@@ -104,92 +81,39 @@ export default function LoginScreen() {
             source={{
               uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDdQO7DmBVbuu03IH4BocFKDFkHmlUe2HE1SMJ8hEEP0N9z-aKcbbSzlGU3DVcXn-D1v-uxMZ2Q_WWZudOeijOi0hrg4Jk0GT83F2Mo31sUwByC3xc1deVXN2ubGgZVyVREHzB26yPLeEwviGWxhQcpIR25bjDWHkZbfz8f7Mbm_HNa368vc9k55RodXtXsFNZZm_u91vUH82knn_hPTGfdAi0dWm0qcPJBjs1uyWZUCGthXhCIpJKfERne5HKVvMzjBkZIEfHly_w",
             }}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              opacity: 0.08,
-            }}
+            className="absolute inset-0 opacity-[0.08]"
             resizeMode="cover"
           />
 
           {/* Logo mosquée */}
-          <View
-            style={{
-              width: 96,
-              height: 96,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              borderRadius: borderRadius.xl,
-              transform: [{ rotate: "45deg" }],
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.2)",
-            }}
-          >
-            <View style={{ transform: [{ rotate: "-45deg" }] }}>
+          <View className="w-24 h-24 bg-white/10 rounded-2xl rotate-45 items-center justify-center border border-white/20">
+            <View className="-rotate-45">
               <MaterialIconsRound name="mosque" size={48} color="#FCD34D" />
             </View>
           </View>
 
-          <Text
-            style={{
-              fontSize: fontSizes["5xl"],
-              fontFamily: fonts.bold,
-              color: "#fff",
-              marginTop: spacing.lg,
-            }}
-          >
+          <Text className="text-white font-outfit-bold text-4xl mt-6">
             MaPrière
           </Text>
-          <Text
-            style={{
-              fontSize: fontSizes.md,
-              fontFamily: fonts.regular,
-              color: "rgba(255,255,255,0.7)",
-              marginTop: spacing.xs,
-            }}
-          >
+          <Text className="text-white/70 font-outfit-regular text-base mt-1">
             Suivez votre chemin spirituel
           </Text>
         </LinearGradient>
 
         {/* Formulaire */}
         <ScrollView
-          style={{
-            flex: 1,
-            backgroundColor: colors.bg,
-            borderTopLeftRadius: borderRadius["3xl"],
-            borderTopRightRadius: borderRadius["3xl"],
-            marginTop: -30,
-          }}
+          className="flex-1 bg-gray-100 dark:bg-slate-900 -mt-8 rounded-t-3xl"
           contentContainerStyle={{
-            padding: spacing["3xl"],
+            padding: 24,
             paddingBottom: 50,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text
-            style={{
-              fontSize: fontSizes["4xl"],
-              fontFamily: fonts.bold,
-              color: colors.textPrimary,
-              marginBottom: spacing.sm,
-            }}
-          >
+          <Text className="text-3xl font-outfit-bold text-slate-800 dark:text-slate-100 mb-2">
             Bon retour
           </Text>
-          <Text
-            style={{
-              fontSize: fontSizes.lg,
-              fontFamily: fonts.regular,
-              color: colors.textSecondary,
-              marginBottom: spacing["3xl"],
-            }}
-          >
+          <Text className="text-lg font-outfit-regular text-gray-500 dark:text-slate-400 mb-8">
             Veuillez entrer vos coordonnées.
           </Text>
 
@@ -202,7 +126,7 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            containerStyle={{ marginBottom: spacing.lg }}
+            containerClassName="mb-5"
           />
 
           {/* Mot de passe */}
@@ -213,30 +137,19 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             isPassword
-            containerStyle={{ marginBottom: spacing.md }}
+            containerClassName="mb-4"
           />
 
           {/* Mot de passe oublié */}
-          <Pressable
-            style={{ alignSelf: "flex-end", marginBottom: spacing.xl }}
-          >
-            <Text
-              style={{
-                fontSize: fontSizes.md,
-                fontFamily: fonts.semiBold,
-                color: colors.primary,
-              }}
-            >
+          <Pressable className="self-end mb-6">
+            <Text className="text-base font-outfit-semibold text-teal-800">
               Mot de passe oublié ?
             </Text>
           </Pressable>
 
           {/* Message d'erreur */}
           {errorMessage ? (
-            <ErrorMessage
-              message={errorMessage}
-              style={{ marginBottom: spacing.base }}
-            />
+            <ErrorMessage message={errorMessage} className="mb-4" />
           ) : null}
 
           {/* Bouton connexion */}
@@ -248,32 +161,12 @@ export default function LoginScreen() {
           />
 
           {/* Lien inscription */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: spacing["3xl"],
-            }}
-          >
-            <Text
-              style={{
-                fontSize: fontSizes.md,
-                fontFamily: fonts.medium,
-                color: colors.textSecondary,
-              }}
-            >
+          <View className="flex-row justify-center items-center mt-8">
+            <Text className="text-base font-outfit-medium text-gray-500 dark:text-slate-400">
               Vous n'avez pas de compte ?
             </Text>
             <Pressable onPress={() => router.push("/auth/register")}>
-              <Text
-                style={{
-                  fontSize: fontSizes.md,
-                  fontFamily: fonts.bold,
-                  color: colors.accent,
-                  marginLeft: spacing.sm,
-                }}
-              >
+              <Text className="text-base font-outfit-bold text-amber-600 ml-2">
                 S'inscrire
               </Text>
             </Pressable>

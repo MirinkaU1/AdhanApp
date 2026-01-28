@@ -1,7 +1,7 @@
-import { ScrollView, Text, View, useColorScheme } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-import useThemeStore from "@/stores/useThemeStore";
+import { AppText } from "@/components/ui";
+import { useTranslation } from "react-i18next";
 
 // Données mock pour l'historique
 const WEEK_DATA = [
@@ -36,24 +36,106 @@ const STATS = [
   { label: "Taux moyen", value: "89", unit: "%", icon: "trending-up" as const },
 ];
 
-export default function HistoryScreen() {
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+/**
+ * Composant pour une carte de stat
+ */
+function StatCard({ stat }: { stat: typeof STATS[0] }) {
+  return (
+    <View className="w-[48%] bg-white dark:bg-slate-800 rounded-2xl p-4 border border-border-light dark:border-border-dark">
+      <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 items-center justify-center mb-3">
+        <Ionicons name={stat.icon} size={20} color="#d97706" />
+      </View>
+      <Text className="text-2xl font-outfit-bold text-text-primary-light dark:text-text-primary-dark">
+        {stat.value}
+        <Text className="text-sm font-outfit-regular text-text-secondary-light dark:text-text-secondary-dark">
+          {" "}
+          {stat.unit}
+        </Text>
+      </Text>
+      <Text className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+        {stat.label}
+      </Text>
+    </View>
+  );
+}
 
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
+/**
+ * Composant pour une barre du graphique hebdomadaire
+ */
+function WeekBar({ day, completed, total, isToday }: typeof WEEK_DATA[0] & { isToday: boolean }) {
+  const heightPercent = (completed / total) * 100;
+  const isEmpty = completed === 0;
+  
+  return (
+    <View className="items-center flex-1">
+      <View className="h-20 justify-end">
+        <View
+          className={`w-6 rounded ${
+            isToday ? "bg-accent" : "bg-primary"
+          } ${isEmpty ? "opacity-20" : "opacity-100"}`}
+          style={{ 
+            height: Math.max((heightPercent * 80) / 100, 4) 
+          }}
+        />
+      </View>
+      <Text
+        className={`text-xs mt-2 ${
+          isToday
+            ? "text-accent font-outfit-semibold"
+            : "text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+        }`}
+      >
+        {day}
+      </Text>
+    </View>
+  );
+}
 
-  const bgColor = isDark ? "#0f172a" : "#f1f5f9";
-  const cardBg = isDark ? "#1e293b" : "#ffffff";
-  const textPrimary = isDark ? "#f8fafc" : "#1e293b";
-  const textSecondary = isDark ? "#94a3b8" : "#64748b";
-  const borderColor = isDark ? "#334155" : "#e2e8f0";
+/**
+ * Composant pour une cellule du calendrier
+ */
+function CalendarDay({ dayNum, isToday, completed, isFuture }: { 
+  dayNum: number; 
+  isToday: boolean; 
+  completed: boolean;
+  isFuture: boolean;
+}) {
+  if (dayNum <= 0 || dayNum > 31) {
+    return <View className="flex-1 h-9" />;
+  }
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgColor }}>
+    <View className="flex-1 h-9 items-center justify-center">
+      <View
+        className={`w-7 h-7 rounded-full items-center justify-center ${
+          isToday
+            ? "bg-accent"
+            : completed
+              ? "bg-primary"
+              : "bg-transparent"
+        } ${isFuture ? "opacity-30" : "opacity-100"}`}
+      >
+        <Text
+          className={`text-xs ${
+            isToday || completed
+              ? "text-white font-outfit-bold"
+              : "text-text-primary-light dark:text-text-primary-dark font-outfit-regular"
+          }`}
+        >
+          {dayNum}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+export default function HistoryScreen() {
+  const { t } = useTranslation();
+
+  return (
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 60,
@@ -62,263 +144,86 @@ export default function HistoryScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={{ fontSize: 28, fontWeight: "700", color: textPrimary }}>
+        <AppText variant="h1" className="mb-2">
           Statistiques
-        </Text>
-        <Text style={{ fontSize: 14, color: textSecondary, marginTop: 8 }}>
+        </AppText>
+        <AppText variant="caption">
           Suivez votre progression dans la prière
-        </Text>
+        </AppText>
 
-        {/* Stats cards */}
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 12,
-            marginTop: 24,
-          }}
-        >
+        {/* Stats cards avec flex-wrap */}
+        <View className="flex-row flex-wrap gap-3 mt-6">
           {STATS.map((stat) => (
-            <View
-              key={stat.label}
-              style={{
-                width: "48%",
-                backgroundColor: cardBg,
-                borderRadius: 16,
-                padding: 16,
-                borderWidth: 1,
-                borderColor,
-              }}
-            >
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: isDark ? "#334155" : "#f1f5f9",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <Ionicons name={stat.icon} size={20} color="#d97706" />
-              </View>
-              <Text
-                style={{ fontSize: 24, fontWeight: "700", color: textPrimary }}
-              >
-                {stat.value}
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "400",
-                    color: textSecondary,
-                  }}
-                >
-                  {" "}
-                  {stat.unit}
-                </Text>
-              </Text>
-              <Text
-                style={{ fontSize: 12, color: textSecondary, marginTop: 4 }}
-              >
-                {stat.label}
-              </Text>
-            </View>
+            <StatCard key={stat.label} stat={stat} />
           ))}
         </View>
 
         {/* Graphique de la semaine */}
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: textPrimary,
-            marginTop: 32,
-            marginBottom: 16,
-          }}
-        >
+        <AppText variant="h3" className="mt-8 mb-4">
           Cette semaine
-        </Text>
+        </AppText>
 
-        <View
-          style={{
-            backgroundColor: cardBg,
-            borderRadius: 16,
-            padding: 20,
-            borderWidth: 1,
-            borderColor,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              height: 120,
-            }}
-          >
-            {WEEK_DATA.map((day, index) => {
-              const height = (day.completed / day.total) * 80;
-              const isToday = index === 6;
-
-              return (
-                <View key={day.day} style={{ alignItems: "center", flex: 1 }}>
-                  <View style={{ height: 80, justifyContent: "flex-end" }}>
-                    <View
-                      style={{
-                        width: 24,
-                        height: Math.max(height, 4),
-                        backgroundColor: isToday ? "#d97706" : "#0f766e",
-                        borderRadius: 4,
-                        opacity: day.completed === 0 ? 0.2 : 1,
-                      }}
-                    />
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: isToday ? "#d97706" : textSecondary,
-                      marginTop: 8,
-                      fontWeight: isToday ? "600" : "400",
-                    }}
-                  >
-                    {day.day}
-                  </Text>
-                </View>
-              );
-            })}
+        <View className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-border-light dark:border-border-dark">
+          <View className="flex-row justify-between items-end h-[120px]">
+            {WEEK_DATA.map((day, index) => (
+              <WeekBar key={day.day} {...day} isToday={index === 6} />
+            ))}
           </View>
         </View>
 
-        {/* Calendrier du mois (placeholder) */}
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: textPrimary,
-            marginTop: 32,
-            marginBottom: 16,
-          }}
-        >
+        {/* Calendrier du mois */}
+        <AppText variant="h3" className="mt-8 mb-4">
           Janvier 2026
-        </Text>
+        </AppText>
 
-        <View
-          style={{
-            backgroundColor: cardBg,
-            borderRadius: 16,
-            padding: 20,
-            borderWidth: 1,
-            borderColor,
-          }}
-        >
+        <View className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-border-light dark:border-border-dark">
           {/* Jours de la semaine */}
-          <View style={{ flexDirection: "row", marginBottom: 12 }}>
+          <View className="flex-row mb-3">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
               <Text
                 key={day}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  fontSize: 12,
-                  color: textSecondary,
-                  fontWeight: "600",
-                }}
+                className="flex-1 text-center text-xs text-text-secondary-light dark:text-text-secondary-dark font-outfit-semibold"
               >
                 {day}
               </Text>
             ))}
           </View>
 
-          {/* Grille du calendrier (simplifiée) */}
+          {/* Grille du calendrier avec flex-wrap amélioré */}
           {[0, 1, 2, 3, 4].map((week) => (
-            <View key={week} style={{ flexDirection: "row", marginBottom: 8 }}>
+            <View key={week} className="flex-row mb-2">
               {[0, 1, 2, 3, 4, 5, 6].map((day) => {
                 const dayNum = week * 7 + day + 1;
-                if (dayNum > 31 || (week === 0 && day < 2)) {
-                  return <View key={day} style={{ flex: 1, height: 36 }} />;
-                }
+                // Commence le 1er janvier un mercredi (index 2)
                 const actualDay = week === 0 ? dayNum - 2 : dayNum - 2;
                 const isToday = actualDay === 25;
                 const completed = Math.random() > 0.3;
+                const isFuture = actualDay > 25;
 
                 return (
-                  <View
+                  <CalendarDay
                     key={day}
-                    style={{
-                      flex: 1,
-                      height: 36,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 14,
-                        backgroundColor: isToday
-                          ? "#d97706"
-                          : completed
-                            ? "#0f766e"
-                            : "transparent",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: actualDay > 25 ? 0.3 : 1,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: isToday || completed ? "#ffffff" : textPrimary,
-                          fontWeight: isToday ? "700" : "400",
-                        }}
-                      >
-                        {actualDay > 0 && actualDay <= 31 ? actualDay : ""}
-                      </Text>
-                    </View>
-                  </View>
+                    dayNum={actualDay}
+                    isToday={isToday}
+                    completed={completed}
+                    isFuture={isFuture}
+                  />
                 );
               })}
             </View>
           ))}
 
           {/* Légende */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 20,
-              marginTop: 16,
-            }}
-          >
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
-              <View
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: "#0f766e",
-                }}
-              />
-              <Text style={{ fontSize: 12, color: textSecondary }}>
+          <View className="flex-row justify-center gap-5 mt-4">
+            <View className="flex-row items-center gap-1.5">
+              <View className="w-3 h-3 rounded-full bg-primary" />
+              <Text className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                 5/5 prières
               </Text>
             </View>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
-              <View
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: "#d97706",
-                }}
-              />
-              <Text style={{ fontSize: 12, color: textSecondary }}>
+            <View className="flex-row items-center gap-1.5">
+              <View className="w-3 h-3 rounded-full bg-accent" />
+              <Text className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                 Aujourd'hui
               </Text>
             </View>

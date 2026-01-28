@@ -1,69 +1,51 @@
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
 import useThemeStore, { ThemeMode } from "@/stores/useThemeStore";
+import { useIsDark } from "@/components/useColorScheme";
 
 interface ThemeOption {
   id: ThemeMode;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   icon: MaterialIconName;
 }
 
 const THEMES: ThemeOption[] = [
   {
     id: "light",
-    name: "Clair",
-    description: "Thème lumineux pour la journée",
+    nameKey: "theme.light",
+    descriptionKey: "theme.lightDesc",
     icon: "light-mode",
   },
   {
     id: "dark",
-    name: "Sombre",
-    description: "Thème sombre pour économiser la batterie",
+    nameKey: "theme.dark",
+    descriptionKey: "theme.darkDesc",
     icon: "dark-mode",
   },
   {
     id: "system",
-    name: "Système",
-    description: "Suivre les paramètres de l'appareil",
+    nameKey: "theme.system",
+    descriptionKey: "theme.systemDesc",
     icon: "settings-suggest",
   },
 ];
 
 export default function ThemeScreen() {
-  const systemColorScheme = useColorScheme();
+  const { t } = useTranslation();
   const { mode: themeMode, setMode } = useThemeStore();
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#F1F5F9",
-    accent: "#F59E0B",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
+  const isDark = useIsDark();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={[colors.tealDark, colors.tealDeep]}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -74,67 +56,38 @@ export default function ThemeScreen() {
           borderBottomRightRadius: 32,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row items-center gap-4">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-              }}
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
             >
-              Thème
+              {t("theme.title")}
             </Text>
             <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_400Regular",
-                color: "rgba(255,255,255,0.7)",
-              }}
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
             >
-              Personnalisez l'apparence de l'app
+              {t("theme.subtitle")}
             </Text>
           </View>
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: "rgba(245, 158, 11, 0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(245, 158, 11, 0.2)" }}
           >
-            <MaterialIconsRound
-              name="palette"
-              size={26}
-              color={colors.accent}
-            />
+            <MaterialIconsRound name="palette" size={26} color="#F59E0B" />
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{
           paddingVertical: 24,
           paddingHorizontal: 16,
@@ -143,220 +96,120 @@ export default function ThemeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Options de thème */}
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
-          {THEMES.map((theme, index) => (
-            <Pressable
-              key={theme.id}
-              onPress={() => setMode(theme.id)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: 16,
-                borderBottomWidth: index < THEMES.length - 1 ? 1 : 0,
-                borderBottomColor: colors.border,
-                backgroundColor:
-                  themeMode === theme.id
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark">
+          {THEMES.map((theme, index) => {
+            const isSelected = themeMode === theme.id;
+            return (
+              <Pressable
+                key={theme.id}
+                onPress={() => setMode(theme.id)}
+                className="flex-row items-center justify-between p-4"
+                style={{
+                  borderBottomWidth: index < THEMES.length - 1 ? 1 : 0,
+                  borderBottomColor: isDark ? "#334155" : "#F1F5F9",
+                  backgroundColor: isSelected
                     ? isDark
                       ? "#422006"
                       : "#FEF3C7"
                     : "transparent",
-              }}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+                }}
               >
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor:
-                      themeMode === theme.id
+                <View className="flex-row items-center gap-3.5">
+                  <View
+                    className="w-12 h-12 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: isSelected
                         ? isDark
                           ? "#78350F"
                           : "#FDE68A"
                         : isDark
                           ? "#334155"
                           : "#F1F5F9",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <MaterialIconsRound
-                    name={theme.icon}
-                    size={24}
-                    color={
-                      themeMode === theme.id
-                        ? colors.accent
-                        : colors.textSecondary
-                    }
-                  />
-                </View>
-                <View>
+                    }}
+                  >
+                    <MaterialIconsRound
+                      name={theme.icon}
+                      size={24}
+                      color={
+                        isSelected ? "#F59E0B" : isDark ? "#94A3B8" : "#64748B"
+                      }
+                    />
+                  </View>
                   <Text
-                    style={{
-                      fontSize: 16,
-                      fontFamily: "Outfit_600SemiBold",
-                      color: colors.textPrimary,
-                    }}
+                    className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                    style={{ fontSize: 16 }}
                   >
-                    {theme.name}
+                    {t(theme.nameKey)}
                   </Text>
-                  {/* <Text
-                    style={{
-                      fontSize: 13,
-                      fontFamily: "Outfit_400Regular",
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {theme.description}
-                  </Text> */}
                 </View>
-              </View>
 
-              {themeMode === theme.id && (
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: colors.accent,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <MaterialIconsRound name="check" size={18} color="#fff" />
-                </View>
-              )}
-            </Pressable>
-          ))}
+                {isSelected && (
+                  <View className="w-7 h-7 rounded-full bg-accent items-center justify-center">
+                    <MaterialIconsRound name="check" size={18} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* Preview */}
         <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "Outfit_700Bold",
-            color: colors.textPrimary,
-            marginTop: 32,
-            marginBottom: 16,
-          }}
+          className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold mt-8 mb-4"
+          style={{ fontSize: 18 }}
         >
-          Aperçu
+          {t("theme.preview")}
         </Text>
 
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row gap-4">
           {/* Light preview */}
           <View
+            className="flex-1 bg-white rounded-2xl p-4"
             style={{
-              flex: 1,
-              backgroundColor: "#FFFFFF",
-              borderRadius: 20,
-              padding: 16,
               borderWidth: 2,
-              borderColor: themeMode === "light" ? colors.accent : "#E2E8F0",
+              borderColor: themeMode === "light" ? "#F59E0B" : "#E2E8F0",
             }}
           >
+            <View className="w-full h-6 bg-primary rounded-md mb-2" />
             <View
-              style={{
-                width: "100%",
-                height: 24,
-                backgroundColor: "#115E59",
-                borderRadius: 6,
-                marginBottom: 8,
-              }}
+              className="w-[70%] h-3 rounded mb-1.5"
+              style={{ backgroundColor: "#E2E8F0" }}
             />
             <View
-              style={{
-                width: "70%",
-                height: 12,
-                backgroundColor: "#E2E8F0",
-                borderRadius: 4,
-                marginBottom: 6,
-              }}
-            />
-            <View
-              style={{
-                width: "50%",
-                height: 12,
-                backgroundColor: "#E2E8F0",
-                borderRadius: 4,
-              }}
+              className="w-[50%] h-3 rounded"
+              style={{ backgroundColor: "#E2E8F0" }}
             />
             <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "Outfit_500Medium",
-                color: "#64748B",
-                textAlign: "center",
-                marginTop: 12,
-              }}
+              className="text-text-secondary-light font-outfit-medium text-center mt-3"
+              style={{ fontSize: 12 }}
             >
-              Clair
+              {t("theme.light")}
             </Text>
           </View>
 
           {/* Dark preview */}
           <View
+            className="flex-1 rounded-2xl p-4"
             style={{
-              flex: 1,
               backgroundColor: "#1E293B",
-              borderRadius: 20,
-              padding: 16,
               borderWidth: 2,
-              borderColor: themeMode === "dark" ? colors.accent : "#334155",
+              borderColor: themeMode === "dark" ? "#F59E0B" : "#334155",
             }}
           >
+            <View className="w-full h-6 bg-primary rounded-md mb-2" />
             <View
-              style={{
-                width: "100%",
-                height: 24,
-                backgroundColor: "#115E59",
-                borderRadius: 6,
-                marginBottom: 8,
-              }}
+              className="w-[70%] h-3 rounded mb-1.5"
+              style={{ backgroundColor: "#334155" }}
             />
             <View
-              style={{
-                width: "70%",
-                height: 12,
-                backgroundColor: "#334155",
-                borderRadius: 4,
-                marginBottom: 6,
-              }}
-            />
-            <View
-              style={{
-                width: "50%",
-                height: 12,
-                backgroundColor: "#334155",
-                borderRadius: 4,
-              }}
+              className="w-[50%] h-3 rounded"
+              style={{ backgroundColor: "#334155" }}
             />
             <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "Outfit_500Medium",
-                color: "#94A3B8",
-                textAlign: "center",
-                marginTop: 12,
-              }}
+              className="font-outfit-medium text-center mt-3"
+              style={{ fontSize: 12, color: "#94A3B8" }}
             >
-              Sombre
+              {t("theme.dark")}
             </Text>
           </View>
         </View>

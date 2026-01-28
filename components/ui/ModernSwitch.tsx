@@ -6,6 +6,7 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { useCallback, useEffect } from "react";
+import { useIsDark } from "@/components/useColorScheme";
 
 export interface ModernSwitchProps {
   value: boolean;
@@ -18,11 +19,16 @@ export interface ModernSwitchProps {
 export default function ModernSwitch({
   value,
   onValueChange,
-  activeColor = "#A855F7",
-  inactiveColor = "#E2E8F0",
+  activeColor = "#0f766e", // Teal primary
+  inactiveColor,
   disabled = false,
 }: ModernSwitchProps) {
+  const isDark = useIsDark();
   const progress = useSharedValue(value ? 1 : 0);
+
+  // Couleur inactive selon le thème
+  const resolvedInactiveColor =
+    inactiveColor ?? (isDark ? "#475569" : "#E2E8F0");
 
   const handlePress = useCallback(() => {
     if (disabled) return;
@@ -38,7 +44,7 @@ export default function ModernSwitch({
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      [inactiveColor, activeColor],
+      [resolvedInactiveColor, activeColor],
     ),
   }));
 

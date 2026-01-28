@@ -4,7 +4,6 @@ import {
   ScrollView,
   Text,
   View,
-  useColorScheme,
 } from "react-native";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +14,7 @@ import Purchases, {
 import ConfettiCannon from "react-native-confetti-cannon";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useThemeStore from "@/stores/useThemeStore";
+import { useIsDark } from "@/components/useColorScheme";
 import { initRevenueCat } from "@/lib/revenuecat";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
@@ -73,8 +72,7 @@ type PurchaseState = {
 
 export default function SupportScreen() {
   const { t } = useTranslation();
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const isDark = useIsDark();
   const navigation = useNavigation();
   const confettiRef = useRef<ConfettiCannon>(null);
 
@@ -86,24 +84,6 @@ export default function SupportScreen() {
   });
 
   const canGoBack = navigation.canGoBack();
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F8FAFC",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#12201F",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#E2E8F0",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-    error: isDark ? "#FCA5A5" : "#DC2626",
-    errorBg: isDark ? "rgba(239, 68, 68, 0.1)" : "#FEF2F2",
-    successBg: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5",
-    successText: isDark ? "#6EE7B7" : "#059669",
-  };
 
   // Charger les offres RevenueCat
   useEffect(() => {
@@ -189,128 +169,57 @@ export default function SupportScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header avec gradient */}
       <LinearGradient
-        colors={[colors.tealDark, colors.tealDeep]}
-        style={{
-          paddingTop: 60,
-          paddingBottom: 32,
-          paddingHorizontal: 20,
-        }}
+        colors={["#115E59", "#0d4542"]}
+        className="pt-[60px] pb-8 px-5"
       >
         {/* Bouton retour */}
         {canGoBack && (
           <Pressable
             onPress={() => router.back()}
-            style={{
-              position: "absolute",
-              top: 60,
-              left: 16,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.15)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="absolute top-[60px] left-4 w-10 h-10 rounded-full bg-white/15 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
         )}
 
         {/* Icône cœur */}
-        <View
-          style={{
-            alignSelf: "center",
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            backgroundColor: "rgba(255,255,255,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 16,
-          }}
-        >
+        <View className="self-center w-16 h-16 rounded-full bg-white/20 items-center justify-center mb-4">
           <MaterialIconsRound name="favorite" size={32} color="#FFFFFF" />
         </View>
 
-        <Text
-          style={{
-            fontFamily: "Outfit_700Bold",
-            fontSize: 28,
-            color: "#FFFFFF",
-            textAlign: "center",
-            marginBottom: 8,
-          }}
-        >
+        <Text className="font-outfit-bold text-[28px] text-white text-center mb-2">
           {t("support.title")}
         </Text>
 
-        <Text
-          style={{
-            fontFamily: "Outfit_400Regular",
-            fontSize: 16,
-            color: "rgba(255,255,255,0.85)",
-            textAlign: "center",
-            lineHeight: 24,
-          }}
-        >
+        <Text className="font-outfit-regular text-base text-white/85 text-center leading-6">
           {t("support.subtitle")}
         </Text>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Message d'introduction */}
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Outfit_400Regular",
-              fontSize: 15,
-              color: colors.textSecondary,
-              textAlign: "center",
-              lineHeight: 24,
-            }}
-          >
+        <View className="bg-card-light dark:bg-card-dark rounded-2xl p-5 mb-6 border border-border-light dark:border-border-dark">
+          <Text className="font-outfit-regular text-[15px] text-text-secondary-light dark:text-text-secondary-dark text-center leading-6">
             {t("support.intro")}
           </Text>
         </View>
 
         {/* Message d'erreur */}
         {state.error && (
-          <View
-            style={{
-              backgroundColor: colors.errorBg,
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <MaterialIconsRound name="error" size={24} color={colors.error} />
-            <Text
-              style={{
-                flex: 1,
-                fontFamily: "Outfit_500Medium",
-                fontSize: 14,
-                color: colors.error,
-              }}
-            >
+          <View className="bg-red-50 dark:bg-red-900/10 rounded-xl p-4 mb-5 flex-row items-center gap-3">
+            <MaterialIconsRound
+              name="error"
+              size={24}
+              color={isDark ? "#FCA5A5" : "#DC2626"}
+            />
+            <Text className="flex-1 font-outfit-medium text-sm text-red-600 dark:text-red-300">
               {state.error}
             </Text>
           </View>
@@ -318,40 +227,17 @@ export default function SupportScreen() {
 
         {/* Message de succès */}
         {state.success && (
-          <View
-            style={{
-              backgroundColor: colors.successBg,
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
+          <View className="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl p-4 mb-5 flex-row items-center gap-3">
             <MaterialIconsRound
               name="check-circle"
               size={24}
-              color={colors.successText}
+              color={isDark ? "#6EE7B7" : "#059669"}
             />
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Outfit_600SemiBold",
-                  fontSize: 16,
-                  color: colors.successText,
-                  marginBottom: 4,
-                }}
-              >
+            <View className="flex-1">
+              <Text className="font-outfit-semibold text-base text-emerald-600 dark:text-emerald-300 mb-1">
                 {t("support.thankYou")}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Outfit_400Regular",
-                  fontSize: 14,
-                  color: colors.successText,
-                }}
-              >
+              <Text className="font-outfit-regular text-sm text-emerald-600 dark:text-emerald-300">
                 {t("support.thankYouDesc")}
               </Text>
             </View>
@@ -359,14 +245,7 @@ export default function SupportScreen() {
         )}
 
         {/* Cartes de dons */}
-        <Text
-          style={{
-            fontFamily: "Outfit_600SemiBold",
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginBottom: 16,
-          }}
-        >
+        <Text className="font-outfit-semibold text-lg text-text-primary-light dark:text-text-primary-dark mb-4">
           {t("support.chooseDonation")}
         </Text>
 
@@ -379,57 +258,31 @@ export default function SupportScreen() {
               key={tier.id}
               onPress={() => handleDonation(tier)}
               disabled={state.loadingId !== null}
-              style={({ pressed }) => ({
-                backgroundColor: colors.card,
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 16,
+              className="bg-card-light dark:bg-card-dark rounded-2xl p-5 mb-4 active:opacity-90 active:scale-[0.98]"
+              style={{
                 borderWidth: 2,
-                borderColor: isLoading ? tier.color : colors.border,
-                opacity: pressed ? 0.9 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
+                borderColor: isLoading
+                  ? tier.color
+                  : isDark
+                    ? "#334155"
+                    : "#E2E8F0",
+              }}
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
+              <View className="flex-row items-center gap-4">
                 {/* Emoji */}
                 <View
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: `${tier.color}20`,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  className="w-14 h-14 rounded-full items-center justify-center"
+                  style={{ backgroundColor: `${tier.color}20` }}
                 >
-                  <Text style={{ fontSize: 28 }}>{tier.emoji}</Text>
+                  <Text className="text-[28px]">{tier.emoji}</Text>
                 </View>
 
                 {/* Infos */}
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Outfit_700Bold",
-                      fontSize: 20,
-                      color: colors.textPrimary,
-                      marginBottom: 4,
-                    }}
-                  >
+                <View className="flex-1">
+                  <Text className="font-outfit-bold text-xl text-text-primary-light dark:text-text-primary-dark mb-1">
                     {t(tier.titleKey)}
                   </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Outfit_400Regular",
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                    }}
-                  >
+                  <Text className="font-outfit-regular text-[13px] text-text-secondary-light dark:text-text-secondary-dark">
                     {t(tier.descriptionKey)}
                   </Text>
                 </View>
@@ -439,17 +292,12 @@ export default function SupportScreen() {
                   <ActivityIndicator size="small" color={tier.color} />
                 ) : (
                   <View
-                    style={{
-                      backgroundColor: tier.color,
-                      paddingHorizontal: 16,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                    }}
+                    className="px-4 py-2.5 rounded-xl"
+                    style={{ backgroundColor: tier.color }}
                   >
                     <Text
+                      className="font-outfit-bold text-base"
                       style={{
-                        fontFamily: "Outfit_700Bold",
-                        fontSize: 16,
                         color: tier.id === "silver" ? "#1E293B" : "#FFFFFF",
                       }}
                     >
@@ -463,159 +311,51 @@ export default function SupportScreen() {
         })}
 
         {/* Section "Pourquoi soutenir ?" */}
-        <View style={{ marginTop: 16 }}>
-          <Text
-            style={{
-              fontFamily: "Outfit_600SemiBold",
-              fontSize: 18,
-              color: colors.textPrimary,
-              marginBottom: 16,
-            }}
-          >
+        <View className="mt-4">
+          <Text className="font-outfit-semibold text-lg text-text-primary-light dark:text-text-primary-dark mb-4">
             {t("support.whySupport")}
           </Text>
 
           {/* Coûts serveurs */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 14,
-              marginBottom: 16,
-            }}
-          >
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: `${colors.tealDark}15`,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MaterialIconsRound
-                name="dns"
-                size={22}
-                color={colors.tealDark}
-              />
+          <View className="flex-row items-start gap-3.5 mb-4">
+            <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
+              <MaterialIconsRound name="dns" size={22} color="#115E59" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Outfit_600SemiBold",
-                  fontSize: 15,
-                  color: colors.textPrimary,
-                  marginBottom: 4,
-                }}
-              >
+            <View className="flex-1">
+              <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">
                 {t("support.serverCosts")}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Outfit_400Regular",
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  lineHeight: 18,
-                }}
-              >
+              <Text className="font-outfit-regular text-[13px] text-text-secondary-light dark:text-text-secondary-dark leading-[18px]">
                 {t("support.serverCostsDesc")}
               </Text>
             </View>
           </View>
 
           {/* Développement */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 14,
-              marginBottom: 16,
-            }}
-          >
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: `${colors.tealDark}15`,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MaterialIconsRound
-                name="code"
-                size={22}
-                color={colors.tealDark}
-              />
+          <View className="flex-row items-start gap-3.5 mb-4">
+            <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
+              <MaterialIconsRound name="code" size={22} color="#115E59" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Outfit_600SemiBold",
-                  fontSize: 15,
-                  color: colors.textPrimary,
-                  marginBottom: 4,
-                }}
-              >
+            <View className="flex-1">
+              <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">
                 {t("support.development")}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Outfit_400Regular",
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  lineHeight: 18,
-                }}
-              >
+              <Text className="font-outfit-regular text-[13px] text-text-secondary-light dark:text-text-secondary-dark leading-[18px]">
                 {t("support.developmentDesc")}
               </Text>
             </View>
           </View>
 
           {/* Sadaqah Jariyah */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 14,
-            }}
-          >
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: `${colors.tealDark}15`,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MaterialIconsRound
-                name="favorite"
-                size={22}
-                color={colors.tealDark}
-              />
+          <View className="flex-row items-start gap-3.5">
+            <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
+              <MaterialIconsRound name="favorite" size={22} color="#115E59" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Outfit_600SemiBold",
-                  fontSize: 15,
-                  color: colors.textPrimary,
-                  marginBottom: 4,
-                }}
-              >
+            <View className="flex-1">
+              <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">
                 {t("support.sadaqah")}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Outfit_400Regular",
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  lineHeight: 18,
-                }}
-              >
+              <Text className="font-outfit-regular text-[13px] text-text-secondary-light dark:text-text-secondary-dark leading-[18px]">
                 {t("support.sadaqahDesc")}
               </Text>
             </View>
@@ -623,16 +363,8 @@ export default function SupportScreen() {
         </View>
 
         {/* Footer */}
-        <View style={{ marginTop: 32, alignItems: "center" }}>
-          <Text
-            style={{
-              fontFamily: "Outfit_400Regular",
-              fontSize: 13,
-              color: colors.textSecondary,
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-          >
+        <View className="mt-8 items-center">
+          <Text className="font-outfit-regular text-[13px] text-text-secondary-light dark:text-text-secondary-dark text-center leading-5">
             {t("support.securePayment")} {"\n"}
             {t("support.appStorePlay")}
           </Text>

@@ -31,6 +31,8 @@ export default {
     error: "Erreur",
     retry: "Réessayer",
     cancel: "Annuler",
+    confirm: "Confirmer",
+    ok: "OK",
     save: "Enregistrer",
     back: "Retour",
     next: "Suivant",
@@ -111,14 +113,23 @@ export default {
 
     // Sections
     prayerSection: "Prières & Rappels",
+    prayersReminders: "Prières & Rappels",
     appSection: "Application",
+    application: "Application",
     aboutSection: "Compte & Support",
+    accountSupport: "Compte & Support",
+    confirmLogout: "Se déconnecter ?",
+    confirmLogoutDesc:
+      "Vous devrez vous reconnecter pour accéder à vos données.",
+    guest: "Invité",
 
     // Items
     notifications: "Notifications",
     notificationsDesc: "Rappels de prière",
     goals: "Objectifs",
     goalsDesc: "Suivi des prières",
+    prayer: "Calcul des prières",
+    prayerDesc: "Méthode et école juridique",
     hijriCalendar: "Calendrier Hijri",
     hijriCalendarDesc: "Ajustement de date",
     location: "Localisation",
@@ -138,6 +149,19 @@ export default {
     totalPrayers: "Total prières",
     streak: "Série actuelle",
     days: "jours",
+    memberSince: "Membre depuis",
+    editProfile: "Modifier le profil",
+    today: "aujourd'hui",
+    // Profile page
+    profileTitle: "Mon Profil",
+    profileSubtitle: "Gérez vos informations personnelles",
+    firstName: "Prénom",
+    firstNamePlaceholderProfile: "Entrez votre prénom",
+    saveChanges: "Enregistrer",
+    saving: "Enregistrement...",
+    profileUpdated: "Profil mis à jour avec succès",
+    profileUpdateError: "Échec de la mise à jour du profil",
+    emailNotEditable: "L'email ne peut pas être modifié",
   },
 
   // Language
@@ -159,6 +183,90 @@ export default {
     darkDesc: "Thème sombre pour vos yeux",
     system: "Système",
     systemDesc: "Suivre les paramètres de l'appareil",
+    preview: "Aperçu",
+  },
+
+  // Notifications
+  notifications: {
+    title: "Notifications",
+    subtitle: "Gérez vos rappels de prière",
+    enableNotifications: "Activer les notifications",
+    enableNotificationsDesc: "Recevoir des rappels pour les prières",
+    prayers: "Prières",
+    playAdhan: "Jouer l'Adhan",
+    info: "Les notifications seront envoyées à l'heure exacte de chaque prière selon votre localisation.",
+  },
+
+  // Goals
+  goals: {
+    title: "Objectifs quotidiens",
+    subtitle: "Définissez vos objectifs de prière",
+    prayersPerDay: "Prières par jour",
+    obligatoryGoal: "Objectif de prières obligatoires",
+    prayersDay: "prières / jour",
+    options: "Options",
+    maintainStreak: "Maintenir la série",
+    maintainStreakDesc: "Rappel si vous risquez de perdre votre série",
+    info: "Votre série augmente chaque jour où vous atteignez votre objectif. Restez régulier pour maintenir votre progression !",
+  },
+
+  // Hijri Calendar
+  hijri: {
+    title: "Ajustement Hijri",
+    subtitle: "Ajustez la date du calendrier islamique",
+    currentDate: "Date Hijri actuelle",
+    adjustment: "Ajustement",
+    noAdjustment: "Aucun ajustement",
+    day: "jour",
+    days: "jours",
+    reset: "Réinitialiser",
+    info: "L'ajustement Hijri permet de corriger la date si elle ne correspond pas à l'observation de la lune dans votre région.",
+  },
+
+  // Location
+  location: {
+    title: "Localisation",
+    autoMode: "Mode Automatique (GPS)",
+    manualMode: "Mode Manuel",
+    autoLocation: "Localisation Automatique",
+    autoLocationDesc: "Utilise le GPS pour détecter votre position exacte.",
+    unknown: "Localisation inconnue",
+    searching: "Recherche...",
+    refresh: "Actualiser ma position",
+    searchByCity: "Recherche par ville",
+    city: "Ville",
+    cityPlaceholder: "Ex: Paris, France",
+    search: "Rechercher",
+    or: "OU",
+    gpsCoordinates: "Coordonnées GPS",
+    latitude: "Latitude",
+    longitude: "Longitude",
+    applyCoordinates: "Appliquer Coordonnées",
+    instantRecalculation:
+      "Les horaires de prière seront recalculés instantanément.",
+    close: "Fermer",
+    error: "Erreur",
+    success: "Succès",
+    cityNotFound: "Aucune ville trouvée avec ce nom.",
+    searchFailed: "Impossible de trouver cette ville.",
+    invalidCoordinates: "Veuillez entrer des coordonnées valides.",
+    coordinatesOutOfRange: "Coordonnées hors limites.",
+    customLocation: "Localisation personnalisée",
+    manualPosition: "Position manuelle",
+    manualLocationSet: "Localisation manuelle définie",
+    coordinatesSaved: "Coordonnées manuelles sauvegardées.",
+    prayerTimesRecalculated:
+      "Les horaires de prière seront calculés pour cette position.",
+  },
+
+  // Prayers (for notifications screen)
+  prayers: {
+    fajr: "Fajr",
+    sunrise: "Lever du soleil",
+    dhuhr: "Dhuhr",
+    asr: "Asr",
+    maghrib: "Maghrib",
+    isha: "Isha",
   },
 
   // Support / Donation
@@ -201,5 +309,48 @@ export default {
     orContinueWith: "Ou continuer avec",
     loginButton: "Se connecter",
     registerButton: "S'inscrire",
+  },
+
+  // Prayer Settings
+  prayerSettings: {
+    title: "Calcul des Prières",
+    subtitle: "Méthode et école juridique",
+    info: "Les horaires de prière varient selon la méthode de calcul utilisée. Choisissez celle qui correspond à votre région ou école.",
+    madhabSection: "École juridique (Asr)",
+    methodSection: "Méthode de calcul",
+    asrNote:
+      "L'heure de Asr diffère selon l'école juridique : Shafi'i calcule quand l'ombre d'un objet égale sa hauteur, Hanafi quand elle atteint le double.",
+    madhab: {
+      shafi: "Shafi'i / Maliki / Hanbali",
+      shafiDesc: "Ombre = hauteur de l'objet",
+      hanafi: "Hanafi",
+      hanafiDesc: "Ombre = 2× hauteur de l'objet",
+    },
+    methods: {
+      muslimWorldLeague: "Ligue Islamique Mondiale",
+      muslimWorldLeagueDesc: "Fajr 18°, Isha 17° — Europe, Extrême-Orient",
+      egyptian: "Autorité Égyptienne",
+      egyptianDesc: "Fajr 19.5°, Isha 17.5° — Afrique, Moyen-Orient",
+      karachi: "Université de Karachi",
+      karachiDesc: "Fajr 18°, Isha 18° — Pakistan, Afghanistan",
+      northAmerica: "ISNA (Amérique du Nord)",
+      northAmericaDesc: "Fajr 15°, Isha 15° — USA, Canada",
+      ummAlQura: "Oumm al-Qura",
+      ummAlQuraDesc: "Fajr 18.5°, Isha 90min — Arabie Saoudite",
+      qatar: "Qatar",
+      qatarDesc: "Fajr 18°, Isha 90min — Qatar",
+      kuwait: "Koweït",
+      kuwaitDesc: "Fajr 18°, Isha 17.5° — Koweït",
+      dubai: "Émirats Arabes Unis",
+      dubaiDesc: "Fajr 18.2°, Isha 18.2° — UAE",
+      singapore: "MUIS (Singapour)",
+      singaporeDesc: "Fajr 20°, Isha 18° — Singapour, Malaisie",
+      tehran: "Université de Téhéran",
+      tehranDesc: "Fajr 17.7°, Isha 14° — Iran",
+      turkey: "Turquie (Diyanet)",
+      turkeyDesc: "Fajr 18°, Isha 17° — Turquie",
+      moonsightingCommittee: "Moonsighting Committee",
+      moonsightingCommitteeDesc: "Fajr 18°, Isha 18° — Observation lunaire",
+    },
   },
 };

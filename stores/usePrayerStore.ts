@@ -46,6 +46,8 @@ export type CalculationMethodName =
   | "turkey"
   | "moonsightingCommittee";
 
+export type MadhabName = "shafi" | "hanafi";
+
 type PrayerStoreState = {
   // Location
   location: LocationInfo | null;
@@ -69,6 +71,7 @@ type PrayerStoreState = {
 
   // Settings
   calculationMethod: CalculationMethodName;
+  madhab: MadhabName;
   hijriOffset: number;
   autoLocation: boolean;
   autoHijriSync: boolean;
@@ -100,6 +103,7 @@ type PrayerStoreState = {
 
   // Actions - Settings
   setCalculationMethod: (value: CalculationMethodName) => void;
+  setMadhab: (value: MadhabName) => void;
   setHijriOffset: (value: number) => void;
   setAutoLocation: (value: boolean) => void;
   setAutoHijriSync: (value: boolean) => void;
@@ -145,6 +149,7 @@ const usePrayerStore = create<PrayerStoreState>()(
 
       // Settings
       calculationMethod: "muslimWorldLeague",
+      madhab: "shafi",
       hijriOffset: 0,
       autoLocation: true,
       autoHijriSync: false,
@@ -269,6 +274,7 @@ const usePrayerStore = create<PrayerStoreState>()(
           return { ...state, dirtyDates: nextDirty };
         }),
       setCalculationMethod: (value) => set({ calculationMethod: value }),
+      setMadhab: (value) => set({ madhab: value }),
       setHijriOffset: (value) => set({ hijriOffset: value }),
       setAutoLocation: (value) => set({ autoLocation: value }),
       setAutoHijriSync: (value) => set({ autoHijriSync: value }),

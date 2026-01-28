@@ -150,6 +150,7 @@ const parseHijriRemote = (payload: any): HijriDate | null => {
 export const usePrayerEngine = (): PrayerEngineResult => {
   const {
     calculationMethod,
+    madhab,
     hijriOffset,
     autoLocation,
     autoHijriSync,
@@ -170,7 +171,7 @@ export const usePrayerEngine = (): PrayerEngineResult => {
 
     const date = new Date();
     const params = methodFactory[calculationMethod]();
-    params.madhab = Madhab.Shafi;
+    params.madhab = madhab === "hanafi" ? Madhab.Hanafi : Madhab.Shafi;
 
     const coordinates = new Coordinates(coords.latitude, coords.longitude);
     const prayerTimes = new PrayerTimes(coordinates, date, params);
@@ -190,7 +191,7 @@ export const usePrayerEngine = (): PrayerEngineResult => {
         ? prayerTimes.timeForPrayer(nextPrayer)
         : null,
     };
-  }, [coords, calculationMethod]);
+  }, [coords, calculationMethod, madhab]);
 
   const hijriLocal = useMemo(() => {
     const date = addDays(new Date(), hijriOffset);

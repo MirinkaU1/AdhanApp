@@ -1,22 +1,17 @@
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
-import useThemeStore from "@/stores/useThemeStore";
-import { ModernSwitch } from "@/components/ui";
+import { Switch } from "@/components/ui";
+import { useIsDark } from "@/components/useColorScheme";
 
 interface PrayerNotification {
   id: string;
-  name: string;
+  nameKey: string;
   arabicName: string;
   icon: MaterialIconName;
   enabled: boolean;
@@ -26,7 +21,7 @@ interface PrayerNotification {
 const INITIAL_PRAYERS: PrayerNotification[] = [
   {
     id: "fajr",
-    name: "Fajr",
+    nameKey: "prayers.fajr",
     arabicName: "الفجر",
     icon: "wb-twilight",
     enabled: true,
@@ -34,7 +29,7 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
   },
   {
     id: "sunrise",
-    name: "Lever du soleil",
+    nameKey: "prayers.sunrise",
     arabicName: "الشروق",
     icon: "wb-sunny",
     enabled: false,
@@ -42,7 +37,7 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
   },
   {
     id: "dhuhr",
-    name: "Dhuhr",
+    nameKey: "prayers.dhuhr",
     arabicName: "الظهر",
     icon: "light-mode",
     enabled: true,
@@ -50,7 +45,7 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
   },
   {
     id: "asr",
-    name: "Asr",
+    nameKey: "prayers.asr",
     arabicName: "العصر",
     icon: "wb-cloudy",
     enabled: true,
@@ -58,7 +53,7 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
   },
   {
     id: "maghrib",
-    name: "Maghrib",
+    nameKey: "prayers.maghrib",
     arabicName: "المغرب",
     icon: "nights-stay",
     enabled: true,
@@ -66,7 +61,7 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
   },
   {
     id: "isha",
-    name: "Isha",
+    nameKey: "prayers.isha",
     arabicName: "العشاء",
     icon: "dark-mode",
     enabled: true,
@@ -75,25 +70,10 @@ const INITIAL_PRAYERS: PrayerNotification[] = [
 ];
 
 export default function NotificationsScreen() {
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const { t } = useTranslation();
+  const isDark = useIsDark();
   const [globalEnabled, setGlobalEnabled] = useState(true);
   const [prayers, setPrayers] = useState(INITIAL_PRAYERS);
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#F1F5F9",
-    accent: "#A855F7",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
 
   const togglePrayerNotification = (id: string) => {
     setPrayers((prev) =>
@@ -110,10 +90,10 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={[colors.tealDark, colors.tealDeep]}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -124,67 +104,42 @@ export default function NotificationsScreen() {
           borderBottomRightRadius: 32,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row items-center gap-4">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-              }}
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
             >
-              Notifications
+              {t("notifications.title")}
             </Text>
             <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_400Regular",
-                color: "rgba(255,255,255,0.7)",
-              }}
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
             >
-              Gérez vos rappels de prière
+              {t("notifications.subtitle")}
             </Text>
           </View>
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: "rgba(168, 85, 247, 0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(168, 85, 247, 0.2)" }}
           >
             <MaterialIconsRound
               name="notifications-active"
               size={26}
-              color={colors.accent}
+              color="#A855F7"
             />
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{
           padding: 16,
           paddingBottom: 100,
@@ -192,211 +147,137 @@ export default function NotificationsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Activation globale */}
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 20,
-            padding: 20,
-            marginBottom: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16,
-              flex: 1,
-            }}
-          >
+        <View className="bg-card-light dark:bg-card-dark rounded-2xl p-5 mb-6 border border-border-light dark:border-border-dark flex-row items-center justify-between">
+          <View className="flex-row items-center gap-4 flex-1">
             <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: isDark ? "#334155" : "#F3E8FF",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-12 h-12 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#F3E8FF" }}
             >
               <MaterialIconsRound
                 name="notifications"
                 size={24}
-                color={colors.accent}
+                color="#A855F7"
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View className="flex-1">
               <Text
-                style={{
-                  fontSize: 16,
-                  fontFamily: "Outfit_600SemiBold",
-                  color: colors.textPrimary,
-                }}
+                className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                style={{ fontSize: 16 }}
                 numberOfLines={1}
               >
-                Activer les notifications
+                {t("notifications.enableNotifications")}
               </Text>
               <Text
-                style={{
-                  fontSize: 13,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                  marginTop: 2,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular mt-0.5"
+                style={{ fontSize: 13 }}
                 numberOfLines={1}
               >
-                Recevoir des rappels pour les prières
+                {t("notifications.enableNotificationsDesc")}
               </Text>
             </View>
           </View>
-          <ModernSwitch
+          <Switch
             value={globalEnabled}
             onValueChange={setGlobalEnabled}
-            activeColor={colors.accent}
+            activeColor="#A855F7"
           />
         </View>
 
         {/* Liste des prières */}
         <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "Outfit_700Bold",
-            color: colors.textPrimary,
-            marginBottom: 16,
-          }}
+          className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold mb-4"
+          style={{ fontSize: 18 }}
         >
-          Prières
+          {t("notifications.prayers")}
         </Text>
 
         <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: colors.border,
-            opacity: globalEnabled ? 1 : 0.5,
-          }}
+          className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark"
+          style={{ opacity: globalEnabled ? 1 : 0.5 }}
           pointerEvents={globalEnabled ? "auto" : "none"}
         >
           {prayers.map((prayer, index) => (
             <View
               key={prayer.id}
+              className="p-4"
               style={{
-                padding: 16,
                 borderBottomWidth: index < prayers.length - 1 ? 1 : 0,
-                borderBottomColor: colors.border,
+                borderBottomColor: isDark ? "#334155" : "#F1F5F9",
               }}
             >
               {/* Ligne principale */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 14,
-                    flex: 1,
-                  }}
-                >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3.5 flex-1">
                   <View
+                    className="w-11 h-11 rounded-full items-center justify-center"
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
                       backgroundColor: isDark
                         ? "#334155"
                         : prayer.enabled
                           ? "#F3E8FF"
                           : "#F1F5F9",
-                      alignItems: "center",
-                      justifyContent: "center",
                     }}
                   >
                     <MaterialIconsRound
                       name={prayer.icon}
                       size={22}
                       color={
-                        prayer.enabled ? colors.accent : colors.textSecondary
+                        prayer.enabled
+                          ? "#A855F7"
+                          : isDark
+                            ? "#94A3B8"
+                            : "#64748B"
                       }
                     />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View className="flex-1">
                     <Text
-                      style={{
-                        fontSize: 16,
-                        fontFamily: "Outfit_600SemiBold",
-                        color: colors.textPrimary,
-                      }}
+                      className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                      style={{ fontSize: 16 }}
                       numberOfLines={1}
                     >
-                      {prayer.name}
+                      {t(prayer.nameKey)}
                     </Text>
                     <Text
-                      style={{
-                        fontSize: 13,
-                        fontFamily: "Outfit_400Regular",
-                        color: colors.textSecondary,
-                      }}
+                      className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                      style={{ fontSize: 13 }}
                       numberOfLines={1}
                     >
                       {prayer.arabicName}
                     </Text>
                   </View>
                 </View>
-                <ModernSwitch
+                <Switch
                   value={prayer.enabled}
                   onValueChange={() => togglePrayerNotification(prayer.id)}
-                  activeColor={colors.accent}
+                  activeColor="#A855F7"
                 />
               </View>
 
               {/* Option Adhan (si notification activée et pas sunrise) */}
               {prayer.enabled && prayer.id !== "sunrise" && (
                 <View
+                  className="flex-row items-center justify-between mt-3 pt-3"
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginTop: 12,
-                    paddingTop: 12,
                     borderTopWidth: 1,
-                    borderTopColor: colors.border,
+                    borderTopColor: isDark ? "#334155" : "#F1F5F9",
                     marginLeft: 58,
                   }}
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
+                  <View className="flex-row items-center gap-2">
                     <MaterialIconsRound
                       name="volume-up"
                       size={18}
-                      color={colors.textSecondary}
+                      color={isDark ? "#94A3B8" : "#64748B"}
                     />
                     <Text
-                      style={{
-                        fontSize: 14,
-                        fontFamily: "Outfit_500Medium",
-                        color: colors.textSecondary,
-                      }}
+                      className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium"
+                      style={{ fontSize: 14 }}
                     >
-                      Jouer l'Adhan
+                      {t("notifications.playAdhan")}
                     </Text>
                   </View>
-                  <ModernSwitch
+                  <Switch
                     value={prayer.adhanEnabled}
                     onValueChange={() => togglePrayerAdhan(prayer.id)}
                     activeColor="#14B8A6"
@@ -409,28 +290,19 @@ export default function NotificationsScreen() {
 
         {/* Info */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-            marginTop: 24,
-            padding: 16,
-            backgroundColor: isDark ? "#1E3A5F" : "#EFF6FF",
-            borderRadius: 16,
-          }}
+          className="flex-row items-start gap-3 mt-6 p-4 rounded-2xl"
+          style={{ backgroundColor: isDark ? "#1E3A5F" : "#EFF6FF" }}
         >
           <MaterialIconsRound name="info" size={20} color="#3B82F6" />
           <Text
+            className="flex-1 font-outfit-regular"
             style={{
-              flex: 1,
               fontSize: 13,
-              fontFamily: "Outfit_400Regular",
               color: isDark ? "#93C5FD" : "#1E40AF",
               lineHeight: 20,
             }}
           >
-            Les notifications seront envoyées à l'heure exacte de chaque prière
-            selon votre localisation.
+            {t("notifications.info")}
           </Text>
         </View>
       </ScrollView>

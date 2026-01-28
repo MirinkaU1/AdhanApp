@@ -3,15 +3,14 @@ import { View, Text, TextInput, Pressable, TextInputProps } from "react-native";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
-import useThemeColors from "@/hooks/useThemeColors";
-import { fonts, fontSizes, borderRadius, spacing } from "@/constants/theme";
+import { useIsDark } from "@/components/useColorScheme";
 
 interface AppInputProps extends Omit<TextInputProps, "style"> {
   label?: string;
   icon?: MaterialIconName;
   error?: string;
   isPassword?: boolean;
-  containerStyle?: object;
+  containerClassName?: string;
 }
 
 export default function AppInput({
@@ -19,85 +18,55 @@ export default function AppInput({
   icon,
   error,
   isPassword = false,
-  containerStyle,
+  containerClassName = "",
   ...textInputProps
 }: AppInputProps) {
-  const colors = useThemeColors();
+  const isDark = useIsDark();
   const [showPassword, setShowPassword] = useState(false);
 
+  // Couleurs dynamiques pour les éléments qui nécessitent des props inline
+  const placeholderColor = isDark ? "#64748B" : "#94A3B8";
+  const iconColor = isDark ? "#64748B" : "#94A3B8";
+  const textColor = isDark ? "#F8FAFC" : "#1E293B";
+
   return (
-    <View style={containerStyle}>
+    <View className={containerClassName}>
       {label && (
-        <Text
-          style={{
-            fontSize: fontSizes.sm,
-            fontFamily: fonts.bold,
-            color: colors.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: 1,
-            marginBottom: spacing.sm,
-            marginLeft: spacing.xs,
-          }}
-        >
+        <Text className="text-sm font-outfit-bold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-2 ml-1">
           {label}
         </Text>
       )}
       <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: colors.input,
-          borderRadius: borderRadius.xl,
-          borderWidth: 1,
-          borderColor: error ? colors.error : colors.inputBorder,
-          paddingHorizontal: spacing.lg,
-          height: 64, // Augmenté à 64px pour matcher le bouton
-        }}
+        className={`flex-row items-center bg-slate-100 dark:bg-slate-700 rounded-2xl border px-5 h-16 ${
+          error
+            ? "border-red-500"
+            : "border-border-light dark:border-border-dark"
+        }`}
       >
-        {icon && (
-          <MaterialIconsRound
-            name={icon}
-            size={24}
-            color={colors.placeholder}
-          />
-        )}
+        {icon && <MaterialIconsRound name={icon} size={24} color={iconColor} />}
         <TextInput
-          style={{
-            flex: 1,
-            height: "100%",
-            paddingHorizontal: icon ? spacing.md : 0,
-            fontSize: fontSizes.lg,
-            fontFamily: fonts.medium,
-            color: colors.textPrimary,
-          }}
-          placeholderTextColor={colors.placeholder}
+          className={`flex-1 h-full text-lg font-outfit-medium text-text-primary-light dark:text-text-primary-dark ${icon ? "px-3" : ""}`}
+          placeholderTextColor={placeholderColor}
           secureTextEntry={isPassword && !showPassword}
+          style={{ color: textColor }}
           {...textInputProps}
         />
         {isPassword && (
           <Pressable
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={{ padding: spacing.xs }}
+            className="p-1"
           >
             <MaterialIconsRound
               name={showPassword ? "visibility" : "visibility-off"}
               size={24}
-              color={colors.placeholder}
+              color={iconColor}
             />
           </Pressable>
         )}
       </View>
       {error && (
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Outfit_500Medium",
-            color: "#EF4444",
-            marginTop: 4,
-            marginLeft: 4,
-          }}
-        >
+        <Text className="text-xs font-outfit-medium text-red-500 mt-1 ml-1">
           {error}
         </Text>
       )}

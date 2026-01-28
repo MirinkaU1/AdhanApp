@@ -28,6 +28,9 @@ interface AuthState {
   updateLevel: (level: number) => void;
   setLoading: (loading: boolean) => void;
   setSupporter: (isSupporter: boolean) => void;
+  updateProfile: (data: {
+    name?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
 
   // Supabase Auth Actions
   signInAnonymously: () => Promise<{ success: boolean; error?: string }>;
@@ -87,6 +90,45 @@ const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, isSupporter } : null,
         })),
+
+      // Mettre à jour le profil
+      updateProfile: async (data) => {
+        const currentUser = get().user;
+        if (!currentUser) {
+          return { success: false, error: "No user logged in" };
+        }
+
+        set({ isLoading: true });
+        try {
+          // Mettre à jour dans Supabase
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              username: data.name,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", currentUser.id);
+
+          if (error) {
+            set({ isLoading: false });
+            return { success: false, error: error.message };
+          }
+
+          // Mettre à jour le state local
+          set({
+            user: {
+              ...currentUser,
+              name: data.name ?? currentUser.name,
+            },
+            isLoading: false,
+          });
+
+          return { success: true };
+        } catch (error: any) {
+          set({ isLoading: false });
+          return { success: false, error: error.message };
+        }
+      },
 
       // Connexion anonyme (Guest)
       signInAnonymously: async () => {

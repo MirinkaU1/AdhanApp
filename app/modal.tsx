@@ -1,23 +1,11 @@
 import { StatusBar } from "expo-status-bar";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  useColorScheme,
-  View,
-  Text,
-} from "react-native";
+import { Platform, Pressable, ScrollView, View, Text } from "react-native";
 import { router } from "expo-router";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useThemeStore from "@/stores/useThemeStore";
+import { useIsDark } from "@/components/useColorScheme";
 
 export default function ModalScreen() {
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
+  const isDark = useIsDark();
 
   const colors = {
     bg: isDark ? "#0F172A" : "#FFFFFF",

@@ -1,35 +1,15 @@
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useThemeStore from "@/stores/useThemeStore";
+import { useIsDark } from "@/components/useColorScheme";
 
 export default function HijriScreen() {
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const { t } = useTranslation();
+  const isDark = useIsDark();
   const [adjustment, setAdjustment] = useState(0);
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#F1F5F9",
-    accent: "#D97706",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
 
   // Simulation de la date Hijri
   const getHijriDate = (adj: number) => {
@@ -38,10 +18,10 @@ export default function HijriScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={[colors.tealDark, colors.tealDeep]}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -52,201 +32,121 @@ export default function HijriScreen() {
           borderBottomRightRadius: 32,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row items-center gap-4">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-              }}
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
             >
-              Ajustement Hijri
+              {t("hijri.title")}
             </Text>
             <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_400Regular",
-                color: "rgba(255,255,255,0.7)",
-              }}
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
             >
-              Ajustez la date du calendrier islamique
+              {t("hijri.subtitle")}
             </Text>
           </View>
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: "rgba(217, 119, 6, 0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}
           >
-            <MaterialIconsRound
-              name="date-range"
-              size={26}
-              color={colors.accent}
-            />
+            <MaterialIconsRound name="date-range" size={26} color="#D97706" />
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Date actuelle */}
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            padding: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: "center",
-            marginBottom: 24,
-          }}
-        >
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl p-6 border border-border-light dark:border-border-dark items-center mb-6">
           <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Outfit_500Medium",
-              color: colors.textSecondary,
-              marginBottom: 8,
-            }}
+            className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium mb-2"
+            style={{ fontSize: 14 }}
           >
-            Date Hijri actuelle
+            {t("hijri.currentDate")}
           </Text>
           <Text
-            style={{
-              fontSize: 28,
-              fontFamily: "Outfit_700Bold",
-              color: colors.accent,
-              marginBottom: 8,
-            }}
+            className="font-outfit-bold mb-2"
+            style={{ fontSize: 28, color: "#D97706" }}
           >
             {getHijriDate(adjustment)}
           </Text>
           <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Outfit_400Regular",
-              color: colors.textSecondary,
-            }}
+            className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+            style={{ fontSize: 14 }}
           >
-            25 janvier 2026
+            {new Date().toLocaleDateString()}
           </Text>
         </View>
 
         {/* Ajustement */}
         <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "Outfit_700Bold",
-            color: colors.textPrimary,
-            marginBottom: 16,
-          }}
+          className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold mb-4"
+          style={{ fontSize: 18 }}
         >
-          Ajustement
+          {t("hijri.adjustment")}
         </Text>
 
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            padding: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 32,
-            }}
-          >
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl p-6 border border-border-light dark:border-border-dark items-center">
+          <View className="flex-row items-center gap-8">
             <Pressable
               onPress={() => setAdjustment(Math.max(-3, adjustment - 1))}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-14 h-14 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#F1F5F9" }}
             >
               <MaterialIconsRound
                 name="remove"
                 size={28}
-                color={colors.textPrimary}
+                color={isDark ? "#F8FAFC" : "#1E293B"}
               />
             </Pressable>
 
-            <View style={{ alignItems: "center", minWidth: 100 }}>
+            <View className="items-center" style={{ minWidth: 100 }}>
               <Text
+                className="font-outfit-bold"
                 style={{
                   fontSize: 56,
-                  fontFamily: "Outfit_700Bold",
                   color:
-                    adjustment === 0 ? colors.textSecondary : colors.accent,
+                    adjustment === 0
+                      ? isDark
+                        ? "#94A3B8"
+                        : "#64748B"
+                      : "#D97706",
                 }}
               >
                 {adjustment > 0 ? `+${adjustment}` : adjustment}
               </Text>
               <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 14 }}
               >
                 {adjustment === 0
-                  ? "Aucun ajustement"
+                  ? t("hijri.noAdjustment")
                   : adjustment === 1 || adjustment === -1
-                    ? "jour"
-                    : "jours"}
+                    ? t("hijri.day")
+                    : t("hijri.days")}
               </Text>
             </View>
 
             <Pressable
               onPress={() => setAdjustment(Math.min(3, adjustment + 1))}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-14 h-14 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#F1F5F9" }}
             >
               <MaterialIconsRound
                 name="add"
                 size={28}
-                color={colors.textPrimary}
+                color={isDark ? "#F8FAFC" : "#1E293B"}
               />
             </Pressable>
           </View>
@@ -255,22 +155,14 @@ export default function HijriScreen() {
           {adjustment !== 0 && (
             <Pressable
               onPress={() => setAdjustment(0)}
-              style={{
-                marginTop: 24,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                borderRadius: 20,
-              }}
+              className="mt-6 px-5 py-2.5 rounded-full"
+              style={{ backgroundColor: isDark ? "#334155" : "#F1F5F9" }}
             >
               <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_500Medium",
-                  color: colors.textSecondary,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium"
+                style={{ fontSize: 14 }}
               >
-                Réinitialiser
+                {t("hijri.reset")}
               </Text>
             </Pressable>
           )}
@@ -278,28 +170,19 @@ export default function HijriScreen() {
 
         {/* Info */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-            marginTop: 24,
-            padding: 16,
-            backgroundColor: isDark ? "#422006" : "#FEF3C7",
-            borderRadius: 16,
-          }}
+          className="flex-row items-start gap-3 mt-6 p-4 rounded-2xl"
+          style={{ backgroundColor: isDark ? "#422006" : "#FEF3C7" }}
         >
           <MaterialIconsRound name="info" size={20} color="#D97706" />
           <Text
+            className="flex-1 font-outfit-regular"
             style={{
-              flex: 1,
               fontSize: 13,
-              fontFamily: "Outfit_400Regular",
               color: isDark ? "#FCD34D" : "#92400E",
               lineHeight: 20,
             }}
           >
-            L'ajustement Hijri permet de corriger la date si elle ne correspond
-            pas à l'observation de la lune dans votre région.
+            {t("hijri.info")}
           </Text>
         </View>
       </ScrollView>

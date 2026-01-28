@@ -10,24 +10,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import usePrayerStore from "@/stores/usePrayerStore";
+import { useIsDark } from "@/components/useColorScheme";
 import { usePrayerLocation } from "@/hooks/usePrayerLocation";
 import {
-  ModernSwitch,
+  Switch,
   AppButton,
   AppInput,
   AppCard,
   AlertDialog,
 } from "@/components/ui";
-import useThemeColors from "@/hooks/useThemeColors";
-import { palette } from "@/constants/theme";
-import { tealBase, tealDark } from "@/constants/Colors";
 
 export default function LocationScreen() {
-  const colors = useThemeColors();
-  const accent = palette.success.main;
-  const accentBg = palette.success.light;
+  const { t } = useTranslation();
+  const isDark = useIsDark();
 
   // Store et Hooks
   const {
@@ -49,6 +47,7 @@ export default function LocationScreen() {
       lat: string;
       lon: string;
       name: string;
+      address?: any;
     }>
   >([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -77,7 +76,7 @@ export default function LocationScreen() {
     };
   }, []);
 
-  // Mettre à jour le champ texte si la location change (sans focus)
+  // Mettre à jour le champ texte si la location change
   useEffect(() => {
     if (storeLocation) {
       setManualCity(storeLocation.city);
@@ -102,9 +101,7 @@ export default function LocationScreen() {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`,
         {
-          headers: {
-            "User-Agent": "PrayerApp/1.0",
-          },
+          headers: { "User-Agent": "PrayerApp/1.0" },
           signal: controller.signal,
         },
       );
@@ -119,10 +116,7 @@ export default function LocationScreen() {
       setCitySuggestions(data);
       setShowSuggestions(data.length > 0);
     } catch (error: any) {
-      console.warn(
-        "Nominatim indisponible (normal dans Expo Go):",
-        error.message,
-      );
+      console.warn("Nominatim indisponible:", error.message);
       setCitySuggestions([]);
       setShowSuggestions(false);
     } finally {
@@ -133,12 +127,10 @@ export default function LocationScreen() {
   const handleCityInputChange = (text: string) => {
     setManualCity(text);
 
-    // Debounce : annuler la recherche précédente
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
-    // Nouvelle recherche après 500ms
     if (text.length >= 3) {
       debounceTimer.current = setTimeout(() => {
         searchCitySuggestions(text);
@@ -182,19 +174,19 @@ export default function LocationScreen() {
       } else {
         setAlertConfig({
           visible: true,
-          title: "Erreur",
-          message: "Aucune ville trouvée avec ce nom.",
+          title: t("location.error"),
+          message: t("location.cityNotFound"),
           icon: "error",
-          iconColor: palette.error.main,
+          iconColor: "#EF4444",
         });
       }
     } catch (error) {
       setAlertConfig({
         visible: true,
-        title: "Erreur",
-        message: "Impossible de trouver cette ville.",
+        title: t("location.error"),
+        message: t("location.searchFailed"),
         icon: "error",
-        iconColor: palette.error.main,
+        iconColor: "#EF4444",
       });
     } finally {
       setIsSearching(false);
@@ -208,10 +200,10 @@ export default function LocationScreen() {
     if (isNaN(lat) || isNaN(lng)) {
       setAlertConfig({
         visible: true,
-        title: "Erreur",
-        message: "Veuillez entrer des coordonnées valides.",
+        title: t("location.error"),
+        message: t("location.invalidCoordinates"),
         icon: "error",
-        iconColor: palette.error.main,
+        iconColor: "#EF4444",
       });
       return;
     }
@@ -219,10 +211,10 @@ export default function LocationScreen() {
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       setAlertConfig({
         visible: true,
-        title: "Erreur",
-        message: "Coordonnées hors limites.",
+        title: t("location.error"),
+        message: t("location.coordinatesOutOfRange"),
         icon: "error",
-        iconColor: palette.error.main,
+        iconColor: "#EF4444",
       });
       return;
     }
@@ -241,7 +233,6 @@ export default function LocationScreen() {
     fallbackCity = "",
   ) => {
     try {
-      // Reverse geocode pour avoir le nom
       const reverse = await Location.reverseGeocodeAsync({
         latitude: lat,
         longitude: lng,
@@ -251,10 +242,9 @@ export default function LocationScreen() {
         reverse[0]?.city ||
         reverse[0]?.region ||
         fallbackCity ||
-        "Localisation personnalisée";
+        t("location.customLocation");
       const country = reverse[0]?.country || "";
 
-      // Désactiver le mode auto et sauvegarder la localisation manuelle
       setAutoLocation(false);
       setLocation({
         latitude: lat,
@@ -265,36 +255,34 @@ export default function LocationScreen() {
 
       setAlertConfig({
         visible: true,
-        title: "Succès",
-        message: `Localisation manuelle définie : ${city}\n\nLes horaires de prière seront calculés pour cette position.`,
+        title: t("location.success"),
+        message: `${t("location.manualLocationSet")}: ${city}\n\n${t("location.prayerTimesRecalculated")}`,
         icon: "check-circle",
-        iconColor: palette.success.main,
+        iconColor: "#10B981",
       });
     } catch (e) {
-      // Fallback si reverse geocoding échoue (ex: hors ligne)
       setAutoLocation(false);
       setLocation({
         latitude: lat,
         longitude: lng,
-        city: fallbackCity || "Position manuelle",
+        city: fallbackCity || t("location.manualPosition"),
         country: "",
       });
       setAlertConfig({
         visible: true,
-        title: "Succès",
-        message:
-          "Coordonnées manuelles sauvegardées.\n\nLes horaires de prière seront calculés pour cette position.",
+        title: t("location.success"),
+        message: `${t("location.coordinatesSaved")}\n\n${t("location.prayerTimesRecalculated")}`,
         icon: "check-circle",
-        iconColor: palette.success.main,
+        iconColor: "#10B981",
       });
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={[tealBase, tealDark]}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -305,160 +293,95 @@ export default function LocationScreen() {
           borderBottomRightRadius: 32,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row items-center gap-4">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-              }}
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
             >
-              Localisation
+              {t("location.title")}
             </Text>
             <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_400Regular",
-                color: "rgba(255,255,255,0.7)",
-              }}
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
             >
-              {autoLocation ? "Mode Automatique (GPS)" : "Mode Manuel"}
+              {autoLocation ? t("location.autoMode") : t("location.manualMode")}
             </Text>
           </View>
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: accentBg,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(34, 197, 94, 0.2)" }}
           >
-            <MaterialIconsRound name="location-on" size={26} color={accent} />
+            <MaterialIconsRound name="location-on" size={26} color="#22C55E" />
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{
           paddingVertical: 24,
           paddingHorizontal: 16,
         }}
       >
         {/* Carte Mode Auto */}
-        <AppCard style={{ marginBottom: 24 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 16 }}>
+        <AppCard className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-1 pr-4">
               <Text
-                style={{
-                  fontSize: 18,
-                  fontFamily: "Outfit_600SemiBold",
-                  color: colors.textPrimary,
-                  marginBottom: 4,
-                }}
+                className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold mb-1"
+                style={{ fontSize: 18 }}
               >
-                Localisation Automatique
+                {t("location.autoLocation")}
               </Text>
               <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                  lineHeight: 20,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 14, lineHeight: 20 }}
               >
-                Utilise le GPS pour détecter votre position exacte.
+                {t("location.autoLocationDesc")}
               </Text>
             </View>
-            <ModernSwitch
+            <Switch
               value={autoLocation}
               onValueChange={setAutoLocation}
-              activeColor={accent}
+              activeColor="#22C55E"
             />
           </View>
 
           {autoLocation && (
-            <View style={{ marginTop: 8 }}>
+            <View className="mt-2">
               <View
-                style={{
-                  backgroundColor: colors.bgAlt,
-                  padding: 16,
-                  borderRadius: 12,
-                  marginBottom: 16,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
+                className="p-4 rounded-xl mb-4 border border-border-light dark:border-border-dark"
+                style={{ backgroundColor: isDark ? "#1E293B" : "#F8FAFC" }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                    marginBottom: 4,
-                  }}
-                >
+                <View className="flex-row items-center gap-3 mb-1">
                   <MaterialIconsRound
                     name="my-location"
                     size={20}
-                    color={accent}
+                    color="#22C55E"
                   />
                   <Text
-                    style={{
-                      fontFamily: "Outfit_600SemiBold",
-                      fontSize: 16,
-                      color: colors.textPrimary,
-                    }}
+                    className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                    style={{ fontSize: 16 }}
                   >
-                    {storeLocation?.city || "Localisation inconnue"}
+                    {storeLocation?.city || t("location.unknown")}
                   </Text>
                 </View>
                 <Text
-                  style={{
-                    fontFamily: "Outfit_400Regular",
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    marginLeft: 32,
-                  }}
+                  className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                  style={{ fontSize: 13, marginLeft: 32 }}
                 >
                   {storeLocation?.country || "---"}
                 </Text>
                 <Text
-                  style={{
-                    fontFamily: "Outfit_300Light",
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    marginLeft: 32,
-                    marginTop: 4,
-                  }}
+                  className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-light mt-1"
+                  style={{ fontSize: 12, marginLeft: 32 }}
                 >
                   {storeLocation?.latitude.toFixed(4)},{" "}
                   {storeLocation?.longitude.toFixed(4)}
@@ -467,7 +390,9 @@ export default function LocationScreen() {
 
               <AppButton
                 title={
-                  isLoadingLocation ? "Recherche..." : "Actualiser ma position"
+                  isLoadingLocation
+                    ? t("location.searching")
+                    : t("location.refresh")
                 }
                 onPress={() => refreshLocation()}
                 loading={isLoadingLocation}
@@ -482,38 +407,28 @@ export default function LocationScreen() {
         {!autoLocation && (
           <AppCard>
             <Text
-              style={{
-                fontSize: 18,
-                fontFamily: "Outfit_600SemiBold",
-                color: colors.textPrimary,
-                marginBottom: 16,
-              }}
+              className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold mb-4"
+              style={{ fontSize: 18 }}
             >
-              Recherche par ville
+              {t("location.searchByCity")}
             </Text>
 
             <View style={{ position: "relative", zIndex: 10 }}>
               <AppInput
-                label="Ville"
-                placeholder="Ex: Paris, France"
+                label={t("location.city")}
+                placeholder={t("location.cityPlaceholder")}
                 value={manualCity}
                 onChangeText={handleCityInputChange}
                 icon="location-city"
-                containerStyle={{ marginBottom: 0 }}
+                containerClassName="mb-0"
               />
 
               {/* Liste de suggestions */}
               {showSuggestions && citySuggestions.length > 0 && (
                 <View
+                  className="absolute left-0 right-0 bg-card-light dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden"
                   style={{
-                    position: "absolute",
                     top: "100%",
-                    left: 0,
-                    right: 0,
-                    backgroundColor: colors.card,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
                     marginTop: 4,
                     maxHeight: 200,
                     shadowColor: "#000",
@@ -521,16 +436,12 @@ export default function LocationScreen() {
                     shadowOpacity: 0.1,
                     shadowRadius: 4,
                     elevation: 3,
-                    overflow: "hidden",
                   }}
-                  onStartShouldSetResponder={() => true}
-                  onMoveShouldSetResponder={() => true}
                 >
                   <ScrollView
                     showsVerticalScrollIndicator={true}
                     nestedScrollEnabled={true}
                     keyboardShouldPersistTaps="handled"
-                    scrollEnabled={true}
                     bounces={false}
                   >
                     {citySuggestions.map((item, index) => (
@@ -538,19 +449,16 @@ export default function LocationScreen() {
                         key={`${item.lat}-${index}`}
                         onPress={() => handleSuggestionSelect(item)}
                         activeOpacity={0.7}
+                        className="p-3"
                         style={{
-                          padding: 12,
                           borderBottomWidth:
                             index < citySuggestions.length - 1 ? 1 : 0,
-                          borderBottomColor: colors.border,
+                          borderBottomColor: isDark ? "#334155" : "#F1F5F9",
                         }}
                       >
                         <Text
-                          style={{
-                            fontFamily: "Outfit_500Medium",
-                            fontSize: 14,
-                            color: colors.textPrimary,
-                          }}
+                          className="text-text-primary-light dark:text-text-primary-dark font-outfit-medium"
+                          style={{ fontSize: 14 }}
                           numberOfLines={2}
                         >
                           {item.display_name}
@@ -559,25 +467,16 @@ export default function LocationScreen() {
                     ))}
                   </ScrollView>
 
-                  {/* Bouton pour fermer */}
                   <TouchableOpacity
                     onPress={() => setShowSuggestions(false)}
-                    style={{
-                      padding: 8,
-                      backgroundColor: colors.bgAlt,
-                      borderTopWidth: 1,
-                      borderTopColor: colors.border,
-                      alignItems: "center",
-                    }}
+                    className="p-2 items-center border-t border-border-light dark:border-border-dark"
+                    style={{ backgroundColor: isDark ? "#1E293B" : "#F8FAFC" }}
                   >
                     <Text
-                      style={{
-                        fontFamily: "Outfit_500Medium",
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                      }}
+                      className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium"
+                      style={{ fontSize: 12 }}
                     >
-                      Fermer
+                      {t("location.close")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -585,78 +484,50 @@ export default function LocationScreen() {
 
               {isLoadingSuggestions && (
                 <View style={{ position: "absolute", right: 12, top: 42 }}>
-                  <ActivityIndicator size="small" color={accent} />
+                  <ActivityIndicator size="small" color="#22C55E" />
                 </View>
               )}
             </View>
 
-            <View style={{ height: 16 }} />
+            <View className="h-4" />
 
             <AppButton
-              title="Rechercher"
+              title={t("location.search")}
               onPress={handleManualSearch}
               loading={isSearching}
               variant="primary"
-              style={{ backgroundColor: accent, marginBottom: 24 }}
+              style={{ backgroundColor: "#22C55E", marginBottom: 24 }}
             />
 
             {/* Séparateur */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 24,
-              }}
-            >
-              <View
-                style={{
-                  flex: 1,
-                  height: 1,
-                  backgroundColor: colors.border,
-                }}
-              />
-              <Text
-                style={{
-                  marginHorizontal: 16,
-                  color: colors.textSecondary,
-                  fontFamily: "Outfit_500Medium",
-                }}
-              >
-                OU
+            <View className="flex-row items-center mb-6">
+              <View className="flex-1 h-px bg-border-light dark:bg-border-dark" />
+              <Text className="mx-4 text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium">
+                {t("location.or")}
               </Text>
-              <View
-                style={{
-                  flex: 1,
-                  height: 1,
-                  backgroundColor: colors.border,
-                }}
-              />
+              <View className="flex-1 h-px bg-border-light dark:bg-border-dark" />
             </View>
 
             <Text
-              style={{
-                fontSize: 18,
-                fontFamily: "Outfit_600SemiBold",
-                color: colors.textPrimary,
-                marginBottom: 16,
-              }}
+              className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold mb-4"
+              style={{ fontSize: 18 }}
             >
-              Coordonnées GPS
+              {t("location.gpsCoordinates")}
             </Text>
 
-            <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
-              <View style={{ flex: 1 }}>
+            <View className="flex-row gap-3 mb-4">
+              <View className="flex-1">
                 <AppInput
-                  label="Latitude"
+                  label={t("location.latitude")}
                   placeholder="0.0000"
                   value={latInput}
                   onChangeText={setLatInput}
                   keyboardType="numeric"
                 />
               </View>
-              <View style={{ flex: 1 }}>
+              <View className="flex-1">
                 <AppInput
-                  label="Longitude"
+                  label={t("location.longitude")}
                   placeholder="0.0000"
                   value={lngInput}
                   onChangeText={setLngInput}
@@ -666,27 +537,22 @@ export default function LocationScreen() {
             </View>
 
             <AppButton
-              title="Appliquer Coordonnées"
+              title={t("location.applyCoordinates")}
               onPress={handleCoordinateSave}
               loading={isSearching}
               variant="outline"
             />
 
             <Text
-              style={{
-                marginTop: 16,
-                fontSize: 13,
-                color: colors.textSecondary,
-                fontFamily: "Outfit_400Regular",
-                textAlign: "center",
-              }}
+              className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular text-center mt-4"
+              style={{ fontSize: 13 }}
             >
-              Les horaires de prière seront recalculés instantanément.
+              {t("location.instantRecalculation")}
             </Text>
           </AppCard>
         )}
 
-        <View style={{ height: 40 }} />
+        <View className="h-10" />
       </ScrollView>
 
       {/* AlertDialog */}
@@ -697,7 +563,7 @@ export default function LocationScreen() {
         icon={alertConfig.icon}
         iconColor={alertConfig.iconColor}
         onDismiss={() => setAlertConfig({ ...alertConfig, visible: false })}
-        buttons={[{ text: "OK", style: "primary" }]}
+        buttons={[{ text: t("common.ok"), style: "primary" }]}
       />
     </View>
   );

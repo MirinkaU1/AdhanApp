@@ -1,44 +1,23 @@
-import {
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useThemeStore from "@/stores/useThemeStore";
+import { Switch } from "@/components/ui";
+import { useIsDark } from "@/components/useColorScheme";
 
 export default function GoalsScreen() {
-  const systemColorScheme = useColorScheme();
-  const { mode: themeMode } = useThemeStore();
+  const { t } = useTranslation();
+  const isDark = useIsDark();
   const [dailyGoal, setDailyGoal] = useState(5);
-  const [sundayEnabled, setSundayEnabled] = useState(true);
-
-  const isDark =
-    themeMode === "dark" ||
-    (themeMode === "system" && systemColorScheme === "dark");
-
-  const colors = {
-    bg: isDark ? "#0F172A" : "#F3F4F6",
-    card: isDark ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDark ? "#F8FAFC" : "#1E293B",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-    border: isDark ? "#334155" : "#F1F5F9",
-    accent: "#3B82F6",
-    tealDark: "#115E59",
-    tealDeep: "#0d4542",
-  };
+  const [streakReminder, setStreakReminder] = useState(true);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={[colors.tealDark, colors.tealDeep]}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -49,198 +28,123 @@ export default function GoalsScreen() {
           borderBottomRightRadius: 32,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        <View className="flex-row items-center gap-4">
           <Pressable
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
           >
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Outfit_700Bold",
-                color: "#fff",
-              }}
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
             >
-              Objectifs quotidiens
+              {t("goals.title")}
             </Text>
             <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Outfit_400Regular",
-                color: "rgba(255,255,255,0.7)",
-              }}
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
             >
-              Définissez vos objectifs de prière
+              {t("goals.subtitle")}
             </Text>
           </View>
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: "rgba(59, 130, 246, 0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(59, 130, 246, 0.2)" }}
           >
             <MaterialIconsRound
               name="track-changes"
               size={26}
-              color={colors.accent}
+              color="#3B82F6"
             />
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Objectif quotidien */}
         <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "Outfit_700Bold",
-            color: colors.textPrimary,
-            marginBottom: 16,
-          }}
+          className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold mb-4"
+          style={{ fontSize: 18 }}
         >
-          Prières par jour
+          {t("goals.prayersPerDay")}
         </Text>
 
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            padding: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: "center",
-            marginBottom: 24,
-          }}
-        >
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl p-6 border border-border-light dark:border-border-dark items-center mb-6">
           <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Outfit_500Medium",
-              color: colors.textSecondary,
-              marginBottom: 16,
-            }}
+            className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium mb-4"
+            style={{ fontSize: 14 }}
           >
-            Objectif de prières obligatoires
+            {t("goals.obligatoryGoal")}
           </Text>
 
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 24,
-            }}
-          >
+          <View className="flex-row items-center gap-6">
             <Pressable
               onPress={() => setDailyGoal(Math.max(1, dailyGoal - 1))}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-12 h-12 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#F1F5F9" }}
             >
               <MaterialIconsRound
                 name="remove"
                 size={24}
-                color={colors.textPrimary}
+                color={isDark ? "#F8FAFC" : "#1E293B"}
               />
             </Pressable>
 
-            <View style={{ alignItems: "center" }}>
+            <View className="items-center">
               <Text
-                style={{
-                  fontSize: 48,
-                  fontFamily: "Outfit_700Bold",
-                  color: colors.accent,
-                }}
+                className="font-outfit-bold"
+                style={{ fontSize: 48, color: "#3B82F6" }}
               >
                 {dailyGoal}
               </Text>
               <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Outfit_400Regular",
-                  color: colors.textSecondary,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 14 }}
               >
-                prières / jour
+                {t("goals.prayersDay")}
               </Text>
             </View>
 
             <Pressable
               onPress={() => setDailyGoal(Math.min(5, dailyGoal + 1))}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-12 h-12 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#F1F5F9" }}
             >
               <MaterialIconsRound
                 name="add"
                 size={24}
-                color={colors.textPrimary}
+                color={isDark ? "#F8FAFC" : "#1E293B"}
               />
             </Pressable>
           </View>
 
           {/* Indicateur visuel */}
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 8,
-              marginTop: 24,
-            }}
-          >
+          <View className="flex-row gap-2 mt-6">
             {[1, 2, 3, 4, 5].map((num) => (
               <View
                 key={num}
+                className="w-10 h-10 rounded-full items-center justify-center"
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
                   backgroundColor:
                     num <= dailyGoal
-                      ? colors.accent
+                      ? "#3B82F6"
                       : isDark
-                      ? "#334155"
-                      : "#E2E8F0",
-                  alignItems: "center",
-                  justifyContent: "center",
+                        ? "#334155"
+                        : "#E2E8F0",
                 }}
               >
                 <MaterialIconsRound
                   name="check"
                   size={20}
-                  color={num <= dailyGoal ? "#fff" : colors.textSecondary}
+                  color={
+                    num <= dailyGoal ? "#fff" : isDark ? "#94A3B8" : "#64748B"
+                  }
                 />
               </View>
             ))}
@@ -249,43 +153,18 @@ export default function GoalsScreen() {
 
         {/* Options */}
         <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "Outfit_700Bold",
-            color: colors.textPrimary,
-            marginBottom: 16,
-          }}
+          className="text-text-primary-light dark:text-text-primary-dark font-outfit-bold mb-4"
+          style={{ fontSize: 18 }}
         >
-          Options
+          {t("goals.options")}
         </Text>
 
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 24,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: 16,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark">
+          <View className="flex-row items-center justify-between p-4">
+            <View className="flex-row items-center gap-3.5">
               <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: isDark ? "#334155" : "#FEF3C7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                className="w-11 h-11 rounded-full items-center justify-center"
+                style={{ backgroundColor: isDark ? "#334155" : "#FEF3C7" }}
               >
                 <MaterialIconsRound
                   name="local-fire-department"
@@ -295,58 +174,42 @@ export default function GoalsScreen() {
               </View>
               <View>
                 <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "Outfit_600SemiBold",
-                    color: colors.textPrimary,
-                  }}
+                  className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                  style={{ fontSize: 16 }}
                 >
-                  Maintenir la série
+                  {t("goals.maintainStreak")}
                 </Text>
                 <Text
-                  style={{
-                    fontSize: 13,
-                    fontFamily: "Outfit_400Regular",
-                    color: colors.textSecondary,
-                  }}
+                  className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                  style={{ fontSize: 13 }}
                 >
-                  Rappel si vous risquez de perdre votre série
+                  {t("goals.maintainStreakDesc")}
                 </Text>
               </View>
             </View>
             <Switch
-              value={sundayEnabled}
-              onValueChange={setSundayEnabled}
-              trackColor={{ false: "#e2e8f0", true: "#F59E0B" }}
-              thumbColor="#ffffff"
+              value={streakReminder}
+              onValueChange={setStreakReminder}
+              activeColor="#F59E0B"
             />
           </View>
         </View>
 
         {/* Info */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-            marginTop: 24,
-            padding: 16,
-            backgroundColor: isDark ? "#1E3A5F" : "#EFF6FF",
-            borderRadius: 16,
-          }}
+          className="flex-row items-start gap-3 mt-6 p-4 rounded-2xl"
+          style={{ backgroundColor: isDark ? "#1E3A5F" : "#EFF6FF" }}
         >
           <MaterialIconsRound name="info" size={20} color="#3B82F6" />
           <Text
+            className="flex-1 font-outfit-regular"
             style={{
-              flex: 1,
               fontSize: 13,
-              fontFamily: "Outfit_400Regular",
               color: isDark ? "#93C5FD" : "#1E40AF",
               lineHeight: 20,
             }}
           >
-            Votre série augmente chaque jour où vous atteignez votre objectif.
-            Restez régulier pour maintenir votre progression !
+            {t("goals.info")}
           </Text>
         </View>
       </ScrollView>

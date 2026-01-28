@@ -10,6 +10,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
+import { useColorScheme as useSystemColorScheme } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
   Outfit_300Light,
@@ -21,8 +22,9 @@ import {
 import { loadSavedLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
+import useThemeStore from "@/stores/useThemeStore";
 
-import { useColorScheme } from "@/components/useColorScheme";
+import { useColorScheme } from "nativewind";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -69,11 +71,24 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const systemColorScheme = useSystemColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const { mode: themeMode, _hasHydrated } = useThemeStore();
   const router = useRouter();
   const segments = useSegments();
   const { isAuthenticated } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
+
+  // Synchroniser le thème du store avec NativeWind (seulement après hydratation)
+  useEffect(() => {
+    if (!_hasHydrated) return;
+
+    if (themeMode === "system") {
+      setColorScheme(systemColorScheme ?? "light");
+    } else {
+      setColorScheme(themeMode);
+    }
+  }, [themeMode, systemColorScheme, setColorScheme, _hasHydrated]);
 
   // Vérifier l'état d'authentification au démarrage
   useEffect(() => {
