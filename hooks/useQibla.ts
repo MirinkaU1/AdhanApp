@@ -31,8 +31,8 @@ const MECCA_COORDS = {
 // Seuil d'alignement en degrés (±2°)
 const ALIGNMENT_THRESHOLD = 2;
 
-// Taille du buffer pour le lissage
-const SMOOTHING_BUFFER_SIZE = 5;
+// Taille du buffer pour le lissage (réduit pour plus de réactivité)
+const SMOOTHING_BUFFER_SIZE = 3;
 
 // Calcul de la distance entre deux points (formule de Haversine)
 const calculateDistance = (
@@ -65,43 +65,27 @@ const getAccuracyLevel = (accuracy: number): AccuracyLevel => {
   return "low";
 };
 
-// Moyenne circulaire pour les angles (gère le passage 359° -> 0°)
-const circularMean = (angles: number[]): number => {
+// Fonction utilitaire pour la moyenne circulaire (CORRECTION CRITIQUE)
+// Utilise cos pour x et sin pour y dans atan2(y, x)
+const getAverageAngle = (angles: number[]): number => {
   if (angles.length === 0) return 0;
-
-  let sinSum = 0;
-  let cosSum = 0;
-
+  let x = 0;
+  let y = 0;
   for (const angle of angles) {
     const rad = (angle * Math.PI) / 180;
-    sinSum += Math.sin(rad);
-    cosSum += Math.cos(rad);
+    x += Math.cos(rad);
+    y += Math.sin(rad);
   }
-
-  const avgRad = Math.atan2(sinSum / angles.length, cosSum / angles.length);
+  const avgRad = Math.atan2(y, x);
   let avgDeg = (avgRad * 180) / Math.PI;
-
   if (avgDeg < 0) avgDeg += 360;
   return avgDeg;
 };
 
-// Filtre passe-bas avec gestion du passage 0°/360°
-const lowPassFilter = (
-  newValue: number,
-  oldValue: number,
-  alpha: number = 0.2,
-): number => {
-  let diff = newValue - oldValue;
-
-  // Gérer le passage de 359° à 0°
-  if (diff > 180) diff -= 360;
-  if (diff < -180) diff += 360;
-
-  let result = oldValue + alpha * diff;
-  if (result < 0) result += 360;
-  if (result >= 360) result -= 360;
-
-  return result;
+// Fonction pour la différence minimale entre deux angles (CORRECTION CRITIQUE)
+const getShortestAngleDifference = (angle1: number, angle2: number): number => {
+  const diff = Math.abs(angle1 - angle2) % 360;
+  return diff > 180 ? 360 - diff : diff;
 };
 
 // Obtenir la direction cardinale
@@ -130,6 +114,7 @@ export default function useQibla(): UseQiblaReturn {
   const headingSubscriptionRef = useRef<Location.LocationSubscription | null>(
     null,
   );
+  const qiblaBearingRef = useRef<number | null>(null);
 
   // Démarrer le watch du heading avec True North
   const startHeadingWatch = useCallback(async () => {
@@ -140,48 +125,51 @@ export default function useQibla(): UseQiblaReturn {
       }
 
       // Utiliser watchHeadingAsync pour obtenir le True North
-      // Cela gère automatiquement la déclinaison magnétique
       headingSubscriptionRef.current = await Location.watchHeadingAsync(
         (heading) => {
-          // trueHeading = nord géographique (corrigé pour la déclinaison magnétique)
-          // magHeading = nord magnétique
-          const trueHeading = heading.trueHeading;
-          const accuracy = heading.accuracy;
+          const { trueHeading, magHeading, accuracy } = heading;
+          // Priorité au True Heading (Vrai Nord), sinon Magnétique
+          const currentHeading = trueHeading >= 0 ? trueHeading : magHeading;
 
-          // Ajouter au buffer pour le lissage
-          headingBufferRef.current.push(trueHeading);
-          if (headingBufferRef.current.length > SMOOTHING_BUFFER_SIZE) {
-            headingBufferRef.current.shift();
+          // Ignorer les valeurs invalides
+          if (currentHeading < 0 || isNaN(currentHeading)) return;
+
+          // 1. Gestion du Buffer (Smoothing)
+          headingBufferRef.current = [
+            ...headingBufferRef.current,
+            currentHeading,
+          ].slice(-SMOOTHING_BUFFER_SIZE);
+
+          // 2. Calcul Moyenne Circulaire Correcte
+          const smoothed = getAverageAngle(headingBufferRef.current);
+          smoothedHeadingRef.current = smoothed;
+
+          // 3. Calcul de l'alignement Correct
+          const qibla = qiblaBearingRef.current;
+          let aligned = false;
+
+          if (qibla !== null) {
+            const diff = getShortestAngleDifference(qibla, smoothed);
+            aligned = diff <= ALIGNMENT_THRESHOLD;
           }
-
-          // Calculer la moyenne lissée
-          const averagedHeading = circularMean(headingBufferRef.current);
-
-          // Appliquer un filtre passe-bas supplémentaire pour plus de fluidité
-          const smoothedHeading = lowPassFilter(
-            averagedHeading,
-            smoothedHeadingRef.current,
-            0.25,
-          );
-          smoothedHeadingRef.current = smoothedHeading;
 
           // Déterminer le niveau de précision
           const accuracyLevel = getAccuracyLevel(accuracy);
 
+          // Mise à jour du state (optimisée pour éviter trop de re-renders)
           setState((prev) => {
-            // Vérifier si aligné avec la Qibla (±2°)
-            let isAligned = false;
-            if (prev.qiblaBearing !== null) {
-              const diff = Math.abs(smoothedHeading - prev.qiblaBearing);
-              const normalizedDiff = diff > 180 ? 360 - diff : diff;
-              isAligned = normalizedDiff <= ALIGNMENT_THRESHOLD;
+            // Ne pas set state si la valeur change peu (< 0.5 degré)
+            if (
+              Math.abs(prev.deviceHeading - smoothed) < 0.5 &&
+              prev.isAligned === aligned
+            ) {
+              return prev;
             }
-
             return {
               ...prev,
-              deviceHeading: smoothedHeading,
-              trueHeading: trueHeading,
-              isAligned,
+              deviceHeading: smoothed,
+              trueHeading: currentHeading,
+              isAligned: aligned,
               accuracyLevel,
             };
           });
@@ -226,6 +214,9 @@ export default function useQibla(): UseQiblaReturn {
       // Calculer la direction de la Qibla avec la librairie adhan
       const coordinates = new Coordinates(latitude, longitude);
       const qiblaDirection = Qibla(coordinates);
+
+      // Stocker dans la ref pour accès synchrone dans le callback
+      qiblaBearingRef.current = qiblaDirection;
 
       // Calculer la distance à La Mecque
       const distance = calculateDistance(

@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import Svg, { Line, Rect } from "react-native-svg";
@@ -32,14 +33,31 @@ export default function QiblaScreen() {
   } = useQibla();
 
   // Animation de rotation de la boussole
+  // L'aiguille doit pointer vers la Qibla relativement à l'orientation du téléphone
   const rotation = useSharedValue(0);
+  const prevRotation = useRef(0);
 
   useEffect(() => {
     if (qiblaBearing !== null) {
-      const targetRotation = qiblaBearing - deviceHeading;
-      rotation.value = withSpring(targetRotation, {
-        damping: 20,
-        stiffness: 90,
+      // Calculer la différence et normaliser entre -180 et 180
+      let targetDiff = qiblaBearing - deviceHeading;
+
+      // Normaliser pour prendre le chemin le plus court
+      if (targetDiff > 180) targetDiff -= 360;
+      if (targetDiff < -180) targetDiff += 360;
+
+      // Calculer le delta depuis la position actuelle pour éviter les sauts
+      let delta = targetDiff - prevRotation.current;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+
+      const newRotation = prevRotation.current + delta;
+      prevRotation.current = newRotation;
+
+      // Animation rapide et fluide
+      rotation.value = withTiming(newRotation, {
+        duration: 100,
+        easing: Easing.out(Easing.quad),
       });
     }
   }, [deviceHeading, qiblaBearing]);
