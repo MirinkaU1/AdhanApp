@@ -57,7 +57,7 @@ export default function TabLayout() {
   const tabBarPaddingBottom = isSmall ? 16 : isLarge ? 24 : 20;
   const tabBarPaddingTop = isSmall ? 8 : isLarge ? 12 : 10;
   const labelSize = isSmall ? 9 : isLarge ? 12 : 10;
-  const iconSize = isSmall ? 24 : isLarge ? 28 : 26;
+  const iconSize = isSmall ? 22 : isLarge ? 26 : 24;
   const centerButtonSize = isSmall ? 50 : isLarge ? 62 : 56;
   const centerButtonMargin = isSmall ? -20 : isLarge ? -26 : -24;
   const centerIconSize = isSmall ? 22 : isLarge ? 30 : 26;
