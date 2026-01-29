@@ -344,14 +344,13 @@ export default function DashboardScreen() {
           {/* Icône notification en absolute */}
           <Pressable
             onPress={() => router.push("/settings/notifications")}
-            className="absolute top-12 right-6 z-10 p-2"
+            className="absolute top-10 right-6 z-10 p-2"
           >
             <MaterialIconsRound
               name="notifications-none"
               size={26}
               color="#fff"
             />
-            <View className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full border border-teal-base" />
           </Pressable>
 
           {/* Contenu du header */}

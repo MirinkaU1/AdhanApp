@@ -146,6 +146,8 @@ export default {
     shareDesc: "Recommander à un ami",
     rate: "Noter l'app",
     rateDesc: "Laisser un avis",
+    debug: "Debug",
+    debugDesc: "Outils de développement",
     version: "Version",
     totalPrayers: "Total prières",
     streak: "Série actuelle",
@@ -458,5 +460,27 @@ export default {
   levelUp: {
     congrats: "Félicitations !",
     newLevel: "Niveau",
+  },
+
+  // Debug
+  debug: {
+    title: "Debug",
+    subtitle: "Outils de développement",
+    notifications: "Tester les notifications",
+    sendAllNotifications: "Envoyer toutes les notifications",
+    sendAllNotificationsDesc: "Afficher les 5 notifications de prière",
+    dailyReminder: "Rappel quotidien",
+    dailyReminderDesc: "Tester la notification de rappel du soir",
+    dailyReminderTriggered:
+      "Vérification du statut des prières effectuée. Si moins de 3 prières sont cochées, une notification a été envoyée.",
+    backgroundTask: "Tâche en arrière-plan",
+    backgroundTaskDesc: "Vérifier le statut de la tâche de rappel",
+    backgroundTaskStatus: "Statut de la tâche",
+    permissionDenied: "Permission refusée",
+    permissionDeniedDesc: "Autorisez les notifications dans les paramètres",
+    notificationSent: "Notification envoyée",
+    notificationSentDesc: "Notification de {{prayer}} affichée",
+    error: "Erreur",
+    info: "Ces outils sont destinés aux développeurs pour tester le comportement des notifications. Le rappel quotidien vérifie en temps réel le nombre de prières cochées.",
   },
 };

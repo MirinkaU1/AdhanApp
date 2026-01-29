@@ -137,7 +137,7 @@ export default function QiblaScreen() {
 
       {/* Header */}
       <View className="pt-14 px-4 flex-row items-center justify-between">
-        <Text className="font-outfit-bold text-lg text-primary dark:text-white/90">
+        <Text className="font-outfit-bold text-lg text-white dark:text-white/90">
           {t("qibla.title")}
         </Text>
       </View>

@@ -25,6 +25,7 @@ import useAuthStore from "@/stores/useAuthStore";
 import useThemeStore from "@/stores/useThemeStore";
 import XpToast from "@/components/XpToast";
 import LevelUpToast from "@/components/LevelUpToast";
+import NotificationProvider from "@/components/NotificationProvider";
 
 import { useColorScheme } from "nativewind";
 
@@ -91,6 +92,23 @@ function RootLayoutNav() {
       setColorScheme(themeMode);
     }
   }, [themeMode, systemColorScheme, setColorScheme, _hasHydrated]);
+
+  // Enregistrer la tâche de rappel quotidien en arrière-plan
+  useEffect(() => {
+    const initBackgroundTasks = async () => {
+      try {
+        // Import dynamique pour éviter les erreurs dans Expo Go
+        const { registerDailyReminderTask, scheduleEveningReminder } =
+          await import("@/utils/backgroundTasks");
+        await registerDailyReminderTask();
+        await scheduleEveningReminder();
+      } catch (error) {
+        console.error("Erreur initialisation tâches arrière-plan:", error);
+      }
+    };
+
+    initBackgroundTasks();
+  }, []);
 
   // Vérifier l'état d'authentification au démarrage
   useEffect(() => {
@@ -174,6 +192,8 @@ function RootLayoutNav() {
         <XpToast />
         {/* Toast Level Up */}
         <LevelUpToast />
+        {/* Provider de notifications */}
+        <NotificationProvider />
       </View>
     </ThemeProvider>
   );

@@ -92,6 +92,13 @@ const ACCOUNT_PREFERENCES: PreferenceItem[] = [
     labelKey: "settings.support",
   },
   {
+    id: "debug",
+    icon: "bug-report",
+    iconBgColor: "#FEF2F2",
+    iconColor: "#EF4444",
+    labelKey: "settings.debug",
+  },
+  {
     id: "logout",
     icon: "logout",
     iconBgColor: "#FEF2F2",
@@ -174,6 +181,9 @@ export default function ProfileScreen() {
         break;
       case "support":
         router.push("/support");
+        break;
+      case "debug":
+        router.push("/settings/debug");
         break;
       case "logout":
         setShowLogoutModal(true);

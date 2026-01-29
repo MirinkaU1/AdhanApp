@@ -1,6 +1,7 @@
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
+import Svg, { Circle } from "react-native-svg";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
@@ -223,13 +224,13 @@ function PrayerProgressBar({ data }: { data: PrayerBreakdown }) {
 }
 
 /**
- * Indicateur circulaire de progression
+ * Indicateur circulaire de progression avec SVG
  */
 function CircularProgress({
   percentage,
   size = 120,
   strokeWidth = 10,
-  color = "#0D9488",
+  color = "#0f766e",
 }: {
   percentage: number;
   size?: number;
@@ -239,42 +240,44 @@ function CircularProgress({
   const isDark = useIsDark();
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  // Assurer que le pourcentage est entre 0 et 100
+  const clampedPercentage = Math.min(100, Math.max(0, percentage));
+  const strokeDashoffset =
+    circumference - (clampedPercentage / 100) * circumference;
 
   return (
     <View
       style={{ width: size, height: size }}
       className="items-center justify-center"
     >
-      {/* Background circle */}
-      <View
-        className="absolute rounded-full"
-        style={{
-          width: size - strokeWidth,
-          height: size - strokeWidth,
-          borderWidth: strokeWidth,
-          borderColor: isDark ? "#334155" : "#E2E8F0",
-        }}
-      />
-      {/* Progress circle - simplified visual */}
-      <View
-        className="absolute rounded-full"
-        style={{
-          width: size - strokeWidth,
-          height: size - strokeWidth,
-          borderWidth: strokeWidth,
-          borderColor: color,
-          borderTopColor: "transparent",
-          borderRightColor: percentage > 25 ? color : "transparent",
-          borderBottomColor: percentage > 50 ? color : "transparent",
-          borderLeftColor: percentage > 75 ? color : "transparent",
-          transform: [{ rotate: "-90deg" }],
-        }}
-      />
+      <Svg width={size} height={size} style={{ position: "absolute" }}>
+        {/* Background circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={"#E2E8F0"}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        {/* Progress circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
       {/* Center content */}
       <View className="items-center">
-        <Text className="text-3xl font-outfit-bold text-text-primary-light dark:text-text-primary-dark">
-          {Math.round(percentage)}%
+        <Text className="text-3xl font-outfit-bold text-white">
+          {Math.round(clampedPercentage)}%
         </Text>
       </View>
     </View>

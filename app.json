@@ -34,6 +34,12 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.moimed22.AdhanApp"
     },
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#115E59",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Rappel de prière"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",

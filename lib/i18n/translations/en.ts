@@ -144,6 +144,8 @@ export default {
     shareDesc: "Recommend to a friend",
     rate: "Rate the app",
     rateDesc: "Leave a review",
+    debug: "Debug",
+    debugDesc: "Developer tools",
     version: "Version",
     totalPrayers: "Total prayers",
     streak: "Current streak",
@@ -455,5 +457,27 @@ export default {
   levelUp: {
     congrats: "Congratulations!",
     newLevel: "Level",
+  },
+
+  // Debug
+  debug: {
+    title: "Debug",
+    subtitle: "Developer tools",
+    notifications: "Test notifications",
+    sendAllNotifications: "Send all notifications",
+    sendAllNotificationsDesc: "Display all 5 prayer notifications",
+    dailyReminder: "Daily reminder",
+    dailyReminderDesc: "Test evening reminder notification",
+    dailyReminderTriggered:
+      "Prayer status check performed. If less than 3 prayers are checked, a notification was sent.",
+    backgroundTask: "Background task",
+    backgroundTaskDesc: "Check reminder task status",
+    backgroundTaskStatus: "Task status",
+    permissionDenied: "Permission denied",
+    permissionDeniedDesc: "Enable notifications in settings",
+    notificationSent: "Notification sent",
+    notificationSentDesc: "{{prayer}} notification displayed",
+    error: "Error",
+    info: "These tools are intended for developers to test notification behavior. The daily reminder checks the real-time count of completed prayers.",
   },
 };

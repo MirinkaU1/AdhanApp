@@ -1,93 +1,63 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
 import { Switch } from "@/components/ui";
 import { useIsDark } from "@/components/useColorScheme";
+import useNotificationStore, {
+  PrayerName,
+} from "@/stores/useNotificationStore";
 
-interface PrayerNotification {
-  id: string;
+interface PrayerNotificationConfig {
+  id: PrayerName;
   nameKey: string;
   arabicName: string;
   icon: MaterialIconName;
-  enabled: boolean;
-  adhanEnabled: boolean;
 }
 
-const INITIAL_PRAYERS: PrayerNotification[] = [
+const PRAYER_CONFIG: PrayerNotificationConfig[] = [
   {
     id: "fajr",
     nameKey: "prayers.fajr",
     arabicName: "الفجر",
     icon: "wb-twilight",
-    enabled: true,
-    adhanEnabled: true,
-  },
-  {
-    id: "sunrise",
-    nameKey: "prayers.sunrise",
-    arabicName: "الشروق",
-    icon: "wb-sunny",
-    enabled: false,
-    adhanEnabled: false,
   },
   {
     id: "dhuhr",
     nameKey: "prayers.dhuhr",
     arabicName: "الظهر",
     icon: "light-mode",
-    enabled: true,
-    adhanEnabled: true,
   },
   {
     id: "asr",
     nameKey: "prayers.asr",
     arabicName: "العصر",
     icon: "wb-cloudy",
-    enabled: true,
-    adhanEnabled: true,
   },
   {
     id: "maghrib",
     nameKey: "prayers.maghrib",
     arabicName: "المغرب",
     icon: "nights-stay",
-    enabled: true,
-    adhanEnabled: true,
   },
   {
     id: "isha",
     nameKey: "prayers.isha",
     arabicName: "العشاء",
     icon: "dark-mode",
-    enabled: true,
-    adhanEnabled: true,
   },
 ];
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
-  const [globalEnabled, setGlobalEnabled] = useState(true);
-  const [prayers, setPrayers] = useState(INITIAL_PRAYERS);
 
-  const togglePrayerNotification = (id: string) => {
-    setPrayers((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)),
-    );
-  };
-
-  const togglePrayerAdhan = (id: string) => {
-    setPrayers((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, adhanEnabled: !p.adhanEnabled } : p,
-      ),
-    );
-  };
+  // Utiliser le store pour persister les préférences
+  const { enabled, preferences, togglePrayer, setEnabled } =
+    useNotificationStore();
 
   return (
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
@@ -177,8 +147,8 @@ export default function NotificationsScreen() {
             </View>
           </View>
           <Switch
-            value={globalEnabled}
-            onValueChange={setGlobalEnabled}
+            value={enabled}
+            onValueChange={setEnabled}
             activeColor="#A855F7"
           />
         </View>
@@ -193,99 +163,67 @@ export default function NotificationsScreen() {
 
         <View
           className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark"
-          style={{ opacity: globalEnabled ? 1 : 0.5 }}
-          pointerEvents={globalEnabled ? "auto" : "none"}
+          style={{ opacity: enabled ? 1 : 0.5 }}
+          pointerEvents={enabled ? "auto" : "none"}
         >
-          {prayers.map((prayer, index) => (
-            <View
-              key={prayer.id}
-              className="p-4"
-              style={{
-                borderBottomWidth: index < prayers.length - 1 ? 1 : 0,
-                borderBottomColor: isDark ? "#334155" : "#F1F5F9",
-              }}
-            >
-              {/* Ligne principale */}
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3.5 flex-1">
-                  <View
-                    className="w-11 h-11 rounded-full items-center justify-center"
-                    style={{
-                      backgroundColor: isDark
-                        ? "#334155"
-                        : prayer.enabled
-                          ? "#F3E8FF"
-                          : "#F1F5F9",
-                    }}
-                  >
-                    <MaterialIconsRound
-                      name={prayer.icon}
-                      size={22}
-                      color={
-                        prayer.enabled
-                          ? "#A855F7"
-                          : isDark
-                            ? "#94A3B8"
-                            : "#64748B"
-                      }
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <Text
-                      className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
-                      style={{ fontSize: 16 }}
-                      numberOfLines={1}
+          {PRAYER_CONFIG.map((prayer, index) => {
+            const isEnabled = preferences[prayer.id];
+            return (
+              <View
+                key={prayer.id}
+                className="p-4"
+                style={{
+                  borderBottomWidth: index < PRAYER_CONFIG.length - 1 ? 1 : 0,
+                  borderBottomColor: isDark ? "#334155" : "#F1F5F9",
+                }}
+              >
+                {/* Ligne principale */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-3.5 flex-1">
+                    <View
+                      className="w-11 h-11 rounded-full items-center justify-center"
+                      style={{
+                        backgroundColor: isDark
+                          ? "#334155"
+                          : isEnabled
+                            ? "#F3E8FF"
+                            : "#F1F5F9",
+                      }}
                     >
-                      {t(prayer.nameKey)}
-                    </Text>
-                    <Text
-                      className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
-                      style={{ fontSize: 13 }}
-                      numberOfLines={1}
-                    >
-                      {prayer.arabicName}
-                    </Text>
-                  </View>
-                </View>
-                <Switch
-                  value={prayer.enabled}
-                  onValueChange={() => togglePrayerNotification(prayer.id)}
-                  activeColor="#A855F7"
-                />
-              </View>
-
-              {/* Option Adhan (si notification activée et pas sunrise) */}
-              {prayer.enabled && prayer.id !== "sunrise" && (
-                <View
-                  className="flex-row items-center justify-between mt-3 pt-3"
-                  style={{
-                    borderTopWidth: 1,
-                    borderTopColor: isDark ? "#334155" : "#F1F5F9",
-                    marginLeft: 58,
-                  }}
-                >
-                  <View className="flex-row items-center gap-2">
-                    <MaterialIconsRound
-                      name="volume-up"
-                      size={18}
-                      color={isDark ? "#94A3B8" : "#64748B"}
-                    />
-                    <Text
-                      className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-medium"
-                      style={{ fontSize: 14 }}
-                    >
-                      {t("notifications.playAdhan")}
-                    </Text>
+                      <MaterialIconsRound
+                        name={prayer.icon}
+                        size={22}
+                        color={
+                          isEnabled ? "#A855F7" : isDark ? "#94A3B8" : "#64748B"
+                        }
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                        style={{ fontSize: 16 }}
+                        numberOfLines={1}
+                      >
+                        {t(prayer.nameKey)}
+                      </Text>
+                      <Text
+                        className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                        style={{ fontSize: 13 }}
+                        numberOfLines={1}
+                      >
+                        {prayer.arabicName}
+                      </Text>
+                    </View>
                   </View>
                   <Switch
-                    value={prayer.adhanEnabled}
-                    onValueChange={() => togglePrayerAdhan(prayer.id)}
-                    activeColor="#14B8A6"
+                    value={isEnabled}
+                    onValueChange={() => togglePrayer(prayer.id)}
+                    activeColor="#A855F7"
                   />
                 </View>
-              )}
-            </View>
-          ))}
+              </View>
+            );
+          })}
         </View>
 
         {/* Info */}
