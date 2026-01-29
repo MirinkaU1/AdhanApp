@@ -13,12 +13,30 @@ import { LinearGradient } from "expo-linear-gradient";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
 import useQibla, { getCardinalDirection } from "@/hooks/useQibla";
+import useResponsive from "@/hooks/useResponsive";
 import { AppText } from "@/components/ui";
 
 export default function QiblaScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
   const wasAlignedRef = useRef(false);
+  const { rs3, fontSize, iconSize } = useResponsive();
+
+  // Tailles spécifiques à la boussole
+  const compassSize = rs3(240, 280, 320);
+  const compassBorder = rs3(4, 6, 8);
+  const compassInner = compassSize - 20;
+  const needleContainer = rs3(170, 200, 230);
+  const needleWidth = rs3(8, 10, 12);
+  const needleHeight = rs3(65, 80, 95);
+  const cardinalOffset = rs3(20, 28, 32);
+  const innerCircle1 = rs3(170, 200, 230);
+  const innerCircle2 = rs3(120, 140, 160);
+  const outerCircle1 = rs3(290, 340, 390);
+  const outerCircle2 = rs3(340, 400, 460);
+  const centerDot = rs3(24, 32, 36);
+  const kaabaSize = rs3(20, 24, 28);
+  const statusBadge = rs3(28, 32, 36);
 
   const {
     qiblaBearing,
@@ -137,7 +155,10 @@ export default function QiblaScreen() {
 
       {/* Header */}
       <View className="pt-14 px-4 flex-row items-center justify-between">
-        <Text className="font-outfit-bold text-lg text-white dark:text-white/90">
+        <Text
+          className="font-outfit-bold text-white dark:text-white/90"
+          style={{ fontSize: fontSize.xl }}
+        >
           {t("qibla.title")}
         </Text>
       </View>
@@ -150,8 +171,8 @@ export default function QiblaScreen() {
           <View
             className="absolute rounded-full"
             style={{
-              width: 340,
-              height: 340,
+              width: outerCircle1,
+              height: outerCircle1,
               borderWidth: 1,
               borderColor: isDark
                 ? "rgba(255,255,255,0.08)"
@@ -161,8 +182,8 @@ export default function QiblaScreen() {
           <View
             className="absolute rounded-full"
             style={{
-              width: 400,
-              height: 400,
+              width: outerCircle2,
+              height: outerCircle2,
               borderWidth: 1,
               borderColor: isDark
                 ? "rgba(255,255,255,0.04)"
@@ -171,10 +192,12 @@ export default function QiblaScreen() {
           />
 
           <View
-            className="w-[280px] h-[280px] rounded-full items-center justify-center"
+            className="rounded-full items-center justify-center"
             style={{
+              width: compassSize,
+              height: compassSize,
               backgroundColor: isDark ? "#1a2c2b" : "#FFFFFF",
-              borderWidth: 6,
+              borderWidth: compassBorder,
               borderColor: "#D4AF37",
               shadowColor: "#115E59",
               shadowOffset: { width: 0, height: 20 },
@@ -185,32 +208,62 @@ export default function QiblaScreen() {
           >
             {/* Gradient intérieur */}
             <View
-              className="absolute w-[260px] h-[260px] rounded-full opacity-50"
-              style={{ backgroundColor: isDark ? "#152322" : "#F8FAFC" }}
+              className="absolute rounded-full opacity-50"
+              style={{
+                width: compassInner,
+                height: compassInner,
+                backgroundColor: isDark ? "#152322" : "#F8FAFC",
+              }}
             />
 
             {/* Points cardinaux */}
             <View className="absolute w-full h-full items-center justify-center">
               {/* N */}
-              <Text className="absolute top-7 font-outfit-bold text-lg text-primary dark:text-teal-200">
+              <Text
+                className="absolute font-outfit-bold text-primary dark:text-teal-200"
+                style={{ top: cardinalOffset, fontSize: fontSize.lg }}
+              >
                 {t("qibla.north")}
               </Text>
               {/* S */}
-              <Text className="absolute bottom-7 font-outfit-semibold text-sm text-text-secondary-light dark:text-text-secondary-dark">
+              <Text
+                className="absolute font-outfit-semibold text-text-secondary-light dark:text-text-secondary-dark"
+                style={{ bottom: cardinalOffset, fontSize: fontSize.sm }}
+              >
                 {t("qibla.south")}
               </Text>
               {/* E */}
-              <Text className="absolute right-7 font-outfit-semibold text-sm text-text-secondary-light dark:text-text-secondary-dark">
+              <Text
+                className="absolute font-outfit-semibold text-text-secondary-light dark:text-text-secondary-dark"
+                style={{ right: cardinalOffset, fontSize: fontSize.sm }}
+              >
                 {t("qibla.east")}
               </Text>
               {/* W */}
-              <Text className="absolute left-7 font-outfit-semibold text-sm text-text-secondary-light dark:text-text-secondary-dark">
+              <Text
+                className="absolute font-outfit-semibold text-text-secondary-light dark:text-text-secondary-dark"
+                style={{ left: cardinalOffset, fontSize: fontSize.sm }}
+              >
                 {t("qibla.west")}
               </Text>
 
               {/* Cercles internes */}
-              <View className="absolute w-[200px] h-[200px] rounded-full border-0.5 border-dashed border-border-light dark:border-border-dark" />
-              <View className="absolute w-[140px] h-[140px] rounded-full border-[0.3px] border-border-light dark:border-border-dark" />
+              <View
+                className="absolute rounded-full border-dashed border-border-light dark:border-border-dark"
+                style={{
+                  width: innerCircle1,
+                  height: innerCircle1,
+                  borderWidth: 0.5,
+                }}
+              />
+              <View
+                className="absolute rounded-full border-border-light dark:border-border-dark"
+                style={{
+                  width: innerCircle2,
+                  height: innerCircle2,
+                  borderWidth: 0.3,
+                }}
+              />
             </View>
 
             {/* Aiguille animée */}
@@ -218,8 +271,8 @@ export default function QiblaScreen() {
               style={[
                 {
                   position: "absolute",
-                  width: 200,
-                  height: 200,
+                  width: needleContainer,
+                  height: needleContainer,
                   alignItems: "center",
                   justifyContent: "center",
                 },
@@ -233,9 +286,9 @@ export default function QiblaScreen() {
                   top: 10,
                   width: 0,
                   height: 0,
-                  borderLeftWidth: 10,
-                  borderRightWidth: 10,
-                  borderBottomWidth: 80,
+                  borderLeftWidth: needleWidth,
+                  borderRightWidth: needleWidth,
+                  borderBottomWidth: needleHeight,
                   borderLeftColor: "transparent",
                   borderRightColor: "transparent",
                   borderBottomColor: "#115E59",
@@ -243,8 +296,8 @@ export default function QiblaScreen() {
               />
 
               {/* Icône Kaaba */}
-              <View className="absolute -top-2.5">
-                <Svg width={24} height={24} viewBox="0 0 24 24">
+              <View className="absolute" style={{ top: -kaabaSize / 4 }}>
+                <Svg width={kaabaSize} height={kaabaSize} viewBox="0 0 24 24">
                   <Rect
                     x={4}
                     y={6}
@@ -266,13 +319,14 @@ export default function QiblaScreen() {
 
               {/* Aiguille Sud - Grise */}
               <View
-                className="absolute bottom-2.5 opacity-80"
+                className="absolute opacity-80"
                 style={{
+                  bottom: 10,
                   width: 0,
                   height: 0,
-                  borderLeftWidth: 10,
-                  borderRightWidth: 10,
-                  borderTopWidth: 80,
+                  borderLeftWidth: needleWidth,
+                  borderRightWidth: needleWidth,
+                  borderTopWidth: needleHeight,
                   borderLeftColor: "transparent",
                   borderRightColor: "transparent",
                   borderTopColor: isDark ? "#475569" : "#CBD5E1",
@@ -282,9 +336,11 @@ export default function QiblaScreen() {
 
             {/* Centre doré */}
             <View
-              className="w-8 h-8 rounded-full bg-[#D4AF37] items-center justify-center"
+              className="rounded-full bg-[#D4AF37] items-center justify-center"
               style={{
-                borderWidth: 3,
+                width: centerDot,
+                height: centerDot,
+                borderWidth: centerDot / 10,
                 borderColor: isDark ? "#1a2c2b" : "#FFFFFF",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
@@ -293,20 +349,33 @@ export default function QiblaScreen() {
                 elevation: 4,
               }}
             >
-              <View className="w-2 h-2 rounded-full bg-white/50" />
+              <View
+                className="rounded-full bg-white/50"
+                style={{ width: centerDot / 4, height: centerDot / 4 }}
+              />
             </View>
           </View>
         </View>
 
         {/* Affichage de l'angle */}
-        <Text className="font-outfit-bold text-5xl text-primary dark:text-teal-200 tracking-widest mb-2">
+        <Text
+          className="font-outfit-bold text-primary dark:text-teal-200 tracking-widest mb-2"
+          style={{ fontSize: fontSize["4xl"] }}
+        >
           {formatBearing(qiblaBearing)}
         </Text>
 
         {/* Distance à La Mecque */}
         <View className="flex-row items-center gap-1.5 mb-9">
-          <MaterialIconsRound name="location-on" size={18} color="#D4AF37" />
-          <Text className="font-outfit-medium text-base text-text-secondary-light dark:text-text-secondary-dark">
+          <MaterialIconsRound
+            name="location-on"
+            size={iconSize.sm}
+            color="#D4AF37"
+          />
+          <Text
+            className="font-outfit-medium text-text-secondary-light dark:text-text-secondary-dark"
+            style={{ fontSize: fontSize.base }}
+          >
             {t("qibla.distanceToMecca", {
               distance: formatDistance(distanceToMecca),
             })}
@@ -335,8 +404,10 @@ export default function QiblaScreen() {
           }}
         >
           <View
-            className="w-8 h-8 rounded-full items-center justify-center"
+            className="rounded-full items-center justify-center"
             style={{
+              width: statusBadge,
+              height: statusBadge,
               backgroundColor: isAligned
                 ? "rgba(16,185,129,0.2)"
                 : isDark
@@ -346,13 +417,14 @@ export default function QiblaScreen() {
           >
             <MaterialIconsRound
               name={isAligned ? "check" : "screen-rotation"}
-              size={18}
+              size={iconSize.xs}
               color={isAligned ? "#10B981" : isDark ? "#5EEAD4" : "#115E59"}
             />
           </View>
           <Text
-            className="font-outfit-semibold text-sm"
+            className="font-outfit-semibold"
             style={{
+              fontSize: fontSize.sm,
               color: isAligned ? "#10B981" : isDark ? "#94A3B8" : "#64748B",
             }}
           >
@@ -367,24 +439,44 @@ export default function QiblaScreen() {
           onPress={calibrate}
           className="mx-6 mb-4 bg-warning/10 dark:bg-warning/15 px-4 py-3 rounded-2xl flex-row items-center gap-3 border border-warning/20 dark:border-warning/30"
         >
-          <View className="w-9 h-9 rounded-full bg-warning/20 items-center justify-center">
-            <MaterialIconsRound name="warning" size={20} color="#F59E0B" />
+          <View
+            className="rounded-full bg-warning/20 items-center justify-center"
+            style={{ width: statusBadge + 4, height: statusBadge + 4 }}
+          >
+            <MaterialIconsRound
+              name="warning"
+              size={iconSize.sm}
+              color="#F59E0B"
+            />
           </View>
           <View className="flex-1">
-            <Text className="font-outfit-semibold text-sm text-warning mb-0.5">
+            <Text
+              className="font-outfit-semibold text-warning mb-0.5"
+              style={{ fontSize: fontSize.sm }}
+            >
               {t("qibla.lowAccuracy")}
             </Text>
-            <Text className="font-outfit-regular text-xs text-text-secondary-light dark:text-text-secondary-dark leading-4">
+            <Text
+              className="font-outfit-regular text-text-secondary-light dark:text-text-secondary-dark leading-4"
+              style={{ fontSize: fontSize.xs }}
+            >
               {t("qibla.calibrateHint")}
             </Text>
           </View>
-          <MaterialIconsRound name="touch-app" size={20} color="#F59E0B" />
+          <MaterialIconsRound
+            name="touch-app"
+            size={iconSize.sm}
+            color="#F59E0B"
+          />
         </Pressable>
       )}
 
       {/* Avertissement en bas */}
       <View className="px-6 pb-10 items-center">
-        <Text className="font-outfit-regular text-xs text-text-secondary-light dark:text-text-secondary-dark text-center opacity-70">
+        <Text
+          className="font-outfit-regular text-text-secondary-light dark:text-text-secondary-dark text-center opacity-70"
+          style={{ fontSize: fontSize.xs }}
+        >
           {t("qibla.metalWarning")}
         </Text>
       </View>

@@ -1,16 +1,66 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs } from "expo-router";
-import { View } from "react-native";
-import MaterialIconsRound from "@/components/MaterialIconsRound";
+import { View, Text, useWindowDimensions } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+import MaterialIconsRound, {
+  MaterialIconName,
+} from "@/components/MaterialIconsRound";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
 
 const ACCENT_COLOR = "#D97706"; // Amber
 const TEAL_BASE = "#115E59";
 
+// Composant icône animée pour les tabs
+interface AnimatedTabIconProps {
+  name: MaterialIconName;
+  color: string;
+  size: number;
+  focused: boolean;
+}
+
+function AnimatedTabIcon({ name, color, size, focused }: AnimatedTabIconProps) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withSpring(focused ? 1.5 : 1, {
+      damping: 14,
+      stiffness: 150,
+    });
+  }, [focused]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <MaterialIconsRound name={name} size={size} color={color} />
+    </Animated.View>
+  );
+}
+
 export default function TabLayout() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const { width } = useWindowDimensions();
+
+  // Responsive sizing
+  const isSmall = width < 360;
+  const isLarge = width >= 414;
+
+  const tabBarHeight = isSmall ? 70 : isLarge ? 90 : 80;
+  const tabBarPaddingBottom = isSmall ? 16 : isLarge ? 24 : 20;
+  const tabBarPaddingTop = isSmall ? 8 : isLarge ? 12 : 10;
+  const labelSize = isSmall ? 9 : isLarge ? 12 : 10;
+  const iconSize = isSmall ? 24 : isLarge ? 28 : 26;
+  const centerButtonSize = isSmall ? 50 : isLarge ? 62 : 56;
+  const centerButtonMargin = isSmall ? -20 : isLarge ? -26 : -24;
+  const centerIconSize = isSmall ? 22 : isLarge ? 30 : 26;
 
   return (
     <Tabs
@@ -20,12 +70,12 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
           borderTopColor: isDark ? "#334155" : "#E2E8F0",
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 10,
+          height: tabBarHeight,
+          paddingBottom: tabBarPaddingBottom,
+          paddingTop: tabBarPaddingTop,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: labelSize,
           fontWeight: "500",
           fontFamily: "Outfit_500Medium",
         },
@@ -36,8 +86,13 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("nav.home"),
-          tabBarIcon: ({ color }) => (
-            <MaterialIconsRound name="home" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon
+              name="home"
+              size={iconSize}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -45,8 +100,13 @@ export default function TabLayout() {
         name="qibla"
         options={{
           title: t("nav.qibla"),
-          tabBarIcon: ({ color }) => (
-            <MaterialIconsRound name="explore" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon
+              name="explore"
+              size={iconSize}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -57,8 +117,11 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: () => (
             <View
-              className="w-14 h-14 -mt-6 rounded-full items-center justify-center"
+              className="rounded-full items-center justify-center"
               style={{
+                width: centerButtonSize,
+                height: centerButtonSize,
+                marginTop: centerButtonMargin,
                 backgroundColor: TEAL_BASE,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -67,7 +130,11 @@ export default function TabLayout() {
                 elevation: 5,
               }}
             >
-              <MaterialIconsRound name="book" size={26} color="#ffffff" />
+              <MaterialIconsRound
+                name="book"
+                size={centerIconSize}
+                color="#ffffff"
+              />
             </View>
           ),
         }}
@@ -76,8 +143,13 @@ export default function TabLayout() {
         name="two"
         options={{
           title: t("nav.tracking"),
-          tabBarIcon: ({ color }) => (
-            <MaterialIconsRound name="analytics" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon
+              name="analytics"
+              size={iconSize}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -85,8 +157,13 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: t("nav.profile"),
-          tabBarIcon: ({ color }) => (
-            <MaterialIconsRound name="person" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon
+              name="person"
+              size={iconSize}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />

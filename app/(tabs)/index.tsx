@@ -129,8 +129,20 @@ export default function DashboardScreen() {
   // Handler pour toggle prière avec gamification
   const handlePrayerToggle = useCallback(
     (prayerName: PrayerName) => {
+      // Vérifier si la prière n'est pas encore arrivée (impossible de cocher une prière future)
+      if (times && times[prayerName]) {
+        const prayerTime = times[prayerName];
+        if (isAfter(prayerTime, now) && !status[prayerName]) {
+          // La prière n'est pas encore arrivée, on ne peut pas la cocher
+          console.log(
+            `[Prayer] Cannot check ${prayerName} - prayer time not yet arrived`,
+          );
+          return;
+        }
+      }
+
       const wasCompleted = !status[prayerName]; // Il va être complété
-      togglePrayer(prayerName);
+      togglePrayer(prayerName, user?.id); // Passer userId pour la sync Supabase
       onPrayerCompleted(prayerName, wasCompleted);
 
       // Vérifier si la prière est faite à l'heure (dans les 30 min après son début)
@@ -138,7 +150,15 @@ export default function DashboardScreen() {
         checkPrayerOnTime(times[prayerName]);
       }
     },
-    [togglePrayer, onPrayerCompleted, checkPrayerOnTime, status, times],
+    [
+      togglePrayer,
+      onPrayerCompleted,
+      checkPrayerOnTime,
+      status,
+      times,
+      now,
+      user?.id,
+    ],
   );
 
   // Salutation

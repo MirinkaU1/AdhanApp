@@ -107,6 +107,7 @@ type PrayerStoreState = {
   setHijriOffset: (value: number) => void;
   setAutoLocation: (value: boolean) => void;
   setAutoHijriSync: (value: boolean) => void;
+  clearAllData: () => void;
 };
 
 const createDefaultStatus = (): PrayerStatus => ({
@@ -394,6 +395,7 @@ const usePrayerStore = create<PrayerStoreState>()(
 
           if (data && data.length > 0) {
             const newLogs: PrayerLogMap = {};
+            const todayKey = new Date().toISOString().split("T")[0];
 
             data.forEach((row) => {
               newLogs[row.date] = {
@@ -405,13 +407,34 @@ const usePrayerStore = create<PrayerStoreState>()(
               };
             });
 
-            set((state) => ({
-              logs: {
-                ...newLogs,
-                ...state.logs, // Local data takes precedence
-              },
-              lastSyncedAt: new Date().toISOString(),
-            }));
+            // Déterminer si le local est "vide" (pas de données pour aujourd'hui)
+            const state = get();
+            const hasLocalDataForToday =
+              state.logs[todayKey] &&
+              Object.values(state.logs[todayKey]).some((v) => v === true);
+
+            set((prevState) => {
+              // Si pas de données locales pour aujourd'hui, serveur prend la priorité
+              // Sinon, local prend la priorité (pour ne pas perdre les modifications offline)
+              const mergedLogs = hasLocalDataForToday
+                ? { ...newLogs, ...prevState.logs }
+                : { ...prevState.logs, ...newLogs };
+
+              // Mettre à jour le status du jour avec les données fusionnées
+              const todayStatus = mergedLogs[todayKey] || createDefaultStatus();
+
+              return {
+                logs: mergedLogs,
+                status: todayStatus,
+                lastSyncedAt: new Date().toISOString(),
+              };
+            });
+
+            console.log(
+              "[fetchFromSupabase] Loaded",
+              data.length,
+              "days from server",
+            );
           }
         } catch (error) {
           console.error("Fetch error:", error);
@@ -459,6 +482,26 @@ const usePrayerStore = create<PrayerStoreState>()(
           set({ isSyncing: false });
           // Keep queue for retry
         }
+      },
+
+      // Réinitialiser toutes les données utilisateur (appelé lors du logout)
+      clearAllData: () => {
+        console.log("[PrayerStore] Clearing all data...");
+        const today = format(new Date(), "yyyy-MM-dd");
+        set({
+          // Reset prayer tracking
+          dateKey: today,
+          status: createDefaultStatus(),
+          logs: {},
+          dirtyDates: [],
+
+          // Reset sync
+          pendingSyncQueue: [],
+          lastSyncedAt: null,
+
+          // Garder les paramètres de calcul (ne pas réinitialiser)
+          // calculationMethod, madhab, hijriOffset, autoLocation, autoHijriSync
+        });
       },
     }),
     {

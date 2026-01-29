@@ -179,6 +179,42 @@ export default {
     tabAvatars: "Avatars",
     tabGallery: "Galerie",
     removeAvatar: "Supprimer l'avatar",
+
+    // Link account (for guest users)
+    linkAccount: "Lier mon compte",
+    linkAccountTitle: "Lier votre compte",
+    linkAccountSubtitle: "Associez un email et mot de passe",
+    linkAccountDescription:
+      "Liez votre compte invité à un email pour ne jamais perdre votre progression.",
+    linkAccountEmail: "Adresse email",
+    linkAccountEmailPlaceholder: "votre@email.com",
+    linkAccountPassword: "Mot de passe",
+    linkAccountPasswordPlaceholder: "Minimum 6 caractères",
+    linkAccountConfirmPassword: "Confirmer le mot de passe",
+    linkAccountButton: "Lier mon compte",
+    linkAccountSuccess: "Compte lié avec succès !",
+    linkAccountError: "Erreur lors de la liaison du compte",
+
+    // Password section
+    password: "Mot de passe",
+    passwordTitle: "Changer le mot de passe",
+    passwordSubtitle: "Mettez à jour votre mot de passe",
+    passwordSecurityInfo:
+      "Pour votre sécurité, vous devez d'abord confirmer votre mot de passe actuel.",
+    currentPassword: "Mot de passe actuel",
+    currentPasswordPlaceholder: "Entrez votre mot de passe actuel",
+    currentPasswordRequired: "Veuillez entrer votre mot de passe actuel",
+    currentPasswordInvalid: "Le mot de passe actuel est incorrect",
+    newPasswordSection: "Nouveau mot de passe",
+    newPassword: "Nouveau mot de passe",
+    newPasswordPlaceholder: "Minimum 6 caractères",
+    confirmNewPassword: "Confirmer le nouveau mot de passe",
+    confirmNewPasswordPlaceholder: "Confirmez votre nouveau mot de passe",
+    changePasswordButton: "Changer le mot de passe",
+    passwordChanged: "Mot de passe modifié avec succès !",
+    passwordChangeError: "Erreur lors du changement de mot de passe",
+    passwordMismatch: "Les mots de passe ne correspondent pas",
+    passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
   },
 
   // Language

@@ -176,6 +176,42 @@ export default {
     tabAvatars: "Avatars",
     tabGallery: "Gallery",
     removeAvatar: "Remove avatar",
+
+    // Link account (for guest users)
+    linkAccount: "Link my account",
+    linkAccountTitle: "Link your account",
+    linkAccountSubtitle: "Associate an email and password",
+    linkAccountDescription:
+      "Link your guest account to an email to never lose your progress.",
+    linkAccountEmail: "Email address",
+    linkAccountEmailPlaceholder: "your@email.com",
+    linkAccountPassword: "Password",
+    linkAccountPasswordPlaceholder: "Minimum 6 characters",
+    linkAccountConfirmPassword: "Confirm password",
+    linkAccountButton: "Link my account",
+    linkAccountSuccess: "Account linked successfully!",
+    linkAccountError: "Error linking account",
+
+    // Password section
+    password: "Password",
+    passwordTitle: "Change password",
+    passwordSubtitle: "Update your password",
+    passwordSecurityInfo:
+      "For your security, you must first confirm your current password.",
+    currentPassword: "Current password",
+    currentPasswordPlaceholder: "Enter your current password",
+    currentPasswordRequired: "Please enter your current password",
+    currentPasswordInvalid: "Current password is incorrect",
+    newPasswordSection: "New password",
+    newPassword: "New password",
+    newPasswordPlaceholder: "Minimum 6 characters",
+    confirmNewPassword: "Confirm new password",
+    confirmNewPasswordPlaceholder: "Confirm your new password",
+    changePasswordButton: "Change password",
+    passwordChanged: "Password changed successfully!",
+    passwordChangeError: "Error changing password",
+    passwordMismatch: "Passwords do not match",
+    passwordTooShort: "Password must be at least 6 characters",
   },
 
   // Language

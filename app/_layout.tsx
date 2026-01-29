@@ -80,7 +80,7 @@ function RootLayoutNav() {
   const { mode: themeMode, _hasHydrated } = useThemeStore();
   const router = useRouter();
   const segments = useSegments();
-  const { isAuthenticated, hasHydrated } = useAuthStore();
+  const { isAuthenticated, hasHydrated, isGuest } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
 
   // Synchroniser le thème du store avec NativeWind (seulement après hydratation)
@@ -154,16 +154,20 @@ function RootLayoutNav() {
     const inAuth = segments[0] === "auth";
     const inIndex = segments[0] === undefined;
 
+    // Exception: les invités (isGuest) peuvent accéder aux pages auth pour lier leur compte ou se connecter
+    const isGuestAccessingAuth = isGuest && inAuth;
+
     console.log("[Navigation] Auth state:", {
       isAuthenticated,
+      isGuest,
       segments,
       inAuthGroup,
       inAuth,
       inIndex,
     });
 
-    if (isAuthenticated && (inAuth || inIndex)) {
-      // Utilisateur connecté sur auth ou index -> rediriger vers l'app
+    if (isAuthenticated && (inAuth || inIndex) && !isGuestAccessingAuth) {
+      // Utilisateur connecté (non-invité) sur auth ou index -> rediriger vers l'app
       console.log("[Navigation] Redirecting to /(tabs)");
       router.replace("/(tabs)");
     } else if (!isAuthenticated && inAuthGroup) {

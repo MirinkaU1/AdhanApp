@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, TextInputProps } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  TextInputProps,
+  useWindowDimensions,
+} from "react-native";
 import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
@@ -23,6 +30,19 @@ export default function AppInput({
 }: AppInputProps) {
   const isDark = useIsDark();
   const [showPassword, setShowPassword] = useState(false);
+  const { width } = useWindowDimensions();
+
+  // Responsive sizing based on screen width
+  const isSmallScreen = width < 360;
+  const isLargeScreen = width >= 414;
+
+  // Tailles responsives
+  const labelSize = isSmallScreen ? 11 : isLargeScreen ? 14 : 12;
+  const inputFontSize = isSmallScreen ? 14 : isLargeScreen ? 18 : 16;
+  const errorSize = isSmallScreen ? 10 : isLargeScreen ? 13 : 11;
+  const iconSize = isSmallScreen ? 20 : isLargeScreen ? 26 : 24;
+  const inputHeight = isSmallScreen ? 52 : isLargeScreen ? 64 : 56;
+  const horizontalPadding = isSmallScreen ? 14 : isLargeScreen ? 20 : 16;
 
   // Couleurs dynamiques pour les éléments qui nécessitent des props inline
   const placeholderColor = isDark ? "#64748B" : "#94A3B8";
@@ -32,23 +52,29 @@ export default function AppInput({
   return (
     <View className={containerClassName}>
       {label && (
-        <Text className="text-sm font-outfit-bold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-2 ml-1">
+        <Text
+          className="font-outfit-bold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-2 ml-1"
+          style={{ fontSize: labelSize }}
+        >
           {label}
         </Text>
       )}
       <View
-        className={`flex-row items-center bg-slate-100 dark:bg-slate-700 rounded-2xl border px-5 h-16 ${
+        className={`flex-row items-center bg-slate-100 dark:bg-slate-700 rounded-2xl border ${
           error
             ? "border-red-500"
             : "border-border-light dark:border-border-dark"
         }`}
+        style={{ height: inputHeight, paddingHorizontal: horizontalPadding }}
       >
-        {icon && <MaterialIconsRound name={icon} size={24} color={iconColor} />}
+        {icon && (
+          <MaterialIconsRound name={icon} size={iconSize} color={iconColor} />
+        )}
         <TextInput
-          className={`flex-1 h-full text-lg font-outfit-medium text-text-primary-light dark:text-text-primary-dark ${icon ? "px-3" : ""}`}
+          className={`flex-1 h-full font-outfit-medium text-text-primary-light dark:text-text-primary-dark ${icon ? "px-3" : ""}`}
           placeholderTextColor={placeholderColor}
           secureTextEntry={isPassword && !showPassword}
-          style={{ color: textColor }}
+          style={{ color: textColor, fontSize: inputFontSize }}
           {...textInputProps}
         />
         {isPassword && (
@@ -59,14 +85,17 @@ export default function AppInput({
           >
             <MaterialIconsRound
               name={showPassword ? "visibility" : "visibility-off"}
-              size={24}
+              size={iconSize}
               color={iconColor}
             />
           </Pressable>
         )}
       </View>
       {error && (
-        <Text className="text-xs font-outfit-medium text-red-500 mt-1 ml-1">
+        <Text
+          className="font-outfit-medium text-red-500 mt-1 ml-1"
+          style={{ fontSize: errorSize }}
+        >
           {error}
         </Text>
       )}

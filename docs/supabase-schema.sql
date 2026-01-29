@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     auth_provider TEXT DEFAULT 'anonymous',  -- 'anonymous', 'email', 'google', 'facebook', 'apple'
     xp INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
+    total_xp_earned INTEGER DEFAULT 0,  -- Total XP gagné depuis le début
+    total_prayers INTEGER DEFAULT 0,     -- Total prières effectuées
     is_supporter BOOLEAN DEFAULT FALSE,
     streak_current INTEGER DEFAULT 0,
     streak_best INTEGER DEFAULT 0,

@@ -4,6 +4,7 @@ import Constants from "expo-constants";
 
 import type { PrayerName } from "@/stores/useNotificationStore";
 import usePrayerStore from "@/stores/usePrayerStore";
+import useAuthStore from "@/stores/useAuthStore";
 
 // Vérifier si on est dans Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
@@ -193,9 +194,10 @@ export const usePrayerNotifications = (options: {
       if (actionId === "MARK_DONE") {
         // Marquer la prière comme faite dans le store
         const state = usePrayerStore.getState();
+        const userId = useAuthStore.getState().user?.id;
         // Vérifier si la prière n'est pas déjà faite avant de toggle
         if (!state.status[prayerName]) {
-          state.togglePrayer(prayerName);
+          state.togglePrayer(prayerName, userId);
         }
         console.log(
           `Prière ${prayerName} marquée comme faite via notification`,

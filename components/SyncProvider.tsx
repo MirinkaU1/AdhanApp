@@ -17,11 +17,13 @@ import { useSyncData } from "@/hooks/useSyncData";
 import { useSyncDailyLogs } from "@/hooks/useSyncDailyLogs";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
+import useQuestStore from "@/stores/useQuestStore";
 import { supabase } from "@/lib/supabase";
 
 export default function SyncProvider() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, updateXp, updateLevel } = useAuthStore();
   const { fetchFromSupabase, status, dateKey } = usePrayerStore();
+  const { xp: questXp, level: questLevel, totalXpEarned } = useQuestStore();
   const appStateRef = useRef(AppState.currentState);
   const lastStreakSyncRef = useRef<string | null>(null);
 
@@ -120,17 +122,33 @@ export default function SyncProvider() {
     }
   }, [status, dateKey, isAuthenticated, user?.id, updateStreak]);
 
+  // Synchroniser XP et Level de useQuestStore vers useAuthStore
+  // Ceci permet de garder les deux stores en sync
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    // Mettre à jour useAuthStore avec les valeurs de useQuestStore
+    if (user.xp !== questXp) {
+      updateXp(questXp);
+    }
+    if (user.level !== questLevel) {
+      updateLevel(questLevel);
+    }
+  }, [questXp, questLevel, isAuthenticated, user, updateXp, updateLevel]);
+
   // Sync XP et niveau vers Supabase quand ils changent
   useEffect(() => {
     const syncProfileToSupabase = async () => {
       if (!isAuthenticated || !user?.id || !supabase) return;
 
+      // Utiliser les valeurs de useQuestStore (source de vérité)
       try {
         const { error } = await supabase
           .from("profiles")
           .update({
-            xp: user.xp ?? 0,
-            level: user.level ?? 1,
+            xp: questXp,
+            level: questLevel,
+            total_xp_earned: totalXpEarned,
             updated_at: new Date().toISOString(),
           })
           .eq("id", user.id);
@@ -138,7 +156,11 @@ export default function SyncProvider() {
         if (error) {
           console.error("[SyncProvider] Failed to sync profile:", error);
         } else {
-          console.log("[SyncProvider] Profile synced (XP/Level)");
+          console.log("[SyncProvider] Profile synced (XP/Level/TotalXP):", {
+            xp: questXp,
+            level: questLevel,
+            totalXpEarned,
+          });
         }
       } catch (error) {
         console.error("[SyncProvider] Profile sync error:", error);
@@ -149,7 +171,7 @@ export default function SyncProvider() {
     const timeoutId = setTimeout(syncProfileToSupabase, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [user?.xp, user?.level, user?.id, isAuthenticated]);
+  }, [questXp, questLevel, totalXpEarned, user?.id, isAuthenticated]);
 
   // Rien à rendre visuellement
   return null;

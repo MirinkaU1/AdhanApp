@@ -98,6 +98,21 @@ interface QuestStoreState {
   consumePendingXpGain: () => XpGain | null;
   consumePendingLevelUp: () => LevelUpNotification | null;
   getUnclaimedQuestsCount: () => number;
+  syncFromServer: (
+    serverXp: number,
+    serverLevel: number,
+    serverTotalXpEarned?: number,
+  ) => void;
+  rebuildDailyXpTrackingFromLogs: (
+    todayLogs: {
+      fajr: boolean;
+      dhuhr: boolean;
+      asr: boolean;
+      maghrib: boolean;
+      isha: boolean;
+    } | null,
+  ) => void;
+  clearAllData: () => void;
 
   // Helpers
   getLevelFromXp: (xp: number) => {
@@ -526,6 +541,53 @@ const useQuestStore = create<QuestStoreState>()(
         return false;
       },
 
+      // Synchroniser les données depuis le serveur (au login)
+      // Prend le max entre local et serveur pour éviter de perdre des données
+      syncFromServer: (
+        serverXp: number,
+        serverLevel: number,
+        serverTotalXpEarned?: number,
+      ) => {
+        const state = get();
+        const localXp = state.xp;
+        const localLevel = state.level;
+        const localTotalXpEarned = state.totalXpEarned;
+
+        // Prendre le maximum pour ne pas perdre de progression
+        const finalXp = Math.max(localXp, serverXp);
+        const finalLevel = Math.max(localLevel, serverLevel);
+        const finalTotalXpEarned = Math.max(
+          localTotalXpEarned,
+          serverTotalXpEarned || 0,
+        );
+
+        console.log("[QuestStore] syncFromServer:", {
+          serverXp,
+          serverLevel,
+          serverTotalXpEarned,
+          localXp,
+          localLevel,
+          localTotalXpEarned,
+          finalXp,
+          finalLevel,
+          finalTotalXpEarned,
+        });
+
+        // Mettre à jour seulement si nécessaire
+        if (
+          finalXp !== localXp ||
+          finalLevel !== localLevel ||
+          finalTotalXpEarned !== localTotalXpEarned
+        ) {
+          set({
+            xp: finalXp,
+            level: finalLevel,
+            xpToNextLevel: state.getXpForLevel(finalLevel),
+            totalXpEarned: finalTotalXpEarned,
+          });
+        }
+      },
+
       resetDailyQuests: () => {
         const defaultQuests = createDefaultDailyQuests();
         const state = get();
@@ -560,6 +622,66 @@ const useQuestStore = create<QuestStoreState>()(
         if (state.lastQuestResetDate !== today) {
           state.resetDailyQuests();
         }
+      },
+
+      // Reconstruire dailyXpTracking à partir des logs du jour (évite XP infini)
+      // Appelé après fetchFromSupabase pour synchroniser le tracking avec les données serveur
+      rebuildDailyXpTrackingFromLogs: (todayLogs) => {
+        const today = getDateKey();
+
+        if (!todayLogs) {
+          // Pas de logs pour aujourd'hui, reset le tracking
+          console.log(
+            "[QuestStore] No logs for today, resetting dailyXpTracking",
+          );
+          set({ dailyXpTracking: createDefaultDailyXpTracking() });
+          return;
+        }
+
+        // Reconstruire le tracking basé sur les prières déjà cochées
+        const prayersRewarded = {
+          fajr: todayLogs.fajr,
+          dhuhr: todayLogs.dhuhr,
+          asr: todayLogs.asr,
+          maghrib: todayLogs.maghrib,
+          isha: todayLogs.isha,
+        };
+
+        // Compter les prières cochées
+        const prayerCount = Object.values(todayLogs).filter(Boolean).length;
+        const allFiveCompleted = prayerCount === 5;
+
+        console.log("[QuestStore] Rebuilding dailyXpTracking from logs:", {
+          todayLogs,
+          prayersRewarded,
+          allFiveCompleted,
+        });
+
+        set({
+          dailyXpTracking: {
+            dateKey: today,
+            prayersRewarded,
+            allFiveBonus: allFiveCompleted,
+            fajrBonus: todayLogs.fajr,
+          },
+        });
+      },
+
+      // Réinitialiser toutes les données (appelé lors du logout)
+      clearAllData: () => {
+        console.log("[QuestStore] Clearing all data...");
+        set({
+          xp: 0,
+          level: 1,
+          xpToNextLevel: XP_PER_LEVEL_BASE,
+          totalXpEarned: 0,
+          dailyQuests: createDefaultDailyQuests(),
+          lastQuestResetDate: getDateKey(),
+          dailyXpTracking: createDefaultDailyXpTracking(),
+          pendingXpGains: [],
+          xpHistory: [],
+          pendingLevelUp: null,
+        });
       },
     }),
     {

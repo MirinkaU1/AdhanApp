@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Image,
   Pressable,
@@ -85,6 +85,13 @@ const ACCOUNT_PREFERENCES: PreferenceItem[] = [
     labelKey: "settings.support",
   },
   {
+    id: "password",
+    icon: "lock",
+    iconBgColor: "#EFF6FF",
+    iconColor: "#3B82F6",
+    labelKey: "settings.password",
+  },
+  {
     id: "debug",
     icon: "bug-report",
     iconBgColor: "#FEF2F2",
@@ -141,13 +148,28 @@ export default function ProfileScreen() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const prayerStore = usePrayerStore();
-  const stats = {
-    currentStreak: prayerStore.getStreak ? prayerStore.getStreak() : 0,
-    totalPrayers: prayerStore.getTotalPrayers
-      ? prayerStore.getTotalPrayers()
-      : 0,
-  };
+  // Récupérer logs et les fonctions de calcul du store
+  const { logs, getStreak, getTotalPrayers } = usePrayerStore();
+
+  // Calculer les stats de manière réactive (se met à jour quand logs change)
+  const stats = useMemo(() => {
+    const localStreak = getStreak();
+    const localTotalPrayers = getTotalPrayers();
+
+    return {
+      // Prendre le max entre serveur et local pour avoir la valeur la plus à jour
+      currentStreak: Math.max(user?.streakCurrent ?? 0, localStreak),
+      streakBest: user?.streakBest ?? 0,
+      totalPrayers: Math.max(user?.totalPrayers ?? 0, localTotalPrayers),
+    };
+  }, [
+    logs,
+    user?.streakCurrent,
+    user?.streakBest,
+    user?.totalPrayers,
+    getStreak,
+    getTotalPrayers,
+  ]);
 
   const handlePreferencePress = async (id: string) => {
     switch (id) {
@@ -171,6 +193,9 @@ export default function ProfileScreen() {
         break;
       case "support":
         router.push("/support");
+        break;
+      case "password":
+        router.push("/settings/password");
         break;
       case "debug":
         router.push("/settings/debug");
@@ -483,6 +508,69 @@ export default function ProfileScreen() {
 
         {/* Contenu principal */}
         <View className="px-4">
+          {/* Carte Lier mon compte (pour utilisateurs invités connectés) */}
+          {user?.isGuest && (
+            <View
+              className="bg-white dark:bg-slate-800 rounded-3xl p-6 mb-6 border border-accent"
+              style={{
+                shadowColor: "#D97706",
+                shadowOpacity: 0.15,
+                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: 12,
+                elevation: 3,
+              }}
+            >
+              {/* En-tête avec icône */}
+              <View className="flex-row items-center mb-3 gap-3">
+                <View className="w-11 h-11 rounded-full bg-amber-100 items-center justify-center">
+                  <MaterialIconsRound name="link" size={24} color="#D97706" />
+                </View>
+                <View className="flex-1">
+                  <AppText variant="h3" className="mb-0.5">
+                    {t("settings.guestAccountTitle")}
+                  </AppText>
+                  <AppText
+                    variant="caption"
+                    className="text-text-secondary-light dark:text-text-secondary-dark"
+                  >
+                    {t("settings.guestAccountSubtitle")}
+                  </AppText>
+                </View>
+              </View>
+
+              {/* Description */}
+              <AppText variant="caption" className="mb-5 leading-5">
+                {t("settings.linkAccountDescription")}
+              </AppText>
+
+              {/* Bouton Lier mon compte */}
+              <Pressable
+                onPress={() => router.push("/auth/link-account")}
+                className="bg-accent px-6 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5 mb-3 active:opacity-80"
+              >
+                <MaterialIconsRound name="link" size={20} color="#fff" />
+                <Text className="text-white font-outfit-semibold text-base">
+                  {t("settings.linkAccount")}
+                </Text>
+              </Pressable>
+
+              {/* Bouton Se connecter (compte existant) */}
+              <Pressable
+                onPress={() => router.push("/auth/login")}
+                className="bg-transparent px-6 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5 border border-border-light dark:border-border-dark active:opacity-60"
+              >
+                <MaterialIconsRound
+                  name="login"
+                  size={20}
+                  color={isDark ? "#F8FAFC" : "#12201F"}
+                />
+                <Text className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold text-base">
+                  {t("settings.loginExisting")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
           <SettingsSection
             title={t("settings.prayersReminders")}
             items={PRAYER_PREFERENCES}
@@ -497,7 +585,11 @@ export default function ProfileScreen() {
 
           <SettingsSection
             title={t("settings.accountSupport")}
-            items={ACCOUNT_PREFERENCES}
+            items={
+              user?.isGuest
+                ? ACCOUNT_PREFERENCES.filter((item) => item.id !== "password")
+                : ACCOUNT_PREFERENCES
+            }
             onItemPress={handlePreferencePress}
           />
 

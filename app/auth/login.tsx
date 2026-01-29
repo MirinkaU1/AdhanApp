@@ -38,7 +38,10 @@ export default function LoginScreen() {
 
     const result = await signInWithEmail(email.trim(), password);
 
-    if (!result.success) {
+    if (result.success) {
+      // Redirection explicite vers la page principale après connexion réussie
+      router.replace("/(tabs)");
+    } else {
       let errorMsg = result.error || "Une erreur est survenue";
       if (errorMsg.includes("Invalid login credentials")) {
         errorMsg = "Email ou mot de passe incorrect";

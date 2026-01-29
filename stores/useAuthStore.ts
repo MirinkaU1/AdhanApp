@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
 import * as FileSystem from "expo-file-system/legacy";
 import { decode as atob } from "base-64";
+import useQuestStore from "@/stores/useQuestStore";
+import usePrayerStore from "@/stores/usePrayerStore";
 
 // Convertir YYYY-MM-DD (Supabase) vers JJ-MM-AAAA (affichage)
 const formatBirthDateFromDB = (
@@ -28,6 +30,11 @@ export interface User {
   xp?: number;
   level?: number;
   isSupporter?: boolean;
+  // Stats de suivi
+  totalXpEarned?: number;
+  streakCurrent?: number;
+  streakBest?: number;
+  totalPrayers?: number;
 }
 
 interface AuthState {
@@ -70,6 +77,10 @@ interface AuthState {
     email: string,
     password: string,
   ) => Promise<{ success: boolean; error?: string }>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   refreshSession: () => Promise<void>;
 }
 
@@ -93,13 +104,27 @@ const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         console.log("[AuthStore] logout() called");
-        console.trace("[AuthStore] Logout stack trace");
         try {
           await supabase.auth.signOut();
         } catch (error) {
           console.error("Logout error:", error);
         }
+
+        // Nettoyer les données des autres stores
+        const { clearAllData: clearQuestData } =
+          await import("@/stores/useQuestStore").then((m) =>
+            m.default.getState(),
+          );
+        const { clearAllData: clearPrayerData } =
+          await import("@/stores/usePrayerStore").then((m) =>
+            m.default.getState(),
+          );
+
+        clearQuestData();
+        clearPrayerData();
+
         get().clearAuth();
+        console.log("[AuthStore] All user data cleared");
       },
 
       clearAuth: () => {
@@ -465,9 +490,39 @@ const useAuthStore = create<AuthState>()(
               xp: profile?.xp || 0,
               level: profile?.level || 1,
               isSupporter: profile?.is_supporter || false,
+              // Stats de suivi
+              totalXpEarned: profile?.total_xp_earned || 0,
+              streakCurrent: profile?.streak_current || 0,
+              streakBest: profile?.streak_best || 0,
+              totalPrayers: profile?.total_prayers || 0,
             };
 
             console.log("[signInWithEmail] User constructed:", user);
+
+            // Synchroniser XP/Level/TotalXpEarned avec useQuestStore (prend le max pour ne pas perdre de données)
+            useQuestStore
+              .getState()
+              .syncFromServer(
+                user.xp || 0,
+                user.level || 1,
+                user.totalXpEarned || 0,
+              );
+
+            // IMPORTANT: Charger les prières depuis Supabase pour restaurer l'état
+            // Cela doit être fait AVANT de set isAuthenticated pour éviter les race conditions
+            await usePrayerStore.getState().fetchFromSupabase(user.id);
+
+            // Reconstruire le tracking XP avec les logs du jour pour éviter les doublons
+            const todayKey = new Date().toISOString().split("T")[0];
+            const todayLogs = usePrayerStore.getState().logs[todayKey];
+            if (todayLogs) {
+              useQuestStore
+                .getState()
+                .rebuildDailyXpTrackingFromLogs(todayLogs);
+              console.log(
+                "[signInWithEmail] Rebuilt XP tracking from today's logs",
+              );
+            }
 
             set({
               user,
@@ -569,13 +624,26 @@ const useAuthStore = create<AuthState>()(
 
           if (data.user) {
             // Mettre à jour le profil - l'utilisateur n'est plus anonyme
-            await supabase
+            const { error: profileError } = await supabase
               .from("profiles")
               .update({
+                email: email,
                 is_anonymous: false,
+                auth_provider: "email",
                 updated_at: new Date().toISOString(),
               })
               .eq("id", data.user.id);
+
+            if (profileError) {
+              console.error(
+                "[linkIdentity] Profile update error:",
+                profileError,
+              );
+            } else {
+              console.log(
+                "[linkIdentity] Profile updated successfully - user is no longer anonymous",
+              );
+            }
 
             // Conserver XP, level et autres données
             const updatedUser: User = {
@@ -595,6 +663,52 @@ const useAuthStore = create<AuthState>()(
 
           set({ isLoading: false });
           return { success: false, error: "Failed to link account" };
+        } catch (error: any) {
+          set({ isLoading: false });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Changer le mot de passe (pour utilisateurs connectés non-invités)
+      changePassword: async (currentPassword, newPassword) => {
+        set({ isLoading: true });
+        const currentUser = get().user;
+
+        if (!currentUser || currentUser.isGuest) {
+          set({ isLoading: false });
+          return {
+            success: false,
+            error: "User not authenticated or is guest",
+          };
+        }
+
+        try {
+          // Vérifier le mot de passe actuel en tentant une ré-authentification
+          const { error: authError } = await supabase.auth.signInWithPassword({
+            email: currentUser.email,
+            password: currentPassword,
+          });
+
+          if (authError) {
+            set({ isLoading: false });
+            return {
+              success: false,
+              error: "INVALID_CURRENT_PASSWORD",
+            };
+          }
+
+          // Mot de passe actuel vérifié, on peut maintenant le changer
+          const { error } = await supabase.auth.updateUser({
+            password: newPassword,
+          });
+
+          if (error) {
+            set({ isLoading: false });
+            return { success: false, error: error.message };
+          }
+
+          set({ isLoading: false });
+          return { success: true };
         } catch (error: any) {
           set({ isLoading: false });
           return { success: false, error: error.message };
@@ -645,6 +759,11 @@ const useAuthStore = create<AuthState>()(
               xp: profile?.xp || 0,
               level: profile?.level || 1,
               isSupporter: profile?.is_supporter || false,
+              // Stats de suivi
+              totalXpEarned: profile?.total_xp_earned || 0,
+              streakCurrent: profile?.streak_current || 0,
+              streakBest: profile?.streak_best || 0,
+              totalPrayers: profile?.total_prayers || 0,
             };
 
             console.log(
@@ -655,6 +774,15 @@ const useAuthStore = create<AuthState>()(
               "- birthDate:",
               user.birthDate,
             );
+
+            // Synchroniser XP/Level/TotalXpEarned avec useQuestStore (prend le max pour ne pas perdre de données)
+            useQuestStore
+              .getState()
+              .syncFromServer(
+                user.xp || 0,
+                user.level || 1,
+                user.totalXpEarned || 0,
+              );
 
             set({
               user,
