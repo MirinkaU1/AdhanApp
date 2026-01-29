@@ -35,7 +35,7 @@ interface AuthState {
     birthDate?: string;
   }) => Promise<{ success: boolean; error?: string }>;
   uploadAvatar: (
-    imageUri: string
+    imageUri: string,
   ) => Promise<{ success: boolean; url?: string; error?: string }>;
 
   // Supabase Auth Actions

@@ -46,7 +46,7 @@ export default function ProfileScreen() {
       if (status !== "granted") {
         Alert.alert(
           t("settings.permissionRequired"),
-          t("settings.photoPermissionDesc")
+          t("settings.photoPermissionDesc"),
         );
         return;
       }
@@ -70,7 +70,9 @@ export default function ProfileScreen() {
           setSuccessMessage(t("settings.avatarUpdated"));
           setTimeout(() => setSuccessMessage(""), 3000);
         } else {
-          setErrorMessage(uploadResult.error || t("settings.avatarUploadError"));
+          setErrorMessage(
+            uploadResult.error || t("settings.avatarUploadError"),
+          );
         }
 
         setIsUploadingAvatar(false);
@@ -159,16 +161,13 @@ export default function ProfileScreen() {
               {t("settings.profileSubtitle")}
             </Text>
           </View>
-{/* Avatar dans le header */}
-          <Pressable
-            onPress={pickImage}
-            className="relative"
-          >
+          {/* Avatar dans le header */}
+          <Pressable onPress={pickImage} className="relative">
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
                 className="w-14 h-14 rounded-full"
-                style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+                style={{ borderWidth: 2, borderColor: "rgba(255,255,255,0.3)" }}
               />
             ) : (
               <View
@@ -180,7 +179,7 @@ export default function ProfileScreen() {
             )}
             <View
               className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full items-center justify-center bg-amber-600"
-              style={{ borderWidth: 2, borderColor: '#115E59' }}
+              style={{ borderWidth: 2, borderColor: "#115E59" }}
             >
               <MaterialIconsRound name="camera-alt" size={12} color="#fff" />
             </View>
@@ -277,14 +276,12 @@ export default function ProfileScreen() {
                 {t("settings.birthDate")}
               </Text>
               <View className="flex-row items-center rounded-xl px-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 h-14">
-                <MaterialIconsRound
-                  name="cake"
-                  size={22}
-                  color="#64748B"
-                />
+                <MaterialIconsRound name="cake" size={22} color="#64748B" />
                 <TextInput
                   value={birthDate}
-                  onChangeText={(text) => setBirthDate(formatBirthDateInput(text))}
+                  onChangeText={(text) =>
+                    setBirthDate(formatBirthDateInput(text))
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#64748B"
                   className="flex-1 font-outfit-medium px-3 text-slate-800 dark:text-slate-100"
@@ -292,7 +289,8 @@ export default function ProfileScreen() {
                   keyboardType="number-pad"
                   maxLength={10}
                 />
-                {birthDate !== (user?.birthDate || "") && birthDate.length === 10 ? (
+                {birthDate !== (user?.birthDate || "") &&
+                birthDate.length === 10 ? (
                   <View className="w-6 h-6 rounded-full items-center justify-center bg-amber-600">
                     <MaterialIconsRound name="edit" size={14} color="#fff" />
                   </View>

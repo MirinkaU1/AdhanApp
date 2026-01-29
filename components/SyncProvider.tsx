@@ -82,7 +82,7 @@ export default function SyncProvider() {
 
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
 
     return () => {

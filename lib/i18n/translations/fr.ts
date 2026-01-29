@@ -167,7 +167,8 @@ export default {
     emailNotEditable: "L'email ne peut pas être modifié",
     birthDate: "Date de naissance",
     permissionRequired: "Permission requise",
-    photoPermissionDesc: "L'accès à la galerie photo est nécessaire pour changer votre avatar.",
+    photoPermissionDesc:
+      "L'accès à la galerie photo est nécessaire pour changer votre avatar.",
     avatarUpdated: "Avatar mis à jour avec succès",
     avatarUploadError: "Erreur lors du téléchargement de l'avatar",
   },
