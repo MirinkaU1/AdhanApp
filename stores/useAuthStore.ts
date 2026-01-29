@@ -3,12 +3,24 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
 
+// Convertir YYYY-MM-DD (Supabase) vers JJ-MM-AAAA (affichage)
+const formatBirthDateFromDB = (
+  date: string | null | undefined,
+): string | undefined => {
+  if (!date) return undefined;
+  const parts = date.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return date;
+};
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  birthDate?: string; // Format: YYYY-MM-DD
+  birthDate?: string; // Format: JJ-MM-AAAA (affichage)
   memberSince: string;
   isGuest?: boolean;
   xp?: number;
@@ -108,6 +120,7 @@ const useAuthStore = create<AuthState>()(
         try {
           // Construire l'objet de mise à jour
           const updateData: Record<string, any> = {
+            id: currentUser.id, // Requis pour upsert
             updated_at: new Date().toISOString(),
           };
 
@@ -118,19 +131,47 @@ const useAuthStore = create<AuthState>()(
             updateData.avatar_url = data.avatar;
           }
           if (data.birthDate !== undefined) {
-            updateData.birth_date = data.birthDate;
+            // Convertir JJ-MM-AAAA vers YYYY-MM-DD pour Supabase
+            const parts = data.birthDate.split("-");
+            console.log(
+              "[updateProfile] birthDate input:",
+              data.birthDate,
+              "parts:",
+              parts,
+            );
+            if (parts.length === 3 && parts[0].length === 2) {
+              // Format JJ-MM-AAAA → YYYY-MM-DD
+              updateData.birth_date = `${parts[2]}-${parts[1]}-${parts[0]}`;
+              console.log(
+                "[updateProfile] Converted to:",
+                updateData.birth_date,
+              );
+            } else {
+              // Déjà au bon format ou format invalide
+              updateData.birth_date = data.birthDate;
+              console.log(
+                "[updateProfile] Keeping as-is:",
+                updateData.birth_date,
+              );
+            }
           }
 
-          // Mettre à jour dans Supabase
-          const { error } = await supabase
+          console.log("[updateProfile] Updating with data:", updateData);
+
+          // Utiliser upsert pour créer le profil s'il n'existe pas
+          const { data: updatedProfile, error } = await supabase
             .from("profiles")
-            .update(updateData)
-            .eq("id", currentUser.id);
+            .upsert(updateData, { onConflict: "id" })
+            .select()
+            .single();
 
           if (error) {
+            console.error("[updateProfile] Error:", error);
             set({ isLoading: false });
             return { success: false, error: error.message };
           }
+
+          console.log("[updateProfile] Success:", updatedProfile);
 
           // Mettre à jour le state local
           set({
@@ -145,6 +186,7 @@ const useAuthStore = create<AuthState>()(
 
           return { success: true };
         } catch (error: any) {
+          console.error("[updateProfile] Exception:", error);
           set({ isLoading: false });
           return { success: false, error: error.message };
         }
@@ -275,11 +317,16 @@ const useAuthStore = create<AuthState>()(
 
           if (data.user) {
             // Récupérer le profil
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from("profiles")
               .select("*")
               .eq("id", data.user.id)
               .single();
+
+            console.log("[signInWithEmail] Profile fetched:", profile);
+            if (profileError) {
+              console.log("[signInWithEmail] Profile error:", profileError);
+            }
 
             const user: User = {
               id: data.user.id,
@@ -287,7 +334,7 @@ const useAuthStore = create<AuthState>()(
                 profile?.username || data.user.email?.split("@")[0] || "User",
               email: data.user.email || "",
               avatar: profile?.avatar_url || undefined,
-              birthDate: profile?.birth_date || undefined,
+              birthDate: formatBirthDateFromDB(profile?.birth_date),
               memberSince:
                 data.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],
@@ -296,6 +343,8 @@ const useAuthStore = create<AuthState>()(
               level: profile?.level || 1,
               isSupporter: profile?.is_supporter || false,
             };
+
+            console.log("[signInWithEmail] User constructed:", user);
 
             set({
               user,
@@ -437,11 +486,19 @@ const useAuthStore = create<AuthState>()(
           } = await supabase.auth.getSession();
 
           if (session?.user) {
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from("profiles")
               .select("*")
               .eq("id", session.user.id)
               .single();
+
+            console.log("[refreshSession] Profile fetched:", profile);
+            if (profileError) {
+              console.log(
+                "[refreshSession] Profile error (may be normal if no profile yet):",
+                profileError.message,
+              );
+            }
 
             const isAnonymous =
               session.user.is_anonymous || !session.user.email;
@@ -454,7 +511,7 @@ const useAuthStore = create<AuthState>()(
                 "User",
               email: session.user.email || "",
               avatar: profile?.avatar_url || undefined,
-              birthDate: profile?.birth_date || undefined,
+              birthDate: formatBirthDateFromDB(profile?.birth_date),
               memberSince:
                 session.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],
@@ -463,6 +520,15 @@ const useAuthStore = create<AuthState>()(
               level: profile?.level || 1,
               isSupporter: profile?.is_supporter || false,
             };
+
+            console.log(
+              "[refreshSession] User constructed:",
+              user.name,
+              "- avatar:",
+              user.avatar,
+              "- birthDate:",
+              user.birthDate,
+            );
 
             set({
               user,

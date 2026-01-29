@@ -115,24 +115,8 @@ function RootLayoutNav() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        if (supabase) {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session?.user) {
-            // Mettre à jour le store si session Supabase existe
-            const { isAuthenticated: storeAuth } = useAuthStore.getState();
-            if (!storeAuth) {
-              useAuthStore.getState().login({
-                id: session.user.id,
-                name: session.user.user_metadata?.first_name || "Utilisateur",
-                email: session.user.email || "",
-                memberSince:
-                  session.user.created_at || new Date().toISOString(),
-              });
-            }
-          }
-        }
+        // Rafraîchir la session depuis Supabase et le store
+        await useAuthStore.getState().refreshSession();
       } catch (error) {
         console.error("Erreur vérification auth:", error);
       } finally {
@@ -149,6 +133,9 @@ function RootLayoutNav() {
       } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === "SIGNED_OUT") {
           useAuthStore.getState().logout();
+        } else if (event === "SIGNED_IN" && session?.user) {
+          // Rafraîchir la session après connexion
+          await useAuthStore.getState().refreshSession();
         }
       });
 
@@ -164,11 +151,21 @@ function RootLayoutNav() {
     const inAuth = segments[0] === "auth";
     const inIndex = segments[0] === undefined;
 
+    console.log("[Navigation] Auth state:", {
+      isAuthenticated,
+      segments,
+      inAuthGroup,
+      inAuth,
+      inIndex,
+    });
+
     if (isAuthenticated && (inAuth || inIndex)) {
       // Utilisateur connecté sur auth ou index -> rediriger vers l'app
+      console.log("[Navigation] Redirecting to /(tabs)");
       router.replace("/(tabs)");
     } else if (!isAuthenticated && inAuthGroup) {
       // Utilisateur non connecté dans l'app -> rediriger vers welcome
+      console.log("[Navigation] Redirecting to /auth/welcome");
       router.replace("/auth/welcome");
     }
   }, [isAuthenticated, segments, isReady]);

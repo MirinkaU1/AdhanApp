@@ -99,6 +99,13 @@ export default function ProfileScreen() {
       updateData.birthDate = birthDate;
     }
 
+    console.log(
+      "[ProfileScreen] Sending update:",
+      updateData,
+      "birthDate state:",
+      birthDate,
+    );
+
     const result = await updateProfile(updateData);
 
     if (result.success) {
@@ -110,18 +117,18 @@ export default function ProfileScreen() {
     }
   };
 
-  // Formater la date de naissance pour l'affichage
+  // Formater la date de naissance pour l'affichage (JJ-MM-AAAA)
   const formatBirthDateInput = (text: string) => {
     // Supprimer tout sauf les chiffres
     const numbers = text.replace(/\D/g, "");
 
-    // Formater en YYYY-MM-DD
-    if (numbers.length <= 4) {
+    // Formater en JJ-MM-AAAA
+    if (numbers.length <= 2) {
       return numbers;
-    } else if (numbers.length <= 6) {
-      return `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}-${numbers.slice(2)}`;
     } else {
-      return `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
+      return `${numbers.slice(0, 2)}-${numbers.slice(2, 4)}-${numbers.slice(4, 8)}`;
     }
   };
 
@@ -282,7 +289,7 @@ export default function ProfileScreen() {
                   onChangeText={(text) =>
                     setBirthDate(formatBirthDateInput(text))
                   }
-                  placeholder="YYYY-MM-DD"
+                  placeholder="JJ-MM-AAAA"
                   placeholderTextColor="#64748B"
                   className="flex-1 font-outfit-medium px-3 text-slate-800 dark:text-slate-100"
                   style={{ fontSize: 16, height: "100%" }}
