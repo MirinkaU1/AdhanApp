@@ -163,6 +163,11 @@ export default {
     profileUpdated: "Profile updated successfully",
     profileUpdateError: "Failed to update profile",
     emailNotEditable: "Email cannot be modified",
+    birthDate: "Date of birth",
+    permissionRequired: "Permission required",
+    photoPermissionDesc: "Gallery access is required to change your avatar.",
+    avatarUpdated: "Avatar updated successfully",
+    avatarUploadError: "Error uploading avatar",
   },
 
   // Language

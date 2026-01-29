@@ -21,6 +21,7 @@ if (!isExpoGo) {
 type PrayerTimes = Record<PrayerName, Date>;
 
 const CHANNEL_ID = "prayer-notifications";
+const DAILY_REMINDER_CHANNEL_ID = "daily-reminder";
 const CATEGORY_ID = "prayer-reminder";
 
 // Labels des prières en français et arabe
@@ -191,8 +192,11 @@ export const usePrayerNotifications = (options: {
 
       if (actionId === "MARK_DONE") {
         // Marquer la prière comme faite dans le store
-        const { setStatus } = usePrayerStore.getState();
-        setStatus(prayerName, true);
+        const state = usePrayerStore.getState();
+        // Vérifier si la prière n'est pas déjà faite avant de toggle
+        if (!state.status[prayerName]) {
+          state.togglePrayer(prayerName);
+        }
         console.log(
           `Prière ${prayerName} marquée comme faite via notification`,
         );
@@ -234,9 +238,7 @@ export const usePrayerNotifications = (options: {
 
     return () => {
       if (responseListenerRef.current) {
-        Notifications.removeNotificationSubscription(
-          responseListenerRef.current,
-        );
+        responseListenerRef.current.remove();
       }
     };
   }, [handleNotificationResponse, setupNotificationCategory]);

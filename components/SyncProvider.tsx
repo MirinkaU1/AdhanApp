@@ -1,0 +1,156 @@
+/**
+ * SyncProvider - Composant qui gère la synchronisation des données avec Supabase
+ *
+ * Ce composant doit être placé dans le layout principal pour activer la sync.
+ * Il ne rend rien visuellement mais gère :
+ * - La synchronisation des logs de prière (daily_logs)
+ * - La synchronisation du XP et niveau (profiles)
+ * - Le calcul et sync de la streak
+ * - La gestion offline-first avec queue de pending
+ */
+
+import { useEffect, useRef, useCallback } from "react";
+import { AppState, AppStateStatus } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
+
+import { useSyncData } from "@/hooks/useSyncData";
+import { useSyncDailyLogs } from "@/hooks/useSyncDailyLogs";
+import useAuthStore from "@/stores/useAuthStore";
+import usePrayerStore from "@/stores/usePrayerStore";
+import { supabase } from "@/lib/supabase";
+
+export default function SyncProvider() {
+  const { user, isAuthenticated } = useAuthStore();
+  const { fetchFromSupabase, status, dateKey } = usePrayerStore();
+  const appStateRef = useRef(AppState.currentState);
+  const lastStreakSyncRef = useRef<string | null>(null);
+
+  // Hook de synchronisation réseau (gère online/offline)
+  const { manualSync, hasPendingSync } = useSyncData();
+
+  // Hook de synchronisation des logs quotidiens
+  useSyncDailyLogs();
+
+  // Calculer et mettre à jour la streak côté serveur
+  const updateStreak = useCallback(async () => {
+    if (!isAuthenticated || !user?.id || !supabase) return;
+
+    try {
+      // Appeler la fonction PostgreSQL pour calculer la streak
+      const { data, error } = await supabase.rpc("calculate_streak", {
+        p_user_id: user.id,
+      });
+
+      if (error) {
+        console.error("[SyncProvider] Failed to calculate streak:", error);
+      } else {
+        console.log("[SyncProvider] Streak calculated:", data);
+      }
+    } catch (error) {
+      console.error("[SyncProvider] Streak calculation error:", error);
+    }
+  }, [isAuthenticated, user?.id]);
+
+  // Sync quand l'app revient au premier plan
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        // L'app revient au premier plan
+        if (isAuthenticated && user?.id) {
+          console.log("[SyncProvider] App active - checking for sync...");
+
+          const netState = await NetInfo.fetch();
+          if (netState.isConnected && netState.isInternetReachable) {
+            // Rafraîchir les données depuis Supabase
+            await fetchFromSupabase(user.id);
+
+            // Sync les données locales non synchronisées
+            if (hasPendingSync) {
+              await manualSync();
+            }
+
+            // Recalculer la streak
+            await updateStreak();
+          }
+        }
+      }
+      appStateRef.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [
+    isAuthenticated,
+    user?.id,
+    fetchFromSupabase,
+    hasPendingSync,
+    manualSync,
+    updateStreak,
+  ]);
+
+  // Calculer la streak quand le statut des prières change (toutes cochées)
+  useEffect(() => {
+    const allPrayed = Object.values(status).every(Boolean);
+    const syncKey = `${dateKey}-${allPrayed}`;
+
+    // Éviter les appels répétés pour le même état
+    if (syncKey === lastStreakSyncRef.current) return;
+
+    if (allPrayed && isAuthenticated && user?.id) {
+      lastStreakSyncRef.current = syncKey;
+
+      // Attendre que la sync des logs soit faite puis calculer la streak
+      const timeoutId = setTimeout(async () => {
+        const netState = await NetInfo.fetch();
+        if (netState.isConnected && netState.isInternetReachable) {
+          await updateStreak();
+        }
+      }, 3000); // Attendre 3s après sync des logs
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [status, dateKey, isAuthenticated, user?.id, updateStreak]);
+
+  // Sync XP et niveau vers Supabase quand ils changent
+  useEffect(() => {
+    const syncProfileToSupabase = async () => {
+      if (!isAuthenticated || !user?.id || !supabase) return;
+
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            xp: user.xp ?? 0,
+            level: user.level ?? 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (error) {
+          console.error("[SyncProvider] Failed to sync profile:", error);
+        } else {
+          console.log("[SyncProvider] Profile synced (XP/Level)");
+        }
+      } catch (error) {
+        console.error("[SyncProvider] Profile sync error:", error);
+      }
+    };
+
+    // Débounce pour éviter trop d'appels
+    const timeoutId = setTimeout(syncProfileToSupabase, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [user?.xp, user?.level, user?.id, isAuthenticated]);
+
+  // Rien à rendre visuellement
+  return null;
+}

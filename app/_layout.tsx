@@ -26,6 +26,7 @@ import useThemeStore from "@/stores/useThemeStore";
 import XpToast from "@/components/XpToast";
 import LevelUpToast from "@/components/LevelUpToast";
 import NotificationProvider from "@/components/NotificationProvider";
+import SyncProvider from "@/components/SyncProvider";
 
 import { useColorScheme } from "nativewind";
 
@@ -194,6 +195,8 @@ function RootLayoutNav() {
         <LevelUpToast />
         {/* Provider de notifications */}
         <NotificationProvider />
+        {/* Provider de synchronisation Supabase */}
+        <SyncProvider />
       </View>
     </ThemeProvider>
   );

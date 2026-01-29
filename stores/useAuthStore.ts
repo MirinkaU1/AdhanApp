@@ -8,6 +8,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  birthDate?: string; // Format: YYYY-MM-DD
   memberSince: string;
   isGuest?: boolean;
   xp?: number;
@@ -30,7 +31,12 @@ interface AuthState {
   setSupporter: (isSupporter: boolean) => void;
   updateProfile: (data: {
     name?: string;
+    avatar?: string;
+    birthDate?: string;
   }) => Promise<{ success: boolean; error?: string }>;
+  uploadAvatar: (
+    imageUri: string
+  ) => Promise<{ success: boolean; url?: string; error?: string }>;
 
   // Supabase Auth Actions
   signInAnonymously: () => Promise<{ success: boolean; error?: string }>;
@@ -100,13 +106,25 @@ const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true });
         try {
+          // Construire l'objet de mise à jour
+          const updateData: Record<string, any> = {
+            updated_at: new Date().toISOString(),
+          };
+
+          if (data.name !== undefined) {
+            updateData.username = data.name;
+          }
+          if (data.avatar !== undefined) {
+            updateData.avatar_url = data.avatar;
+          }
+          if (data.birthDate !== undefined) {
+            updateData.birth_date = data.birthDate;
+          }
+
           // Mettre à jour dans Supabase
           const { error } = await supabase
             .from("profiles")
-            .update({
-              username: data.name,
-              updated_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq("id", currentUser.id);
 
           if (error) {
@@ -119,6 +137,8 @@ const useAuthStore = create<AuthState>()(
             user: {
               ...currentUser,
               name: data.name ?? currentUser.name,
+              avatar: data.avatar ?? currentUser.avatar,
+              birthDate: data.birthDate ?? currentUser.birthDate,
             },
             isLoading: false,
           });
@@ -126,6 +146,54 @@ const useAuthStore = create<AuthState>()(
           return { success: true };
         } catch (error: any) {
           set({ isLoading: false });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Uploader un avatar vers Supabase Storage
+      uploadAvatar: async (imageUri) => {
+        const currentUser = get().user;
+        if (!currentUser) {
+          return { success: false, error: "No user logged in" };
+        }
+
+        try {
+          // Lire le fichier et le convertir en blob
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+
+          // Générer un nom de fichier unique
+          const fileExt = imageUri.split(".").pop() || "jpg";
+          const fileName = `${currentUser.id}/avatar.${fileExt}`;
+
+          // Uploader vers Supabase Storage
+          const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(fileName, blob, {
+              upsert: true,
+              contentType: `image/${fileExt}`,
+            });
+
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            return { success: false, error: uploadError.message };
+          }
+
+          // Obtenir l'URL publique
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+          // Mettre à jour le profil avec la nouvelle URL
+          const updateResult = await get().updateProfile({ avatar: publicUrl });
+
+          if (!updateResult.success) {
+            return { success: false, error: updateResult.error };
+          }
+
+          return { success: true, url: publicUrl };
+        } catch (error: any) {
+          console.error("Upload avatar error:", error);
           return { success: false, error: error.message };
         }
       },
@@ -218,6 +286,8 @@ const useAuthStore = create<AuthState>()(
               name:
                 profile?.username || data.user.email?.split("@")[0] || "User",
               email: data.user.email || "",
+              avatar: profile?.avatar_url || undefined,
+              birthDate: profile?.birth_date || undefined,
               memberSince:
                 data.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],
@@ -383,6 +453,8 @@ const useAuthStore = create<AuthState>()(
                 (isAnonymous ? "Invité" : session.user.email?.split("@")[0]) ||
                 "User",
               email: session.user.email || "",
+              avatar: profile?.avatar_url || undefined,
+              birthDate: profile?.birth_date || undefined,
               memberSince:
                 session.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],

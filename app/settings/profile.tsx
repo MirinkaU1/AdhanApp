@@ -8,33 +8,96 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
+import * as ImagePicker from "expo-image-picker";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useAuthStore from "@/stores/useAuthStore";
+import { useIsDark } from "@/components/useColorScheme";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { user, updateProfile, isLoading } = useAuthStore();
+  const isDark = useIsDark();
+  const { user, updateProfile, uploadAvatar, isLoading } = useAuthStore();
 
   const [firstName, setFirstName] = useState(user?.name || "");
+  const [birthDate, setBirthDate] = useState(user?.birthDate || "");
+  const [avatarUri, setAvatarUri] = useState(user?.avatar || "");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    setHasChanges(firstName.trim() !== (user?.name || "").trim());
-  }, [firstName, user?.name]);
+    const nameChanged = firstName.trim() !== (user?.name || "").trim();
+    const birthDateChanged = birthDate !== (user?.birthDate || "");
+    setHasChanges(nameChanged || birthDateChanged);
+  }, [firstName, birthDate, user?.name, user?.birthDate]);
+
+  const pickImage = async () => {
+    try {
+      // Demander les permissions
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          t("settings.permissionRequired"),
+          t("settings.photoPermissionDesc")
+        );
+        return;
+      }
+
+      // Ouvrir le sélecteur d'images
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploadingAvatar(true);
+        setErrorMessage("");
+
+        const uploadResult = await uploadAvatar(result.assets[0].uri);
+
+        if (uploadResult.success && uploadResult.url) {
+          setAvatarUri(uploadResult.url);
+          setSuccessMessage(t("settings.avatarUpdated"));
+          setTimeout(() => setSuccessMessage(""), 3000);
+        } else {
+          setErrorMessage(uploadResult.error || t("settings.avatarUploadError"));
+        }
+
+        setIsUploadingAvatar(false);
+      }
+    } catch (error: any) {
+      console.error("Image picker error:", error);
+      setErrorMessage(error.message);
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleSave = async () => {
-    if (!hasChanges || !firstName.trim()) return;
+    if (!hasChanges) return;
 
     setErrorMessage("");
     setSuccessMessage("");
 
-    const result = await updateProfile({ name: firstName.trim() });
+    const updateData: { name?: string; birthDate?: string } = {};
+
+    if (firstName.trim() !== (user?.name || "").trim()) {
+      updateData.name = firstName.trim();
+    }
+    if (birthDate !== (user?.birthDate || "")) {
+      updateData.birthDate = birthDate;
+    }
+
+    const result = await updateProfile(updateData);
 
     if (result.success) {
       setSuccessMessage(t("settings.profileUpdated"));
@@ -42,6 +105,21 @@ export default function ProfileScreen() {
       setTimeout(() => setSuccessMessage(""), 3000);
     } else {
       setErrorMessage(result.error || t("settings.profileUpdateError"));
+    }
+  };
+
+  // Formater la date de naissance pour l'affichage
+  const formatBirthDateInput = (text: string) => {
+    // Supprimer tout sauf les chiffres
+    const numbers = text.replace(/\D/g, "");
+
+    // Formater en YYYY-MM-DD
+    if (numbers.length <= 4) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      return `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+    } else {
+      return `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
     }
   };
 
@@ -81,12 +159,32 @@ export default function ProfileScreen() {
               {t("settings.profileSubtitle")}
             </Text>
           </View>
-          <View
-            className="w-12 h-12 rounded-full items-center justify-center"
-            style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}
+{/* Avatar dans le header */}
+          <Pressable
+            onPress={pickImage}
+            className="relative"
           >
-            <MaterialIconsRound name="person" size={26} color="#D97706" />
-          </View>
+            {avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                className="w-14 h-14 rounded-full"
+                style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+              />
+            ) : (
+              <View
+                className="w-14 h-14 rounded-full items-center justify-center"
+                style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}
+              >
+                <MaterialIconsRound name="person" size={28} color="#D97706" />
+              </View>
+            )}
+            <View
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full items-center justify-center bg-amber-600"
+              style={{ borderWidth: 2, borderColor: '#115E59' }}
+            >
+              <MaterialIconsRound name="camera-alt" size={12} color="#fff" />
+            </View>
+          </Pressable>
         </View>
       </LinearGradient>
 
@@ -160,6 +258,41 @@ export default function ProfileScreen() {
                   autoCorrect={false}
                 />
                 {firstName !== user?.name && firstName.trim() ? (
+                  <View className="w-6 h-6 rounded-full items-center justify-center bg-amber-600">
+                    <MaterialIconsRound name="edit" size={14} color="#fff" />
+                  </View>
+                ) : null}
+              </View>
+            </View>
+
+            {/* Séparateur */}
+            <View className="h-px mx-4 bg-gray-200 dark:bg-slate-700" />
+
+            {/* Date de naissance */}
+            <View className="p-4">
+              <Text
+                className="font-outfit-semibold uppercase mb-2 text-gray-500 dark:text-slate-400"
+                style={{ fontSize: 11, letterSpacing: 1 }}
+              >
+                {t("settings.birthDate")}
+              </Text>
+              <View className="flex-row items-center rounded-xl px-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 h-14">
+                <MaterialIconsRound
+                  name="cake"
+                  size={22}
+                  color="#64748B"
+                />
+                <TextInput
+                  value={birthDate}
+                  onChangeText={(text) => setBirthDate(formatBirthDateInput(text))}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#64748B"
+                  className="flex-1 font-outfit-medium px-3 text-slate-800 dark:text-slate-100"
+                  style={{ fontSize: 16, height: "100%" }}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+                {birthDate !== (user?.birthDate || "") && birthDate.length === 10 ? (
                   <View className="w-6 h-6 rounded-full items-center justify-center bg-amber-600">
                     <MaterialIconsRound name="edit" size={14} color="#fff" />
                   </View>

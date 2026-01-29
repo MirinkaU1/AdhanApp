@@ -165,6 +165,11 @@ export default {
     profileUpdated: "Profil mis à jour avec succès",
     profileUpdateError: "Échec de la mise à jour du profil",
     emailNotEditable: "L'email ne peut pas être modifié",
+    birthDate: "Date de naissance",
+    permissionRequired: "Permission requise",
+    photoPermissionDesc: "L'accès à la galerie photo est nécessaire pour changer votre avatar.",
+    avatarUpdated: "Avatar mis à jour avec succès",
+    avatarUploadError: "Erreur lors du téléchargement de l'avatar",
   },
 
   // Language
