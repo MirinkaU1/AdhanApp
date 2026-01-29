@@ -80,7 +80,7 @@ function RootLayoutNav() {
   const { mode: themeMode, _hasHydrated } = useThemeStore();
   const router = useRouter();
   const segments = useSegments();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, hasHydrated } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
 
   // Synchroniser le thème du store avec NativeWind (seulement après hydratation)
@@ -113,6 +113,8 @@ function RootLayoutNav() {
 
   // Vérifier l'état d'authentification au démarrage
   useEffect(() => {
+    if (!hasHydrated) return;
+
     const checkAuth = async () => {
       try {
         // Rafraîchir la session depuis Supabase et le store
@@ -132,7 +134,8 @@ function RootLayoutNav() {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === "SIGNED_OUT") {
-          useAuthStore.getState().logout();
+          // Éviter la boucle: on nettoie localement sans rappeler signOut
+          useAuthStore.getState().clearAuth();
         } else if (event === "SIGNED_IN" && session?.user) {
           // Rafraîchir la session après connexion
           await useAuthStore.getState().refreshSession();
@@ -141,11 +144,11 @@ function RootLayoutNav() {
 
       return () => subscription.unsubscribe();
     }
-  }, []);
+  }, [hasHydrated]);
 
   // Redirection basée sur l'authentification
   useEffect(() => {
-    if (!isReady) return;
+    if (!hasHydrated || !isReady) return;
 
     const inAuthGroup = segments[0] === "(tabs)";
     const inAuth = segments[0] === "auth";
@@ -168,7 +171,7 @@ function RootLayoutNav() {
       console.log("[Navigation] Redirecting to /auth/welcome");
       router.replace("/auth/welcome");
     }
-  }, [isAuthenticated, segments, isReady]);
+  }, [isAuthenticated, segments, isReady, hasHydrated]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

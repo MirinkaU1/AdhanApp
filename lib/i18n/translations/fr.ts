@@ -171,6 +171,14 @@ export default {
       "L'accès à la galerie photo est nécessaire pour changer votre avatar.",
     avatarUpdated: "Avatar mis à jour avec succès",
     avatarUploadError: "Erreur lors du téléchargement de l'avatar",
+    chooseAvatar: "Choisir un avatar",
+    chooseFromGallery: "Choisir depuis la galerie",
+    avatars: "Avatars",
+    noAvatars: "Ajoute des avatars dans profile.tsx",
+    avatarDrawerSubtitle: "Personnalise ton profil",
+    tabAvatars: "Avatars",
+    tabGallery: "Galerie",
+    removeAvatar: "Supprimer l'avatar",
   },
 
   // Language

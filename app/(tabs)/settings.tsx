@@ -78,13 +78,6 @@ const APP_PREFERENCES: PreferenceItem[] = [
 
 const ACCOUNT_PREFERENCES: PreferenceItem[] = [
   {
-    id: "account",
-    icon: "account-circle",
-    iconBgColor: "#E0E7FF",
-    iconColor: "#6366F1",
-    labelKey: "settings.profile",
-  },
-  {
     id: "support",
     icon: "favorite",
     iconBgColor: "#FCE7F3",
@@ -175,9 +168,6 @@ export default function ProfileScreen() {
         break;
       case "theme":
         router.push("/settings/theme");
-        break;
-      case "account":
-        router.push("/auth/login");
         break;
       case "support":
         router.push("/support");
@@ -395,22 +385,6 @@ export default function ProfileScreen() {
                   />
                 )}
               </View>
-              {/* Bouton edit */}
-              <Pressable
-                className="absolute items-center justify-center"
-                style={{
-                  bottom: 0,
-                  right: 0,
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  backgroundColor: "#D97706",
-                  borderWidth: 2,
-                  borderColor: "#115E59",
-                }}
-              >
-                <MaterialIconsRound name="edit" size={14} color="#fff" />
-              </Pressable>
             </View>
 
             {/* Nom */}

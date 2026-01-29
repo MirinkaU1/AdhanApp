@@ -15,9 +15,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
+import { Asset } from "expo-asset";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useAuthStore from "@/stores/useAuthStore";
 import { useIsDark } from "@/components/useColorScheme";
+import { AvatarDrawer } from "@/components/ui";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -28,9 +30,28 @@ export default function ProfileScreen() {
   const [birthDate, setBirthDate] = useState(user?.birthDate || "");
   const [avatarUri, setAvatarUri] = useState(user?.avatar || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Avatars locaux
+  const avatarOptions = [
+    { id: "01", source: require("@/assets/images/avatars/01.png") },
+    { id: "02", source: require("@/assets/images/avatars/02.png") },
+    { id: "03", source: require("@/assets/images/avatars/03.png") },
+    { id: "04", source: require("@/assets/images/avatars/04.png") },
+    { id: "05", source: require("@/assets/images/avatars/05.png") },
+    { id: "06", source: require("@/assets/images/avatars/06.png") },
+  ];
+
+  // Debug: vérifier que les avatars sont chargés
+  useEffect(() => {
+    console.log("👤 Avatar options loaded:", avatarOptions.length);
+    avatarOptions.forEach((avatar) => {
+      console.log(`Avatar ${avatar.id}:`, avatar.source);
+    });
+  }, []);
 
   useEffect(() => {
     const nameChanged = firstName.trim() !== (user?.name || "").trim();
@@ -132,6 +153,71 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSelectAvatar = async (
+    source: string | import("react-native").ImageSourcePropType,
+  ) => {
+    try {
+      setIsUploadingAvatar(true);
+      setErrorMessage("");
+
+      let resolvedUri: string | undefined;
+
+      if (typeof source === "string") {
+        resolvedUri = source;
+      } else {
+        const asset = Asset.fromModule(source as number);
+        if (!asset.localUri) {
+          await asset.downloadAsync();
+        }
+        resolvedUri = asset.localUri || asset.uri;
+      }
+
+      if (!resolvedUri) {
+        setErrorMessage(t("settings.avatarUploadError"));
+        setIsUploadingAvatar(false);
+        return;
+      }
+
+      const uploadResult = await uploadAvatar(resolvedUri);
+
+      if (uploadResult.success && uploadResult.url) {
+        setAvatarUri(uploadResult.url);
+        setSuccessMessage(t("settings.avatarUpdated"));
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsAvatarSheetOpen(false);
+      } else {
+        setErrorMessage(uploadResult.error || t("settings.avatarUploadError"));
+      }
+    } catch (error: any) {
+      console.error("Avatar select error:", error);
+      setErrorMessage(error.message);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      setIsUploadingAvatar(true);
+      setErrorMessage("");
+
+      const result = await updateProfile({ avatar: null });
+      if (result.success) {
+        setAvatarUri("");
+        setSuccessMessage(t("settings.avatarUpdated"));
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsAvatarSheetOpen(false);
+      } else {
+        setErrorMessage(result.error || t("settings.avatarUploadError"));
+      }
+    } catch (error: any) {
+      console.error("Remove avatar error:", error);
+      setErrorMessage(error.message);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   return (
     <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       {/* Header */}
@@ -168,31 +254,26 @@ export default function ProfileScreen() {
               {t("settings.profileSubtitle")}
             </Text>
           </View>
-          {/* Avatar dans le header */}
-          <Pressable onPress={pickImage} className="relative">
-            {avatarUri ? (
-              <Image
-                source={{ uri: avatarUri }}
-                className="w-14 h-14 rounded-full"
-                style={{ borderWidth: 2, borderColor: "rgba(255,255,255,0.3)" }}
-              />
-            ) : (
-              <View
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}
-              >
-                <MaterialIconsRound name="person" size={28} color="#D97706" />
-              </View>
-            )}
-            <View
-              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full items-center justify-center bg-amber-600"
-              style={{ borderWidth: 2, borderColor: "#115E59" }}
-            >
-              <MaterialIconsRound name="camera-alt" size={12} color="#fff" />
-            </View>
-          </Pressable>
+          {/* Icône profil dans le header */}
+          <View
+            className="w-12 h-12 rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}
+          >
+            <MaterialIconsRound name="person" size={26} color="#D97706" />
+          </View>
         </View>
       </LinearGradient>
+
+      {/* Drawer Avatars */}
+      <AvatarDrawer
+        visible={isAvatarSheetOpen}
+        onClose={() => setIsAvatarSheetOpen(false)}
+        onPickImage={pickImage}
+        avatarOptions={avatarOptions}
+        onSelectAvatar={handleSelectAvatar}
+        onRemoveAvatar={avatarUri ? handleRemoveAvatar : undefined}
+        isLoading={isUploadingAvatar}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -236,6 +317,41 @@ export default function ProfileScreen() {
               </Text>
             </View>
           ) : null}
+
+          {/* Action avatar visible */}
+          <Pressable
+            onPress={() => setIsAvatarSheetOpen(true)}
+            className="mb-6 flex-row items-center gap-4 p-4 rounded-3xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+            disabled={isUploadingAvatar}
+          >
+            {isUploadingAvatar ? (
+              <View className="w-14 h-14 rounded-full items-center justify-center bg-gray-200 dark:bg-slate-700">
+                <ActivityIndicator size="small" color="#D97706" />
+              </View>
+            ) : avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                className="w-14 h-14 rounded-full"
+              />
+            ) : (
+              <View className="w-14 h-14 rounded-full items-center justify-center bg-amber-100 dark:bg-amber-900/30">
+                <MaterialIconsRound name="person" size={26} color="#D97706" />
+              </View>
+            )}
+            <View className="flex-1">
+              <Text className="font-outfit-semibold text-slate-800 dark:text-slate-100">
+                {t("settings.chooseAvatar")}
+              </Text>
+              <Text className="text-sm font-outfit-regular text-gray-500 dark:text-slate-400">
+                {t("settings.chooseFromGallery")}
+              </Text>
+            </View>
+            <MaterialIconsRound
+              name="chevron-right"
+              size={24}
+              color="#94A3B8"
+            />
+          </Pressable>
 
           {/* Formulaire */}
           <View className="rounded-3xl overflow-hidden bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">

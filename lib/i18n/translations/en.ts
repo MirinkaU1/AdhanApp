@@ -168,6 +168,14 @@ export default {
     photoPermissionDesc: "Gallery access is required to change your avatar.",
     avatarUpdated: "Avatar updated successfully",
     avatarUploadError: "Error uploading avatar",
+    chooseAvatar: "Choose an avatar",
+    chooseFromGallery: "Choose from gallery",
+    avatars: "Avatars",
+    noAvatars: "Add avatars in profile.tsx",
+    avatarDrawerSubtitle: "Personalize your profile",
+    tabAvatars: "Avatars",
+    tabGallery: "Gallery",
+    removeAvatar: "Remove avatar",
   },
 
   // Language
