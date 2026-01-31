@@ -8,4 +8,9 @@ declare module "lucide-react-native" {
   };
 
   export const Check: ComponentType<LucideProps>;
+  export const BookOpen: ComponentType<LucideProps>;
+  export const Share2: ComponentType<LucideProps>;
+  export const RefreshCw: ComponentType<LucideProps>;
+  export const X: ComponentType<LucideProps>;
+  export const ChevronLeft: ComponentType<LucideProps>;
 }

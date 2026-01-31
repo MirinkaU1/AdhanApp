@@ -34,6 +34,7 @@ import { usePrayerLocation } from "@/hooks/usePrayerLocation";
 import { useGamification } from "@/hooks/useGamification";
 import { useTranslation } from "react-i18next";
 import { AppText } from "@/components/ui";
+import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
 
 // Configuration des prières avec icônes Material
 const PRAYER_ICONS: Record<string, MaterialIconName> = {
@@ -78,6 +79,9 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const [now, setNow] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showSurahReader, setShowSurahReader] = useState(false);
+  const [selectedSurahNumber, setSelectedSurahNumber] = useState(67);
+  const [targetVerse, setTargetVerse] = useState<number | undefined>(undefined);
   const isDark = useIsDark();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
 
@@ -684,41 +688,37 @@ export default function DashboardScreen() {
             })}
           </View>
 
-          {/* Hadith du jour */}
-          <LinearGradient
-            colors={isDark ? ["#1f2937", "#111827"] : ["#f0fdfa", "#ffffff"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              marginTop: 24,
-              borderRadius: 16,
-              padding: 20,
-              borderWidth: 1,
-              borderColor: isDark ? "#334155" : "#ccfbf1",
-            }}
-          >
-            <View className="flex-row items-start gap-3">
-              <MaterialIconsRound
-                name="format-quote"
-                size={20}
-                color="#D97706"
-                style={{ marginTop: 2 }}
-              />
-              <View className="flex-1">
-                <Text
-                  className="text-sm leading-6 font-outfit-regular"
-                  style={{ color: isDark ? "#cbd5e1" : "#475569" }}
-                >
-                  « {dailyHadith.text} »
-                </Text>
-                <Text className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2 text-right font-outfit-medium">
-                  — {dailyHadith.source}
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
+          {/* Sagesse du Jour (Alternance Verset/Hadith) */}
+          <View className="mt-6">
+            <DailyWisdomCard
+              onVersePress={(surahId: string, verseNumber: number) => {
+                // Map surahId to surahNumber
+                const surahNumberMap: Record<string, number> = {
+                  mulk: 67, fajr: 89, ikhlas: 112, falaq: 113, nas: 114,
+                  kahf: 18, yasin: 36, waqia: 56, rahman: 55, shams: 91,
+                  layl: 92, duha: 93, sharh: 94, tin: 95, alaq: 96,
+                  qadr: 97, bayyinah: 98, zilzal: 99,adiyat: 100,
+                  qariah: 101, takathur: 102, asr: 103, humazah: 104,
+                  fil: 105, quraish: 106, maun: 107, kawthar: 108, kafirun: 109,
+                  nasr: 110, masad: 111
+                };
+                setSelectedSurahNumber(surahNumberMap[surahId] || 67);
+                setTargetVerse(verseNumber);
+                setShowSurahReader(true);
+              }}
+              mode="daily"
+            />
+          </View>
         </View>
       </ScrollView>
+
+      {/* Modal Lecture de Sourate */}
+      <SurahReaderDrawer
+        isVisible={showSurahReader}
+        onClose={() => setShowSurahReader(false)}
+        surahNumber={selectedSurahNumber}
+        targetVerseNumber={targetVerse}
+      />
     </View>
   );
 }

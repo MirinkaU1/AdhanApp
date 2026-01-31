@@ -19,6 +19,10 @@ import {
   Outfit_600SemiBold,
   Outfit_700Bold,
 } from "@expo-google-fonts/outfit";
+import {
+  Amiri_400Regular,
+  Amiri_700Bold,
+} from "@expo-google-fonts/amiri";
 import { loadSavedLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
@@ -50,6 +54,8 @@ export default function RootLayout() {
     Outfit_500Medium,
     Outfit_600SemiBold,
     Outfit_700Bold,
+    Amiri_400Regular,
+    Amiri_700Bold,
     ...MaterialIcons.font,
   });
 
@@ -60,10 +66,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      // Charger la langue sauvegardée
-      loadSavedLanguage().then(() => {
-        SplashScreen.hideAsync();
+      loadSavedLanguage();
+      import("@/utils/quranLoader").then(({ preloadQuranToStorage }) => {
+        preloadQuranToStorage().catch(console.error);
       });
+      SplashScreen.hideAsync();
     }
   }, [loaded]);
 
@@ -188,6 +195,8 @@ function RootLayoutNav() {
           <Stack.Screen name="support" options={{ headerShown: false }} />
           <Stack.Screen name="quests" options={{ headerShown: false }} />
           <Stack.Screen name="levels" options={{ headerShown: false }} />
+          <Stack.Screen name="quran" options={{ headerShown: false }} />
+          <Stack.Screen name="quran/reader/[id]" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{ presentation: "modal", headerShown: false }}

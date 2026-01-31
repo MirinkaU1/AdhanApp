@@ -320,16 +320,10 @@ export default function StatisticsScreen() {
             borderBottomRightRadius: 32,
           }}
         >
-          <Text
-            className="text-white font-outfit-bold"
-            style={{ fontSize: 28 }}
-          >
+          <Text className="text-white text-4xl mb-2 font-outfit-bold">
             {t("stats.title")}
           </Text>
-          <Text
-            className="text-white/70 font-outfit-regular mt-1"
-            style={{ fontSize: 15 }}
-          >
+          <Text className="text-white/70 font-outfit-regular mt-1 text-sm">
             {t("stats.subtitle")}
           </Text>
 

@@ -131,7 +131,7 @@ export default function TabLayout() {
               }}
             >
               <MaterialIconsRound
-                name="book"
+                name="menu-book"
                 size={centerIconSize}
                 color="#ffffff"
               />

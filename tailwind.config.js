@@ -44,6 +44,8 @@ module.exports = {
         "outfit-medium": ["Outfit_500Medium", "sans-serif"],
         "outfit-semibold": ["Outfit_600SemiBold", "sans-serif"],
         "outfit-bold": ["Outfit_700Bold", "sans-serif"],
+        amiri: ["Amiri", "Amiri_400Regular", "serif"],
+        "amiri-bold": ["Amiri_700Bold", "serif"],
       },
       borderRadius: {
         "4xl": "40px",

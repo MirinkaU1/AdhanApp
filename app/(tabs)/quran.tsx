@@ -1,186 +1,192 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
+import { useState, useEffect } from "react";
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import MaterialIconsRound from "@/components/MaterialIconsRound";
+import { AppText, AppCard } from "@/components/ui";
+import { SurahReaderDrawer, ContinueReadingCard } from "@/components/quran";
 
-const SURAHS = [
-  { number: 1, name: "Al-Fatiha", arabicName: "الفاتحة", verses: 7 },
-  { number: 2, name: "Al-Baqarah", arabicName: "البقرة", verses: 286 },
-  { number: 3, name: "Ali 'Imran", arabicName: "آل عمران", verses: 200 },
-  { number: 36, name: "Ya-Sin", arabicName: "يس", verses: 83 },
-  { number: 55, name: "Ar-Rahman", arabicName: "الرحمن", verses: 78 },
-  { number: 67, name: "Al-Mulk", arabicName: "الملك", verses: 30 },
-  { number: 112, name: "Al-Ikhlas", arabicName: "الإخلاص", verses: 4 },
-  { number: 113, name: "Al-Falaq", arabicName: "الفلق", verses: 5 },
-  { number: 114, name: "An-Nas", arabicName: "الناس", verses: 6 },
+const QURAN_ACTIVITIES = [
+  {
+    id: "read",
+    title: "readQuran",
+    subtitle: "essentialSurahs",
+    icon: "menu-book",
+    color: "#115E59",
+  },
+  {
+    id: "hadith",
+    title: "hadiths",
+    subtitle: "teachings",
+    icon: "format-quote",
+    color: "#D97706",
+  },
+  {
+    id: "dhikr",
+    title: "dhikr",
+    subtitle: "invocations",
+    icon: "self-improvement",
+    color: "#059669",
+  },
+  {
+    id: "learn",
+    title: "learn",
+    subtitle: "learnQuran",
+    icon: "school",
+    color: "#7C3AED",
+  },
+  {
+    id: "quests",
+    title: "quests",
+    subtitle: "dailyQuests",
+    icon: "military-tech",
+    color: "#EA580C",
+  },
 ];
 
 export default function QuranScreen() {
-  const isDark = useIsDark();
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const [showSurahReader, setShowSurahReader] = useState(false);
+  const [selectedSurahNumber, setSelectedSurahNumber] = useState(67);
+  const [targetVerse, setTargetVerse] = useState<number | undefined>(undefined);
 
-  const bgColor = isDark ? "#0f172a" : "#f1f5f9";
-  const cardBg = isDark ? "#1e293b" : "#ffffff";
-  const textPrimary = isDark ? "#f8fafc" : "#1e293b";
-  const textSecondary = isDark ? "#94a3b8" : "#64748b";
-  const borderColor = isDark ? "#334155" : "#e2e8f0";
+  useEffect(() => {
+    router.prefetch("/quran");
+    router.prefetch("/quran/favorites");
+  }, [router]);
+
+  const handleActivityPress = (activityId: string) => {
+    switch (activityId) {
+      case "read":
+        router.push("/quran");
+        break;
+      case "hadith":
+        break;
+      case "dhikr":
+        break;
+      case "learn":
+        router.push("/learn");
+        break;
+      case "quests":
+        router.push("/quests");
+        break;
+    }
+  };
+
+  const handleSurahPress = (surahNumber: number) => {
+    setSelectedSurahNumber(surahNumber);
+    setTargetVerse(undefined);
+    setShowSurahReader(true);
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgColor }}>
+    <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingTop: 60,
-          paddingBottom: 120,
-        }}
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Text style={{ fontSize: 28, fontWeight: "700", color: textPrimary }}>
-          Al-Quran
-        </Text>
-        <Text style={{ fontSize: 14, color: textSecondary, marginTop: 8 }}>
-          Lisez et méditez le Saint Coran
-        </Text>
+        {/* ===== HEADER ===== */}
+        <View className="rounded-b-4xl min-h-52 overflow-hidden">
+          <LinearGradient
+            colors={["#115E59", "#0d4542"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/photo-1542813820-56b46215a3f8?w=800&q=80",
+            }}
+            style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+            resizeMode="cover"
+          />
 
-        {/* Continuer la lecture */}
-        <View
-          style={{
-            marginTop: 24,
-            backgroundColor: "#0f766e",
-            borderRadius: 20,
-            padding: 20,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <View
-            style={{ position: "absolute", right: -20, top: -20, opacity: 0.1 }}
-          >
-            <Ionicons name="book" size={120} color="#ffffff" />
-          </View>
-          <Text
-            style={{
-              fontSize: 12,
-              color: "rgba(255,255,255,0.7)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Continuer la lecture
-          </Text>
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: "700",
-              color: "#ffffff",
-              marginTop: 8,
-            }}
-          >
-            Sourate Al-Baqarah
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: "rgba(255,255,255,0.7)",
-              marginTop: 4,
-            }}
-          >
-            Verset 142 sur 286
-          </Text>
-          <Pressable
-            style={{
-              marginTop: 16,
-              backgroundColor: "rgba(255,255,255,0.2)",
-              borderRadius: 12,
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-              alignSelf: "flex-start",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Ionicons name="play" size={16} color="#ffffff" />
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#ffffff" }}>
-              Reprendre
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Sourates populaires */}
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: textPrimary,
-            marginTop: 32,
-            marginBottom: 16,
-          }}
-        >
-          Sourates populaires
-        </Text>
-
-        <View style={{ gap: 12 }}>
-          {SURAHS.map((surah) => (
-            <Pressable
-              key={surah.number}
-              style={{
-                backgroundColor: cardBg,
-                borderRadius: 16,
-                padding: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor,
-              }}
+          <View className="px-6 pt-20 pb-8">
+            <AppText
+              variant="h1"
+              className="text-white text-4xl font-outfit-bold mb-2"
             >
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 8,
-                  backgroundColor: isDark ? "#334155" : "#f1f5f9",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 12,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 14, fontWeight: "700", color: "#0f766e" }}
-                >
-                  {surah.number}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: textPrimary,
-                  }}
-                >
-                  {surah.name}
-                </Text>
-                <Text
-                  style={{ fontSize: 12, color: textSecondary, marginTop: 2 }}
-                >
-                  {surah.verses} versets
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontSize: 18,
-                  color: textSecondary,
-                  fontFamily: "System",
-                }}
-              >
-                {surah.arabicName}
-              </Text>
-            </Pressable>
-          ))}
+              Al-Quran
+            </AppText>
+            <AppText variant="caption" className="text-white/70">
+              {t("quran.subtitle")}
+            </AppText>
+          </View>
         </View>
+
+        <View className="px-4 -mt-6">
+          <ContinueReadingCard />
+        </View>
+
+        <View className="px-4 mt-6">
+          <AppText variant="h3" className="mb-4">
+            {t("quran.activities")}
+          </AppText>
+
+          <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
+            {QURAN_ACTIVITIES.map((activity) => (
+              <View
+                key={activity.id}
+                style={{ width: "50%", paddingHorizontal: 6, marginBottom: 12 }}
+              >
+                <Pressable
+                  onPress={() => handleActivityPress(activity.id)}
+                  className="active:scale-95 transition-transform"
+                  style={{ height: 140 }}
+                >
+                  <AppCard className="p-4 h-full justify-between">
+                    <View
+                      className="w-12 h-12 rounded-xl items-center justify-center mb-3"
+                      style={{ backgroundColor: activity.color + "15" }}
+                    >
+                      <MaterialIconsRound
+                        name={activity.icon as any}
+                        size={24}
+                        color={activity.color}
+                      />
+                    </View>
+                    <View>
+                      <AppText
+                        variant="bodyMedium"
+                        style={{ color: activity.color }}
+                      >
+                        {activity.id === "dhikr"
+                          ? activity.title
+                          : t(`quran.${activity.title}`)}
+                      </AppText>
+                      <AppText variant="label" className="mt-1">
+                        {t(`quran.${activity.subtitle}`)}
+                      </AppText>
+                    </View>
+                  </AppCard>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View className="h-8" />
       </ScrollView>
+
+      <SurahReaderDrawer
+        isVisible={showSurahReader}
+        onClose={() => setShowSurahReader(false)}
+        surahNumber={selectedSurahNumber}
+        targetVerseNumber={targetVerse}
+      />
     </View>
   );
 }
