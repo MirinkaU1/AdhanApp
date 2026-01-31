@@ -77,6 +77,7 @@ Ce document sert de suivi pour toutes les demandes et améliorations demandées 
 - [x] Backdrop cliquable pour fermer
 - [x] Support enableSwipeToClose optionnel
 - [x] Animations fluides avec react-native-reanimated
+- [x] Ajout traduction i18n pour le bouton "Fermer/Close"
 
 ### Composants utilisant AppDrawer
 - SurahReaderDrawer - Lecteur de sourates avec scroll vers le verset cible
@@ -85,31 +86,105 @@ Ce document sert de suivi pour toutes les demandes et améliorations demandées 
 ### Breaking changes
 Aucun - l'API reste compatible, seulement des ajouts optionnels
 
-## Notes techniques
+## Performances et Optimisations (31 Jan 2026)
 
-### Dépendances ajoutées
-- @expo-google-fonts/amiri: ^0.4.1
-- react-native-gesture-handler: ^2.30.0 (pour les gestes du drawer)
+### Améliorations de navigation
+- [x] Splash screen non bloqué par le préchargement Quran
+- [x] Pré-chargement des routes avec router.prefetch()
+- [x] Rendu virtualisé avec FlatList (au lieu de ScrollView + map)
+- [x] Composants SurahCard optimisés avec React.memo
+- [x] Configuration optimisée FlatList: initialNumToRender, removeClippedSubviews
 
-### Composants clés créés
-1. **DailyWisdomCard** - Card unique qui alterne entre verset et hadith selon le jour
-2. **SurahReaderDrawer** - Drawer interactif avec scroll et gestes
-3. **QuranData.ts** - Structure de données locale pour le Quran
+### Header quran/index.tsx
+- [x] Design avec gradient teal (#115E59 → #0d4542)
+- [x] Coins arrondis (rounded-b-4xl)
+- [x] Bouton favoris avec badge (en haut à droite)
+- [x] Barre de progression intégrée au header du lecteur
 
-### Design System utilisé
-- NativeWind pour le styling
-- AppCard, AppText comme composants de base
-- Thème Teal (#115E59) et Amber (#D97706)
-- Police Amiri pour le texte arabe
-- Police Outfit pour le texte français
+## Système de Favoris (31 Jan 2026)
 
-## Historique des modifications
+### Store useQuranStore
+- [x] Interface FavoriteVerse ajoutée
+- [x] Actions: addToFavorites, removeFromFavorites, isFavorite, getAllFavorites
+- [x] Action: unmarkVerse pour retirer marquage "lu"
+- [x] Synchronisation Supabase avec favorite_verses
 
-### 30 Jan 2026
-- Création initiale du Quran Engine
-- Implémentation complète des composants Quran
-- Intégration dans les pages index.tsx et quran.tsx
-- Corrections bugs et améliorations UX
+### Composants Favoris
+- [x] VerseOptionsDrawer - ajout/retrait favoris avec toggle
+- [x] Page /app/quran/favorites.tsx - liste des versets favoris
+- [x] Groupement des favoris par sourate
+- [x] Toast de confirmation lors de la suppression
+- [x] Navigation vers le lecteur au clic sur un favori
+
+### Bouton Favoris
+- [x] Badge dans header quran/index (en haut à droite de l'icône)
+- [x] Format compact avec nombre (cappé à "99+")
+- [x] Accès rapide à la page favoris
+
+## Page quran.tsx - Réorganisation (31 Jan 2026)
+
+### Changements effectués
+- [x] Section "Sourates Essentielles" retirée
+- [x] Grid d'activités restructurée avec 5 items:
+  - Lire le Coran (menu-book, teal)
+  - Hadiths (format-quote, amber)
+  - Dhikr (self-improvement, emerald)
+  - Apprendre (school, violet) → vers /learn
+  - Quêtes (military-tech, orange) → vers /quests
+
+### Traductions ajoutées
+- learnQuran: "Le Coran en profondeur" / "Deepen your knowledge"
+- quests: "Quêtes" / "Quests"
+- dailyQuests: "Quêtes quotidiennes" / "Daily quests"
+
+## Migration Supabase (31 Jan 2026)
+
+### Table quran_progress
+Emplacement: supabase/migrations/20260131_create_quran_progress.sql
+
+Colonnes:
+- id (BIGSERIAL, PK)
+- user_id (UUID, FK vers auth.users)
+- progress (JSONB)
+- stats (JSONB)
+- last_position (JSONB)
+- favorite_verses (JSONB)
+- updated_at (TIMESTAMPTZ)
+- created_at (TIMESTAMPTZ)
+
+Politiques RLS:
+- SELECT: auth.uid() = user_id
+- UPDATE: auth.uid() = user_id
+- INSERT: auth.uid() = user_id
+
+## Composants Clés Créés
+
+### SurahCard.tsx
+- Card de sourate avec progression
+- Barre de progression visuelle
+- Affichage du percentage et versets lus
+- Design cohérent avec le reste de l'app
+
+### VerseOptionsDrawer.tsx
+- Options pour chaque verset
+- Marquer comme lu/non lu
+- Ajouter/retirer des favoris
+- Partager et copier
+- Intégration i18n complète
+
+### favorites.tsx
+- Page dédiée aux versets favoris
+- Groupement par sourate
+- Cards avec texte arabe et traduction
+- Bouton suppression avec confirmation toast
+
+### Nouvelles traductions
+- common.close: "Fermer" / "Close"
+- quran.favorites: "Favoris" / "Favorites"
+- quran.addToFavorites / removeFromFavorites / removedFromFavorites
+- quran.noFavorites / noFavoritesHint
+- quran.verseSaved / versesSaved / allFavorites
+- quran.learnQuran / quests / dailyQuests
 
 ---
-Dernière mise à jour: 30 Jan 2026
+Dernière mise à jour: 31 Jan 2026
