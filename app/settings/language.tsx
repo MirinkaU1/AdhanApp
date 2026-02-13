@@ -6,6 +6,7 @@ import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useThemeStore from "@/stores/useThemeStore";
 import { changeLanguage } from "@/lib/i18n";
 import { useIsDark } from "@/components/useColorScheme";
+import { clearQuranCache } from "@/utils/quranLoader";
 
 interface Language {
   code: "fr" | "en";
@@ -26,7 +27,9 @@ export default function LanguageScreen() {
   const currentLanguage = i18n.language as "fr" | "en";
 
   const handleLanguageChange = async (langCode: "fr" | "en") => {
+    if (currentLanguage === langCode) return;
     await changeLanguage(langCode);
+    await clearQuranCache();
   };
 
   return (

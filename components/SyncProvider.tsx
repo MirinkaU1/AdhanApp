@@ -18,20 +18,30 @@ import { useSyncDailyLogs } from "@/hooks/useSyncDailyLogs";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
 import useQuestStore from "@/stores/useQuestStore";
+import { useQuranStore } from "@/stores/useQuranStore";
 import { supabase } from "@/lib/supabase";
 
 export default function SyncProvider() {
   const { user, isAuthenticated, updateXp, updateLevel } = useAuthStore();
   const { fetchFromSupabase, status, dateKey } = usePrayerStore();
   const { xp: questXp, level: questLevel, totalXpEarned } = useQuestStore();
+  const { loadFromSupabase, syncWithSupabase } = useQuranStore();
   const appStateRef = useRef(AppState.currentState);
   const lastStreakSyncRef = useRef<string | null>(null);
+  const lastQuranSyncRef = useRef<number>(0);
 
   // Hook de synchronisation réseau (gère online/offline)
   const { manualSync, hasPendingSync } = useSyncData();
 
   // Hook de synchronisation des logs quotidiens
   useSyncDailyLogs();
+
+  // Charger la progression Quran au démarrage si connecté
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      loadFromSupabase();
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Calculer et mettre à jour la streak côté serveur
   const updateStreak = useCallback(async () => {
@@ -76,6 +86,13 @@ export default function SyncProvider() {
 
             // Recalculer la streak
             await updateStreak();
+
+            // Charger la progression Quran depuis Supabase (toutes les 30 secondes max)
+            const now = Date.now();
+            if (now - lastQuranSyncRef.current > 30000) {
+              lastQuranSyncRef.current = now;
+              await loadFromSupabase();
+            }
           }
         }
       }
@@ -97,6 +114,7 @@ export default function SyncProvider() {
     hasPendingSync,
     manualSync,
     updateStreak,
+    loadFromSupabase,
   ]);
 
   // Calculer la streak quand le statut des prières change (toutes cochées)

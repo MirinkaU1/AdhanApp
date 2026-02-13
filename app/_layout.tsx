@@ -33,6 +33,7 @@ import NotificationProvider from "@/components/NotificationProvider";
 import SyncProvider from "@/components/SyncProvider";
 
 import { useColorScheme } from "nativewind";
+import { useQuranStore } from "@/stores/useQuranStore";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -146,6 +147,8 @@ function RootLayoutNav() {
         } else if (event === "SIGNED_IN" && session?.user) {
           // Rafraîchir la session après connexion
           await useAuthStore.getState().refreshSession();
+          // Charger la progression Quran depuis Supabase
+          await useQuranStore.getState().loadFromSupabase();
         }
       });
 

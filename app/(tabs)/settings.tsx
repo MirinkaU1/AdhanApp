@@ -18,6 +18,7 @@ import type { ButtonGroupItem } from "@/components/ui/AppButtonGroup";
 import { useIsDark } from "@/components/useColorScheme";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
+import { getAvatarSource } from "@/lib/avatarService";
 
 interface PreferenceItem {
   id: string;
@@ -170,6 +171,11 @@ export default function ProfileScreen() {
     getStreak,
     getTotalPrayers,
   ]);
+
+  const avatarSource = useMemo(
+    () => getAvatarSource(user?.avatar_id, user?.avatar_url),
+    [user?.avatar_id, user?.avatar_url],
+  );
 
   const handlePreferencePress = async (id: string) => {
     switch (id) {
@@ -397,9 +403,9 @@ export default function ProfileScreen() {
                 className="w-full h-full rounded-full bg-white/10 items-center justify-center"
                 style={{ borderWidth: 2, borderColor: "#115E59" }}
               >
-                {user?.avatar ? (
+                {avatarSource ? (
                   <Image
-                    source={{ uri: user.avatar }}
+                    source={avatarSource}
                     style={{ width: "100%", height: "100%", borderRadius: 50 }}
                   />
                 ) : (

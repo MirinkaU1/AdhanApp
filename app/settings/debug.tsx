@@ -16,6 +16,7 @@ import MaterialIconsRound, {
 import { useIsDark } from "@/components/useColorScheme";
 import { AppText } from "@/components/ui";
 import type { PrayerName } from "@/stores/useNotificationStore";
+import useQuestStore from "@/stores/useQuestStore";
 import {
   triggerDailyReminderManually,
   getDailyReminderTaskStatus,
@@ -80,6 +81,9 @@ const testMessages: Record<PrayerName, string> = {
 export default function DebugScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const enqueueXpToast = useQuestStore((s) => s.enqueueXpToast);
+  const enqueueLevelUpToast = useQuestStore((s) => s.enqueueLevelUpToast);
+  const level = useQuestStore((s) => s.level);
 
   // Afficher une notification de test
   const showTestNotification = async (prayerId: PrayerName) => {
@@ -213,6 +217,16 @@ export default function DebugScreen() {
     } catch (error) {
       Alert.alert(t("debug.error"), String(error));
     }
+  };
+
+  // Toast XP - Quête accomplie
+  const showQuestCompletedToast = () => {
+    enqueueXpToast(50, "quest_debug");
+  };
+
+  // Toast Level Up (sans XP toast)
+  const showLevelUpToast = () => {
+    enqueueLevelUpToast(level + 1);
   };
 
   return (
@@ -436,6 +450,85 @@ export default function DebugScreen() {
               />
             </Pressable>
           ))}
+        </View>
+
+        {/* Section Toasts */}
+        <AppText variant="h3" className="mb-4">
+          {t("debug.toasts")}
+        </AppText>
+
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark mb-6">
+          {/* Toast XP - Quête accomplie */}
+          <Pressable
+            onPress={showQuestCompletedToast}
+            className="p-4 flex-row items-center gap-3 active:opacity-70"
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: isDark ? "#334155" : "#F1F5F9",
+            }}
+          >
+            <View
+              className="w-11 h-11 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#FEF3C7" }}
+            >
+              <MaterialIconsRound name="star" size={22} color="#F59E0B" />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                style={{ fontSize: 16 }}
+              >
+                {t("debug.testQuestToast")}
+              </Text>
+              <Text
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 13 }}
+              >
+                {t("debug.testQuestToastDesc")}
+              </Text>
+            </View>
+            <MaterialIconsRound
+              name="play-arrow"
+              size={20}
+              color={isDark ? "#94A3B8" : "#64748B"}
+            />
+          </Pressable>
+
+          {/* Toast Level Up */}
+          <Pressable
+            onPress={showLevelUpToast}
+            className="p-4 flex-row items-center gap-3 active:opacity-70"
+          >
+            <View
+              className="w-11 h-11 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#EDE9FE" }}
+            >
+              <MaterialIconsRound
+                name="emoji-events"
+                size={22}
+                color="#7C3AED"
+              />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                style={{ fontSize: 16 }}
+              >
+                {t("debug.testLevelUpToast")}
+              </Text>
+              <Text
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 13 }}
+              >
+                {t("debug.testLevelUpToastDesc")}
+              </Text>
+            </View>
+            <MaterialIconsRound
+              name="play-arrow"
+              size={20}
+              color={isDark ? "#94A3B8" : "#64748B"}
+            />
+          </Pressable>
         </View>
 
         {/* Info */}

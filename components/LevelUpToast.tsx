@@ -10,18 +10,17 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
   withSequence,
   withDelay,
   Easing,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useQuestStore, { LevelUpNotification } from "@/stores/useQuestStore";
 import { useTranslation } from "react-i18next";
 
-const TOAST_DURATION = 4000;
-const ANIMATION_DURATION = 400;
+const TOAST_DURATION = 2500;
+const ANIMATION_DURATION = 300;
+const TOP_OFFSET = Platform.OS === "ios" ? 50 : 40;
 
 export default function LevelUpToast() {
   const { t } = useTranslation();
@@ -31,9 +30,9 @@ export default function LevelUpToast() {
   const consumePendingLevelUp = useQuestStore((s) => s.consumePendingLevelUp);
 
   // Animation values
-  const translateY = useSharedValue(-200);
+  const translateY = useSharedValue(-100);
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.5);
+  const scale = useSharedValue(0.8);
   const starRotation = useSharedValue(0);
   const starScale = useSharedValue(0);
 
@@ -64,27 +63,33 @@ export default function LevelUpToast() {
     setCurrentLevelUp(levelUp);
 
     // Reset values
-    translateY.value = -200;
+    translateY.value = -100;
     opacity.value = 0;
-    scale.value = 0.5;
+    scale.value = 0.8;
     starRotation.value = 0;
     starScale.value = 0;
 
-    // Animate in with spring
-    translateY.value = withSpring(0, {
-      damping: 12,
-      stiffness: 100,
+    // Animate in (same feel as XP toast)
+    translateY.value = withTiming(0, {
+      duration: ANIMATION_DURATION,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
     opacity.value = withTiming(1, { duration: ANIMATION_DURATION });
-    scale.value = withSpring(1, {
-      damping: 10,
-      stiffness: 150,
+    scale.value = withTiming(1, {
+      duration: ANIMATION_DURATION,
+      easing: Easing.bezier(0.34, 1.56, 0.64, 1),
     });
 
     // Star animation
-    starScale.value = withDelay(200, withSpring(1.2, { damping: 8 }));
+    starScale.value = withDelay(
+      150,
+      withSequence(
+        withTiming(1.2, { duration: 180 }),
+        withTiming(1, { duration: 120 }),
+      ),
+    );
     starRotation.value = withDelay(
-      200,
+      150,
       withSequence(
         withTiming(15, { duration: 100 }),
         withTiming(-15, { duration: 100 }),
@@ -101,12 +106,12 @@ export default function LevelUpToast() {
   };
 
   const hideToast = () => {
-    translateY.value = withTiming(-200, {
+    translateY.value = withTiming(-100, {
       duration: ANIMATION_DURATION,
       easing: Easing.bezier(0.55, 0, 1, 0.45),
     });
     opacity.value = withTiming(0, { duration: ANIMATION_DURATION });
-    scale.value = withTiming(0.5, { duration: ANIMATION_DURATION });
+    scale.value = withTiming(0.8, { duration: ANIMATION_DURATION });
 
     // Wait for animation to complete
     timeoutRef.current = setTimeout(() => {
@@ -139,47 +144,24 @@ export default function LevelUpToast() {
       pointerEvents="box-none"
     >
       <Pressable onPress={hideToast}>
-        <LinearGradient
-          colors={["#7C3AED", "#5B21B6", "#4C1D95"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.toast}
-        >
-          {/* Decorative stars */}
-          <View style={styles.decorLeft}>
-            <MaterialIconsRound
-              name="auto-awesome"
-              size={16}
-              color="rgba(255,255,255,0.3)"
-            />
-          </View>
-          <View style={styles.decorRight}>
-            <MaterialIconsRound
-              name="auto-awesome"
-              size={16}
-              color="rgba(255,255,255,0.3)"
-            />
-          </View>
-
-          {/* Main star icon */}
+        <View style={styles.toast}>
+          {/* Icon */}
           <Animated.View style={[styles.iconContainer, starStyle]}>
-            <MaterialIconsRound name="emoji-events" size={32} color="#FBBF24" />
+            <MaterialIconsRound name="emoji-events" size={24} color="#FBBF24" />
           </Animated.View>
 
           {/* Content */}
           <View style={styles.content}>
             <Text style={styles.congratsText}>{t("levelUp.congrats")}</Text>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelText}>{t("levelUp.newLevel")}</Text>
-              <View style={styles.levelBadge}>
-                <Text style={styles.levelNumber}>
-                  {currentLevelUp.newLevel}
-                </Text>
-              </View>
-            </View>
             <Text style={styles.levelName}>{currentLevelUp.levelName}</Text>
           </View>
-        </LinearGradient>
+
+          {/* Badge */}
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelText}>{t("levelUp.newLevel")}</Text>
+            <Text style={styles.levelNumber}>{currentLevelUp.newLevel}</Text>
+          </View>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -188,7 +170,7 @@ export default function LevelUpToast() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 50,
+    top: TOP_OFFSET,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -197,72 +179,62 @@ const styles = StyleSheet.create({
   toast: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     marginHorizontal: 16,
-    shadowColor: "#7C3AED",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-    overflow: "hidden",
-  },
-  decorLeft: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-  },
-  decorRight: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
+    backgroundColor: "#7C3AED",
+    shadowColor: "#5B21B6",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
   },
   iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(251,191,36,0.15)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
+    marginRight: 12,
   },
   content: {
     flex: 1,
   },
   congratsText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Outfit_500Medium",
     color: "rgba(255,255,255,0.8)",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  levelRow: {
-    flexDirection: "row",
+  levelBadge: {
+    backgroundColor: "rgba(251,191,36,0.18)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     alignItems: "center",
-    gap: 8,
-    marginTop: 4,
   },
   levelText: {
-    fontSize: 18,
-    fontFamily: "Outfit_700Bold",
-    color: "#FFFFFF",
-  },
-  levelBadge: {
-    backgroundColor: "#FBBF24",
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 12,
+    fontSize: 10,
+    fontFamily: "Outfit_600SemiBold",
+    color: "#FDE68A",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   levelNumber: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Outfit_700Bold",
-    color: "#1E1B4B",
+    color: "#FBBF24",
+    marginTop: 2,
   },
   levelName: {
     fontSize: 14,
     fontFamily: "Outfit_600SemiBold",
-    color: "#C4B5FD",
+    color: "#E9D5FF",
     marginTop: 2,
   },
 });

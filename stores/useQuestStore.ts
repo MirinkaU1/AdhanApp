@@ -87,6 +87,9 @@ interface QuestStoreState {
 
   // Actions
   addXp: (amount: number, reason: string, showToast?: boolean) => void;
+  // Debug / test (n'altère pas l'XP)
+  enqueueXpToast: (amount: number, reason: string) => void;
+  enqueueLevelUpToast: (level?: number) => void;
   addPrayerXp: (prayerName: PrayerNameXp) => boolean;
   addAllFiveBonusXp: () => boolean;
   addFajrBonusXp: () => boolean;
@@ -329,6 +332,33 @@ const useQuestStore = create<QuestStoreState>()(
           // Ajouter la notification de level up si on a monté de niveau
           pendingLevelUp: levelUpNotification || state.pendingLevelUp,
         });
+      },
+
+      // Debug: déclencher un toast XP sans modifier l'XP
+      enqueueXpToast: (amount: number, reason: string) => {
+        const xpGain: XpGain = {
+          amount,
+          reason,
+          timestamp: Date.now(),
+        };
+        set((state) => ({
+          pendingXpGains: [...state.pendingXpGains, xpGain],
+          xpHistory: [xpGain, ...state.xpHistory.slice(0, 49)],
+        }));
+      },
+
+      // Debug: déclencher un toast Level Up sans modifier l'XP
+      enqueueLevelUpToast: (level?: number) => {
+        const state = get();
+        const newLevel = level ?? state.level + 1;
+        const levelUpNotification: LevelUpNotification = {
+          newLevel,
+          levelName: getLevelName(newLevel),
+          timestamp: Date.now(),
+        };
+        set((s) => ({
+          pendingLevelUp: levelUpNotification || s.pendingLevelUp,
+        }));
       },
 
       // Add prayer XP avec vérification anti-doublon

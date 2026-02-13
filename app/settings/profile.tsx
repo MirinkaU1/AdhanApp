@@ -15,43 +15,33 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
-import { Asset } from "expo-asset";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useAuthStore from "@/stores/useAuthStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { AvatarDrawer } from "@/components/ui";
+import {
+  PRESET_AVATARS,
+  selectPresetAvatar,
+  uploadCustomAvatar,
+  removeAvatar,
+  getAvatarSource,
+} from "@/lib/avatarService";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
-  const { user, updateProfile, uploadAvatar, isLoading } = useAuthStore();
+  const { user, updateProfile, isLoading, setAvatarLocal } = useAuthStore();
 
   const [firstName, setFirstName] = useState(user?.name || "");
   const [birthDate, setBirthDate] = useState(user?.birthDate || "");
-  const [avatarUri, setAvatarUri] = useState(user?.avatar || "");
+  const [avatarSource, setAvatarSource] = useState(
+    getAvatarSource(user?.avatar_id, user?.avatar_url),
+  );
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Avatars locaux
-  const avatarOptions = [
-    { id: "01", source: require("@/assets/images/avatars/01.png") },
-    { id: "02", source: require("@/assets/images/avatars/02.png") },
-    { id: "03", source: require("@/assets/images/avatars/03.png") },
-    { id: "04", source: require("@/assets/images/avatars/04.png") },
-    { id: "05", source: require("@/assets/images/avatars/05.png") },
-    { id: "06", source: require("@/assets/images/avatars/06.png") },
-  ];
-
-  // Debug: vérifier que les avatars sont chargés
-  useEffect(() => {
-    console.log("👤 Avatar options loaded:", avatarOptions.length);
-    avatarOptions.forEach((avatar) => {
-      console.log(`Avatar ${avatar.id}:`, avatar.source);
-    });
-  }, []);
 
   useEffect(() => {
     const nameChanged = firstName.trim() !== (user?.name || "").trim();
@@ -84,12 +74,17 @@ export default function ProfileScreen() {
         setIsUploadingAvatar(true);
         setErrorMessage("");
 
-        const uploadResult = await uploadAvatar(result.assets[0].uri);
+        const uploadResult = await uploadCustomAvatar(
+          result.assets[0].uri,
+          user!.id,
+        );
 
         if (uploadResult.success && uploadResult.url) {
-          setAvatarUri(uploadResult.url);
+          setAvatarSource({ uri: uploadResult.url });
+          setAvatarLocal({ avatar_url: uploadResult.url, avatar_id: null });
           setSuccessMessage(t("settings.avatarUpdated"));
           setTimeout(() => setSuccessMessage(""), 3000);
+          setIsAvatarSheetOpen(false);
         } else {
           setErrorMessage(
             uploadResult.error || t("settings.avatarUploadError"),
@@ -153,43 +148,25 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSelectAvatar = async (
-    source: string | import("react-native").ImageSourcePropType,
-  ) => {
+  const handleSelectPresetAvatar = async (avatarId: string) => {
     try {
       setIsUploadingAvatar(true);
       setErrorMessage("");
 
-      let resolvedUri: string | undefined;
+      const result = await selectPresetAvatar(user!.id, avatarId);
 
-      if (typeof source === "string") {
-        resolvedUri = source;
-      } else {
-        const asset = Asset.fromModule(source as number);
-        if (!asset.localUri) {
-          await asset.downloadAsync();
-        }
-        resolvedUri = asset.localUri || asset.uri;
-      }
-
-      if (!resolvedUri) {
-        setErrorMessage(t("settings.avatarUploadError"));
-        setIsUploadingAvatar(false);
-        return;
-      }
-
-      const uploadResult = await uploadAvatar(resolvedUri);
-
-      if (uploadResult.success && uploadResult.url) {
-        setAvatarUri(uploadResult.url);
+      if (result.success) {
+        const source = getAvatarSource(avatarId, null);
+        setAvatarSource(source);
+        setAvatarLocal({ avatar_id: avatarId, avatar_url: null });
         setSuccessMessage(t("settings.avatarUpdated"));
         setTimeout(() => setSuccessMessage(""), 3000);
         setIsAvatarSheetOpen(false);
       } else {
-        setErrorMessage(uploadResult.error || t("settings.avatarUploadError"));
+        setErrorMessage(result.error || t("settings.avatarUploadError"));
       }
     } catch (error: any) {
-      console.error("Avatar select error:", error);
+      console.error("❌ Error selecting avatar:", error);
       setErrorMessage(error.message);
     } finally {
       setIsUploadingAvatar(false);
@@ -201,9 +178,10 @@ export default function ProfileScreen() {
       setIsUploadingAvatar(true);
       setErrorMessage("");
 
-      const result = await updateProfile({ avatar: null });
+      const result = await removeAvatar(user!.id);
       if (result.success) {
-        setAvatarUri("");
+        setAvatarSource(null);
+        setAvatarLocal({ avatar_id: null, avatar_url: null });
         setSuccessMessage(t("settings.avatarUpdated"));
         setTimeout(() => setSuccessMessage(""), 3000);
         setIsAvatarSheetOpen(false);
@@ -211,7 +189,7 @@ export default function ProfileScreen() {
         setErrorMessage(result.error || t("settings.avatarUploadError"));
       }
     } catch (error: any) {
-      console.error("Remove avatar error:", error);
+      console.error("❌ Remove avatar error:", error);
       setErrorMessage(error.message);
     } finally {
       setIsUploadingAvatar(false);
@@ -269,9 +247,15 @@ export default function ProfileScreen() {
         visible={isAvatarSheetOpen}
         onClose={() => setIsAvatarSheetOpen(false)}
         onPickImage={pickImage}
-        avatarOptions={avatarOptions}
-        onSelectAvatar={handleSelectAvatar}
-        onRemoveAvatar={avatarUri ? handleRemoveAvatar : undefined}
+        avatarOptions={PRESET_AVATARS}
+        onSelectAvatar={(source) => {
+          // Trouver l'ID de l'avatar sélectionné
+          const avatarId = PRESET_AVATARS.find((a) => a.source === source)?.id;
+          if (avatarId) {
+            handleSelectPresetAvatar(avatarId);
+          }
+        }}
+        onRemoveAvatar={avatarSource ? handleRemoveAvatar : undefined}
         isLoading={isUploadingAvatar}
       />
 
@@ -328,11 +312,8 @@ export default function ProfileScreen() {
               <View className="w-14 h-14 rounded-full items-center justify-center bg-gray-200 dark:bg-slate-700">
                 <ActivityIndicator size="small" color="#D97706" />
               </View>
-            ) : avatarUri ? (
-              <Image
-                source={{ uri: avatarUri }}
-                className="w-14 h-14 rounded-full"
-              />
+            ) : avatarSource ? (
+              <Image source={avatarSource} className="w-14 h-14 rounded-full" />
             ) : (
               <View className="w-14 h-14 rounded-full items-center justify-center bg-amber-100 dark:bg-amber-900/30">
                 <MaterialIconsRound name="person" size={26} color="#D97706" />

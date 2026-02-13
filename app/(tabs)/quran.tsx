@@ -75,9 +75,9 @@ export default function QuranScreen() {
       case "hadith":
         break;
       case "dhikr":
+        router.push("/quran/dhikr");
         break;
       case "learn":
-        router.push("/learn");
         break;
       case "quests":
         router.push("/quests");
@@ -164,7 +164,7 @@ export default function QuranScreen() {
                         style={{ color: activity.color }}
                       >
                         {activity.id === "dhikr"
-                          ? activity.title
+                          ? t("dhikr.title")
                           : t(`quran.${activity.title}`)}
                       </AppText>
                       <AppText variant="label" className="mt-1">

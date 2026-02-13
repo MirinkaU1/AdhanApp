@@ -23,7 +23,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  avatar?: string;
+  avatar?: string; // Legacy - compatibilité
+  avatar_id?: string; // ID de l'avatar prédéfini (01-06)
+  avatar_url?: string; // URL custom depuis Supabase Storage
   birthDate?: string; // Format: JJ-MM-AAAA (affichage)
   memberSince: string;
   isGuest?: boolean;
@@ -53,9 +55,15 @@ interface AuthState {
   updateLevel: (level: number) => void;
   setLoading: (loading: boolean) => void;
   setSupporter: (isSupporter: boolean) => void;
+  setAvatarLocal: (data: {
+    avatar_id?: string | null;
+    avatar_url?: string | null;
+  }) => void;
   updateProfile: (data: {
     name?: string;
     avatar?: string | null;
+    avatar_id?: string | null;
+    avatar_url?: string | null;
     birthDate?: string;
   }) => Promise<{ success: boolean; error?: string }>;
   uploadAvatar: (
@@ -150,10 +158,40 @@ const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, isSupporter } : null,
         })),
 
+      setAvatarLocal: ({ avatar_id, avatar_url }) =>
+        set((state) => ({
+          user: state.user
+            ? {
+                ...state.user,
+                avatar_id:
+                  avatar_id === undefined
+                    ? state.user.avatar_id
+                    : avatar_id === null
+                      ? undefined
+                      : avatar_id,
+                avatar_url:
+                  avatar_url === undefined
+                    ? state.user.avatar_url
+                    : avatar_url === null
+                      ? undefined
+                      : avatar_url,
+                // Legacy support
+                avatar:
+                  avatar_url === undefined
+                    ? state.user.avatar
+                    : avatar_url === null
+                      ? undefined
+                      : avatar_url,
+              }
+            : null,
+        })),
+
       // Mettre à jour le profil
       updateProfile: async (data: {
         name?: string;
-        avatar?: string | null;
+        avatar?: string | null; // Legacy - compatibilité
+        avatar_id?: string | null; // ID de l'avatar prédéfini
+        avatar_url?: string | null; // URL custom depuis Supabase Storage
         birthDate?: string;
       }) => {
         const currentUser = get().user;
@@ -172,9 +210,22 @@ const useAuthStore = create<AuthState>()(
           if (data.name !== undefined) {
             updateData.username = data.name;
           }
-          if (data.avatar !== undefined) {
+
+          // Gestion hybride des avatars
+          if (data.avatar_id !== undefined) {
+            // Avatar prédéfini sélectionné
+            updateData.avatar_id = data.avatar_id;
+            updateData.avatar_url = null; // Supprimer l'URL custom
+          } else if (data.avatar_url !== undefined) {
+            // Avatar custom uploadé
+            updateData.avatar_url = data.avatar_url;
+            updateData.avatar_id = null; // Supprimer l'ID prédéfini
+          } else if (data.avatar !== undefined) {
+            // Legacy support - traiter comme avatar_url
             updateData.avatar_url = data.avatar;
+            updateData.avatar_id = null;
           }
+
           if (data.birthDate !== undefined) {
             // Convertir JJ-MM-AAAA vers YYYY-MM-DD pour Supabase
             const parts = data.birthDate.split("-");
@@ -223,10 +274,25 @@ const useAuthStore = create<AuthState>()(
             user: {
               ...currentUser,
               name: data.name ?? currentUser.name,
+              avatar_id:
+                data.avatar_id !== undefined
+                  ? data.avatar_id === null
+                    ? undefined
+                    : data.avatar_id
+                  : currentUser.avatar_id,
+              avatar_url:
+                data.avatar_url !== undefined
+                  ? data.avatar_url === null
+                    ? undefined
+                    : data.avatar_url
+                  : currentUser.avatar_url,
+              // Legacy support
               avatar:
-                data.avatar === null
-                  ? undefined
-                  : (data.avatar ?? currentUser.avatar),
+                data.avatar !== undefined
+                  ? data.avatar === null
+                    ? undefined
+                    : data.avatar
+                  : currentUser.avatar,
               birthDate: data.birthDate ?? currentUser.birthDate,
             },
             isLoading: false,
@@ -248,6 +314,8 @@ const useAuthStore = create<AuthState>()(
         }
 
         try {
+          console.log("🚀 [Upload] Starting upload for URI:", imageUri);
+
           // 🔍 DÉBOGAGE: Vérifier la session Supabase
           const {
             data: { session },
@@ -259,26 +327,140 @@ const useAuthStore = create<AuthState>()(
           });
 
           let uploadBody: Blob | Uint8Array;
+          let fileExt = "jpg";
 
-          if (imageUri.startsWith("file://")) {
-            const base64 = await FileSystem.readAsStringAsync(imageUri, {
-              encoding: "base64",
-            });
-            const binaryString = atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i += 1) {
-              bytes[i] = binaryString.charCodeAt(i);
+          // Déterminer le type de fichier
+          const uriMatch = imageUri.match(/\.(png|jpg|jpeg|webp)$/i);
+          if (uriMatch) {
+            fileExt = uriMatch[1].toLowerCase();
+          }
+
+          console.log("📝 [Upload] File extension detected:", fileExt);
+
+          // Gérer les différents formats d'URI
+          const isFileUri = imageUri.startsWith("file://");
+          const isHttpUri =
+            imageUri.startsWith("http://") || imageUri.startsWith("https://");
+          const isAssetUri = imageUri.startsWith("asset://");
+          const isContentUri = imageUri.startsWith("content://");
+          // Les URIs sans protocole des assets en mode production (ex: assets_images_avatars_02)
+          const isAssetPath =
+            !isFileUri &&
+            !isHttpUri &&
+            !isAssetUri &&
+            !isContentUri &&
+            imageUri.includes("assets");
+          const isAbsolutePath =
+            !isFileUri &&
+            !isHttpUri &&
+            !isAssetUri &&
+            !isContentUri &&
+            !isAssetPath &&
+            (imageUri.startsWith("/") || /^[A-Za-z]:/.test(imageUri));
+
+          if (
+            isFileUri ||
+            isAssetUri ||
+            isAbsolutePath ||
+            isContentUri ||
+            isAssetPath
+          ) {
+            console.log("📁 [Upload] Processing local file...");
+            try {
+              // Normaliser l'URI pour FileSystem
+              let normalizedUri = imageUri;
+              if (isAssetUri) {
+                // Convertir asset:// en file://
+                normalizedUri = imageUri.replace("asset://", "file://");
+              } else if (isAssetPath) {
+                // URIs sans protocole - essayer comme chemin direct
+                console.log(
+                  "🔍 [Upload] Asset path detected (no protocol), trying to access directly",
+                );
+                normalizedUri = imageUri;
+              } else if (isAbsolutePath && !imageUri.startsWith("file://")) {
+                // Ajouter le préfixe file:// si nécessaire
+                normalizedUri = `file://${imageUri}`;
+              } else if (isContentUri) {
+                // Les content:// URIs Android peuvent être utilisés directement
+                normalizedUri = imageUri;
+              }
+
+              console.log("🔄 [Upload] Normalized URI:", normalizedUri);
+
+              const base64 = await FileSystem.readAsStringAsync(normalizedUri, {
+                encoding: "base64",
+              });
+              console.log("📦 [Upload] Base64 length:", base64.length);
+
+              const binaryString = atob(base64);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i += 1) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              uploadBody = bytes;
+              console.log(
+                "✅ [Upload] Local file converted to bytes:",
+                bytes.length,
+              );
+            } catch (fsError: any) {
+              console.error("❌ [Upload] FileSystem error:", fsError);
+              return {
+                success: false,
+                error: `Erreur de lecture du fichier: ${fsError.message}`,
+              };
             }
-            uploadBody = bytes;
+          } else if (
+            imageUri.startsWith("http://") ||
+            imageUri.startsWith("https://")
+          ) {
+            console.log("🌐 [Upload] Processing remote file...");
+            try {
+              // Lire le fichier distant et le convertir en blob
+              const response = await fetch(imageUri, {
+                method: "GET",
+                headers: {
+                  Accept: "image/*",
+                },
+              });
+
+              if (!response.ok) {
+                throw new Error(
+                  `HTTP ${response.status}: ${response.statusText}`,
+                );
+              }
+
+              const blob = await response.blob();
+              uploadBody = blob;
+              console.log(
+                "✅ [Upload] Remote file fetched:",
+                blob.size,
+                "bytes",
+              );
+            } catch (fetchError: any) {
+              console.error("❌ [Upload] Fetch error:", fetchError);
+              return {
+                success: false,
+                error: `Erreur de téléchargement: ${fetchError.message}`,
+              };
+            }
           } else {
-            // Lire le fichier distant et le convertir en blob
-            const response = await fetch(imageUri);
-            const blob = await response.blob();
-            uploadBody = blob;
+            console.error("❌ [Upload] Unsupported URI format:", imageUri);
+            console.error("❌ [Upload] URI details:", {
+              startsWithFile: imageUri.startsWith("file://"),
+              startsWithHttp:
+                imageUri.startsWith("http://") ||
+                imageUri.startsWith("https://"),
+              startsWithAsset: imageUri.startsWith("asset://"),
+              firstChars: imageUri.substring(0, 20),
+            });
+            return {
+              success: false,
+              error: `Format d'URI non supporté: ${imageUri.substring(0, 50)}...`,
+            };
           }
 
           // Générer un nom de fichier unique
-          const fileExt = imageUri.split(".").pop() || "jpg";
           const fileName = `${currentUser.id}/avatar.${fileExt}`;
 
           // 🔍 DÉBOGAGE: Afficher les détails de l'upload
@@ -481,7 +663,9 @@ const useAuthStore = create<AuthState>()(
               name:
                 profile?.username || data.user.email?.split("@")[0] || "User",
               email: data.user.email || "",
-              avatar: profile?.avatar_url || undefined,
+              avatar: profile?.avatar_url || undefined, // Legacy
+              avatar_id: profile?.avatar_id || undefined,
+              avatar_url: profile?.avatar_url || undefined,
               birthDate: formatBirthDateFromDB(profile?.birth_date),
               memberSince:
                 data.user.created_at?.split("T")[0] ||
@@ -750,7 +934,9 @@ const useAuthStore = create<AuthState>()(
                 (isAnonymous ? "Invité" : session.user.email?.split("@")[0]) ||
                 "User",
               email: session.user.email || "",
-              avatar: profile?.avatar_url || undefined,
+              avatar: profile?.avatar_url || undefined, // Legacy
+              avatar_id: profile?.avatar_id || undefined,
+              avatar_url: profile?.avatar_url || undefined,
               birthDate: formatBirthDateFromDB(profile?.birth_date),
               memberSince:
                 session.user.created_at?.split("T")[0] ||

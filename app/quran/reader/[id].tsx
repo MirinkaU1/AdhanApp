@@ -1,12 +1,6 @@
 // Page dédiée de lecture de sourate avec options
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  StyleSheet,
-} from "react-native";
+import { Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
@@ -21,6 +15,7 @@ interface SelectedVerse {
   id: number;
   text: string;
   translation: string;
+  transliteration?: string;
 }
 
 export default function QuranReaderScreen() {
@@ -97,7 +92,12 @@ export default function QuranReaderScreen() {
   );
 
   const handleVerseLongPress = useCallback(
-    (verse: { id: number; text: string; translation: string }) => {
+    (verse: {
+      id: number;
+      text: string;
+      translation: string;
+      transliteration?: string;
+    }) => {
       setSelectedVerse(verse);
       setShowVerseOptions(true);
     },
@@ -154,7 +154,8 @@ export default function QuranReaderScreen() {
                   {progress.percentage}% {t("quran.completed")}
                 </Text>
                 <Text className="text-white/80 text-xs font-outfit-medium">
-                  {progress.versesRead.length}/{surah.total_verses} {t("quran.versets")}
+                  {progress.versesRead.length}/{surah.total_verses}{" "}
+                  {t("quran.versets")}
                 </Text>
               </View>
               <View className="h-1.5 rounded-full overflow-hidden bg-white/20">
@@ -273,6 +274,11 @@ export default function QuranReaderScreen() {
                 </View>
 
                 <View className="mt-3 pl-12">
+                  {verse.transliteration ? (
+                    <Text className="text-sm italic leading-relaxed text-amber-600 dark:text-amber-500 font-outfit-regular mb-1">
+                      {verse.transliteration}
+                    </Text>
+                  ) : null}
                   <Text className="text-sm leading-relaxed text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular">
                     {verse.translation}
                   </Text>
