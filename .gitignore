@@ -42,4 +42,9 @@ yarn-error.*
 /ios
 /android
 
+# releases
+releases/*.apk
+releases/*.aab
+releases/*.ipa
+
 docs/

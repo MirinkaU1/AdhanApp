@@ -694,13 +694,36 @@ export default function DashboardScreen() {
               onVersePress={(surahId: string, verseNumber: number) => {
                 // Map surahId to surahNumber
                 const surahNumberMap: Record<string, number> = {
-                  mulk: 67, fajr: 89, ikhlas: 112, falaq: 113, nas: 114,
-                  kahf: 18, yasin: 36, waqia: 56, rahman: 55, shams: 91,
-                  layl: 92, duha: 93, sharh: 94, tin: 95, alaq: 96,
-                  qadr: 97, bayyinah: 98, zilzal: 99,adiyat: 100,
-                  qariah: 101, takathur: 102, asr: 103, humazah: 104,
-                  fil: 105, quraish: 106, maun: 107, kawthar: 108, kafirun: 109,
-                  nasr: 110, masad: 111
+                  mulk: 67,
+                  fajr: 89,
+                  ikhlas: 112,
+                  falaq: 113,
+                  nas: 114,
+                  kahf: 18,
+                  yasin: 36,
+                  waqia: 56,
+                  rahman: 55,
+                  shams: 91,
+                  layl: 92,
+                  duha: 93,
+                  sharh: 94,
+                  tin: 95,
+                  alaq: 96,
+                  qadr: 97,
+                  bayyinah: 98,
+                  zilzal: 99,
+                  adiyat: 100,
+                  qariah: 101,
+                  takathur: 102,
+                  asr: 103,
+                  humazah: 104,
+                  fil: 105,
+                  quraish: 106,
+                  maun: 107,
+                  kawthar: 108,
+                  kafirun: 109,
+                  nasr: 110,
+                  masad: 111,
                 };
                 setSelectedSurahNumber(surahNumberMap[surahId] || 67);
                 setTargetVerse(verseNumber);
