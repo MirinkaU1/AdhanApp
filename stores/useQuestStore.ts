@@ -27,6 +27,12 @@ export type QuestId =
   | "pray_on_time"
   | "first_prayer_today";
 
+export type RamadanQuestId =
+  // Hebdomadaires
+  | "ramadan_week_perfect"
+  | "ramadan_week_juz"
+  | "ramadan_week_surahs";
+
 export type QuestStatus = "locked" | "active" | "completed" | "claimed";
 
 export interface Quest {
@@ -39,6 +45,18 @@ export interface Quest {
   progress: number;
   status: QuestStatus;
   isDaily: boolean;
+}
+
+export interface RamadanQuest {
+  id: RamadanQuestId;
+  titleKey: string;
+  descriptionKey: string;
+  xpReward: number;
+  icon: string;
+  requirement: number;
+  progress: number;
+  status: QuestStatus;
+  isWeekly: boolean;
 }
 
 export interface XpGain {
@@ -72,6 +90,10 @@ interface QuestStoreState {
   dailyQuests: Record<QuestId, Quest>;
   lastQuestResetDate: string;
 
+  // Ramadan Weekly Quests
+  ramadanWeeklyQuests: Record<RamadanQuestId, RamadanQuest>;
+  lastWeeklyResetDate: string;
+
   // Daily XP Tracking (évite les doubles)
   dailyXpTracking: DailyXpTracking;
 
@@ -98,6 +120,12 @@ interface QuestStoreState {
   completeQuest: (questId: QuestId) => void;
   resetDailyQuests: () => void;
   checkAndResetDailyQuests: () => void;
+
+  // Ramadan weekly actions
+  updateRamadanQuestProgress: (questId: RamadanQuestId, progress: number) => void;
+  claimRamadanQuestReward: (questId: RamadanQuestId) => boolean;
+  resetWeeklyRamadanQuests: () => void;
+  checkAndResetWeeklyQuests: () => void;
   consumePendingXpGain: () => XpGain | null;
   consumePendingLevelUp: () => LevelUpNotification | null;
   getUnclaimedQuestsCount: () => number;
@@ -167,6 +195,44 @@ export const getLevelName = (level: number): string => {
 };
 
 const getDateKey = () => format(new Date(), "yyyy-MM-dd");
+// Clé de semaine : année + numéro de semaine ISO (lundi → dimanche)
+const getWeekKey = () => format(new Date(), "yyyy-'W'II");
+
+const createDefaultRamadanWeeklyQuests = (): Record<RamadanQuestId, RamadanQuest> => ({
+  ramadan_week_perfect: {
+    id: "ramadan_week_perfect",
+    titleKey: "quests.ramadan.weekPerfect.title",
+    descriptionKey: "quests.ramadan.weekPerfect.description",
+    xpReward: 200,
+    icon: "emoji-events",
+    requirement: 7,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+  ramadan_week_juz: {
+    id: "ramadan_week_juz",
+    titleKey: "quests.ramadan.weekJuz.title",
+    descriptionKey: "quests.ramadan.weekJuz.description",
+    xpReward: 150,
+    icon: "import-contacts",
+    requirement: 240,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+  ramadan_week_surahs: {
+    id: "ramadan_week_surahs",
+    titleKey: "quests.ramadan.weekSurahs.title",
+    descriptionKey: "quests.ramadan.weekSurahs.description",
+    xpReward: 100,
+    icon: "library-books",
+    requirement: 10,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+});
 
 const createDefaultDailyXpTracking = (): DailyXpTracking => ({
   dateKey: getDateKey(),
@@ -264,6 +330,8 @@ const useQuestStore = create<QuestStoreState>()(
       totalXpEarned: 0,
       dailyQuests: createDefaultDailyQuests(),
       lastQuestResetDate: getDateKey(),
+      ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+      lastWeeklyResetDate: getWeekKey(),
       dailyXpTracking: createDefaultDailyXpTracking(),
       pendingXpGains: [],
       xpHistory: [],
@@ -697,6 +765,62 @@ const useQuestStore = create<QuestStoreState>()(
         });
       },
 
+      // ── Ramadan weekly quests ─────────────────────────────────────────────
+
+      updateRamadanQuestProgress: (questId, progress) => {
+        set((state) => {
+          const quest = state.ramadanWeeklyQuests[questId];
+          if (!quest || quest.status === "completed" || quest.status === "claimed") {
+            return state;
+          }
+          const newProgress = Math.min(progress, quest.requirement);
+          return {
+            ramadanWeeklyQuests: {
+              ...state.ramadanWeeklyQuests,
+              [questId]: {
+                ...quest,
+                progress: newProgress,
+                status: newProgress >= quest.requirement ? "completed" : quest.status,
+              },
+            },
+          };
+        });
+      },
+
+      claimRamadanQuestReward: (questId) => {
+        let xpToAdd = 0;
+        set((state) => {
+          const quest = state.ramadanWeeklyQuests[questId];
+          if (!quest || quest.status !== "completed") return state;
+          xpToAdd = quest.xpReward;
+          return {
+            ramadanWeeklyQuests: {
+              ...state.ramadanWeeklyQuests,
+              [questId]: { ...quest, status: "claimed" as const },
+            },
+          };
+        });
+        if (xpToAdd > 0) {
+          get().addXp(xpToAdd, `ramadan_quest_${questId}`, true);
+          return true;
+        }
+        return false;
+      },
+
+      resetWeeklyRamadanQuests: () => {
+        set({
+          ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+          lastWeeklyResetDate: getWeekKey(),
+        });
+      },
+
+      checkAndResetWeeklyQuests: () => {
+        const state = get();
+        if (state.lastWeeklyResetDate !== getWeekKey()) {
+          state.resetWeeklyRamadanQuests();
+        }
+      },
+
       // Réinitialiser toutes les données (appelé lors du logout)
       clearAllData: () => {
         console.log("[QuestStore] Clearing all data...");
@@ -707,6 +831,8 @@ const useQuestStore = create<QuestStoreState>()(
           totalXpEarned: 0,
           dailyQuests: createDefaultDailyQuests(),
           lastQuestResetDate: getDateKey(),
+          ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+          lastWeeklyResetDate: getWeekKey(),
           dailyXpTracking: createDefaultDailyXpTracking(),
           pendingXpGains: [],
           xpHistory: [],
@@ -724,6 +850,8 @@ const useQuestStore = create<QuestStoreState>()(
         totalXpEarned: state.totalXpEarned,
         dailyQuests: state.dailyQuests,
         lastQuestResetDate: state.lastQuestResetDate,
+        ramadanWeeklyQuests: state.ramadanWeeklyQuests,
+        lastWeeklyResetDate: state.lastWeeklyResetDate,
         dailyXpTracking: state.dailyXpTracking,
         xpHistory: state.xpHistory,
       }),
