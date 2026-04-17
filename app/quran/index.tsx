@@ -19,6 +19,7 @@ import { ContinueReadingCard, SurahSkeleton } from "@/components/quran";
 import { SurahCard } from "@/components/quran/SurahCard";
 import {
   loadSurahIndex,
+  loadSurah,
   SurahIndexInfo,
   getSurahIndexSync,
 } from "@/utils/quranLoader";
@@ -64,12 +65,15 @@ export default function QuranListScreen() {
 
   const handleSurahPress = useCallback(
     (surahNumber: number) => {
+      // Déclenche le chargement avant la navigation — la transition (~300ms)
+      // donne du temps gratuit pour charger ou récupérer le cache mémoire.
+      loadSurah(surahNumber, currentLanguage);
       router.push({
         pathname: "/quran/reader/[id]",
         params: { id: surahNumber.toString() },
       });
     },
-    [router],
+    [router, currentLanguage],
   );
 
   const renderSurahItem: ListRenderItem<SurahIndexInfo> = useCallback(

@@ -4,8 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import { AppText, AppCard } from "@/components/ui";
-import { TasbihArc, DhikrSettingsDrawer } from "@/components/quran/dhikr";
+import { AppText, AppCard, AlertDialog } from "@/components/ui";
+import { DhikrSettingsDrawer, DigitalCounter } from "@/components/quran/dhikr";
 import useDhikrStore, { DHIKR_OPTIONS } from "@/stores/useDhikrStore";
 import { router } from "expo-router";
 
@@ -13,6 +13,7 @@ export default function DhikrScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
   const [showSettings, setShowSettings] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const {
     count,
@@ -109,9 +110,9 @@ export default function DhikrScreen() {
               </Text>
             </View>
 
-            {/* Bouton Reset uniquement */}
+            {/* Bouton Reset */}
             <Pressable
-              onPress={reset}
+              onPress={() => setShowResetConfirm(true)}
               className="w-12 h-12 rounded-full items-center justify-center"
               style={{
                 backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
@@ -158,10 +159,23 @@ export default function DhikrScreen() {
         </AppCard>
       </View>
 
-      {/* Tasbih Arc - Zone principale interactive */}
+      {/* Zone principale interactive */}
       <View className="flex-1">
-        <TasbihArc />
+        <DigitalCounter />
       </View>
+
+      <AlertDialog
+        visible={showResetConfirm}
+        title={t("dhikr.resetTitle")}
+        message={t("dhikr.resetDesc")}
+        icon="refresh"
+        iconColor="#64748B"
+        onDismiss={() => setShowResetConfirm(false)}
+        buttons={[
+          { text: t("common.cancel"), style: "default", onPress: () => setShowResetConfirm(false) },
+          { text: t("common.reset"), style: "destructive", onPress: () => { reset(); setShowResetConfirm(false); } },
+        ]}
+      />
 
       {/* Drawer des paramètres */}
       <DhikrSettingsDrawer
@@ -175,3 +189,4 @@ export default function DhikrScreen() {
     </View>
   );
 }
+

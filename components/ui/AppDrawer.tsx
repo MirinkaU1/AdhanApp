@@ -42,6 +42,8 @@ interface AppDrawerProps {
   contentContainerClassName?: string;
   scrollable?: boolean;
   enableSwipeToClose?: boolean;
+  /** Utilise height fixe au lieu de maxHeight — requis quand le contenu est une FlatList */
+  fillHeight?: boolean;
 }
 
 export default function AppDrawer({
@@ -57,6 +59,7 @@ export default function AppDrawer({
   contentContainerClassName = "",
   scrollable = true,
   enableSwipeToClose = true,
+  fillHeight = false,
 }: AppDrawerProps) {
   const { t } = useTranslation();
   const scrollOffset = useRef(0);
@@ -235,7 +238,7 @@ export default function AppDrawer({
               bottom: 0,
               left: 0,
               right: 0,
-              maxHeight: maxHeightValue,
+              ...(fillHeight ? { height: maxHeightValue } : { maxHeight: maxHeightValue }),
               backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,

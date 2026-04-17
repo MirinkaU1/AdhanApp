@@ -40,6 +40,7 @@ export default {
     yes: "Yes",
     no: "No",
     close: "Close",
+    reset: "Reset",
   },
 
   // Home / Dashboard
@@ -591,6 +592,8 @@ export default {
     addToFavoritesDesc: "Find this verse easily",
     removeFromFavorites: "Remove from favorites",
     removedFromFavorites: "Removed from favorites",
+    confirmRemoveFavorite: "Remove from favorites?",
+    confirmRemoveFavoriteDesc: "This verse will be removed from your favorites.",
     favorites: "Favorites",
     savedVerses: "Saved verses",
     verseSaved: "verse saved",
@@ -614,6 +617,8 @@ export default {
     selectDhikr: "Choose invocation",
     selectTarget: "Target",
     reset: "Reset",
+    resetTitle: "Reset Tasbih?",
+    resetDesc: "The counter, total and round count will be reset to zero.",
     history: "History",
     round: "Round",
     settings: "Tasbih Settings",

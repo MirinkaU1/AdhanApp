@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { AppLoader } from "@/components/ui";
 import { useTranslation } from "react-i18next";
 import Animated, {
   useSharedValue,
@@ -110,10 +111,7 @@ export default function QiblaScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg-light dark:bg-bg-dark items-center justify-center">
-        <ActivityIndicator size="large" color="#115E59" />
-        <Text className="mt-4 font-outfit-medium text-base text-text-secondary-light dark:text-text-secondary-dark">
-          {t("common.loading")}
-        </Text>
+        <AppLoader variant="inline" size="large" message={t("common.loading")} />
       </View>
     );
   }

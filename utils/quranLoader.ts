@@ -1,10 +1,21 @@
-// Service de chargement du Quran - Support FR + EN avec translitération
-// Charge les données depuis assets/raw/ via expo-file-system/legacy
-// ET les persiste dans AsyncStorage pour un accès ultra-rapide aux lancements suivants
+/**
+ * QuranLoader v2 — Chargement par sourate individuelle
+ *
+ * Chaque sourate est un fichier .bin séparé (~2–300 Ko).
+ * On ne charge plus jamais les 7 Mo d'un coup.
+ *
+ * Flux :
+ *   1. Premier lancement → copie des assets vers FileSystem (à la demande)
+ *   2. loadSurah(id, lang) → lit un seul fichier depuis FileSystem
+ *   3. Cache mémoire par sourate chargée
+ */
 
 import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SURAH_ASSETS, QURAN_INDEX_ASSET } from './surahAssets';
+
+// ── Types publics ─────────────────────────────────────────────────────────────
 
 export interface QuranVerse {
   id: number;
@@ -18,7 +29,7 @@ export interface QuranSurah {
   name: string;
   transliteration: string;
   translation: string;
-  type: "meccan" | "medinan";
+  type: 'meccan' | 'medinan';
   total_verses: number;
   verses: QuranVerse[];
 }
@@ -28,287 +39,223 @@ export interface SurahIndexInfo {
   name: string;
   transliteration: string;
   translation: string;
-  type: "meccan" | "medinan";
+  type: 'meccan' | 'medinan';
   total_verses: number;
 }
 
-const QURAN_DIR = FileSystem.documentDirectory + 'quran/';
-const FR_FILE = QURAN_DIR + 'quran_fr.json';
-const EN_FILE = QURAN_DIR + 'quran_en.json';
-const PHONETIC_FILE = QURAN_DIR + 'quran_transliteration.json';
+// ── Format de stockage interne ────────────────────────────────────────────────
 
-const ASYNC_STORAGE_FR_DATA = '@quran_fr_data';
-const ASYNC_STORAGE_EN_DATA = '@quran_en_data';
-const ASYNC_STORAGE_PHONETIC_DATA = '@quran_phonetic_data';
-const ASYNC_STORAGE_FR_INDEX = '@quran_fr_index';
-const ASYNC_STORAGE_EN_INDEX = '@quran_en_index';
+interface StoredVerse {
+  id: number;
+  text: string;
+  translation_fr: string;
+  translation_en: string;
+  transliteration: string;
+}
 
-// Imports des fichiers .bin
-// @ts-ignore
-const FR_ASSET = require('../assets/raw/quran_fr.bin');
-// @ts-ignore
-const EN_ASSET = require('../assets/raw/quran_en.bin');
-// @ts-ignore
-const PHONETIC_ASSET = require('../assets/raw/quran_transliteration.bin');
+interface StoredSurah {
+  id: number;
+  name: string;
+  transliteration: string;
+  translation_fr: string;
+  translation_en: string;
+  type: 'meccan' | 'medinan';
+  total_verses: number;
+  verses: StoredVerse[];
+}
 
-// Cache en mémoire
-const memoryCache: {
-  frData: QuranSurah[] | null;
-  enData: QuranSurah[] | null;
-  frIndex: SurahIndexInfo[] | null;
-  enIndex: SurahIndexInfo[] | null;
-  isInitialized: boolean;
-} = {
-  frData: null,
-  enData: null,
-  frIndex: null,
-  enIndex: null,
-  isInitialized: false,
-};
+// ── Chemins ───────────────────────────────────────────────────────────────────
 
-async function saveToStorage(key: string, data: any): Promise<void> {
+const SURAHS_DIR = FileSystem.documentDirectory + 'quran/surahs/';
+const INDEX_FILE = FileSystem.documentDirectory + 'quran/index.bin';
+
+const ASYNC_INDEX_FR = '@quran_index_fr_v2';
+const ASYNC_INDEX_EN = '@quran_index_en_v2';
+
+// ── Cache mémoire par sourate ─────────────────────────────────────────────────
+
+const surahCache = new Map<number, StoredSurah>();
+let indexCacheFr: SurahIndexInfo[] | null = null;
+let indexCacheEn: SurahIndexInfo[] | null = null;
+
+// ── Helpers filesystem ────────────────────────────────────────────────────────
+
+async function ensureSurahsDir(): Promise<void> {
+  const info = await FileSystem.getInfoAsync(SURAHS_DIR);
+  if (!info.exists) {
+    await FileSystem.makeDirectoryAsync(SURAHS_DIR, { intermediates: true });
+  }
+}
+
+async function copyAssetToFs(assetModule: number, destPath: string): Promise<void> {
+  const asset = Asset.fromModule(assetModule);
+  await asset.downloadAsync();
+  if (!asset.localUri) throw new Error('Asset sans URI locale');
+  await FileSystem.copyAsync({ from: asset.localUri, to: destPath });
+}
+
+// ── Chargement de l'index ─────────────────────────────────────────────────────
+
+export function getSurahIndexSync(language = 'fr'): SurahIndexInfo[] | null {
+  return language === 'fr' ? indexCacheFr : indexCacheEn;
+}
+
+export async function loadSurahIndex(language = 'fr'): Promise<SurahIndexInfo[]> {
+  const isFr = language === 'fr';
+
+  if (isFr && indexCacheFr) return indexCacheFr;
+  if (!isFr && indexCacheEn) return indexCacheEn;
+
+  const storageKey = isFr ? ASYNC_INDEX_FR : ASYNC_INDEX_EN;
+
+  // Essai depuis AsyncStorage
   try {
-    await AsyncStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.error(`Erreur sauvegarde ${key}:`, error);
-  }
-}
-
-async function loadFromStorage(key: string): Promise<any | null> {
-  try {
-    const data = await AsyncStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
-  } catch (error) {
-    console.error(`Erreur chargement ${key}:`, error);
-    return null;
-  }
-}
-
-async function loadRawAsset(assetModule: any): Promise<string | null> {
-  try {
-    const asset = Asset.fromModule(assetModule);
-    await asset.downloadAsync();
-    if (!asset.localUri) {
-      console.error("Asset téléchargé mais pas d'URI locale");
-      return null;
+    const stored = await AsyncStorage.getItem(storageKey);
+    if (stored) {
+      const index: SurahIndexInfo[] = JSON.parse(stored);
+      if (isFr) indexCacheFr = index; else indexCacheEn = index;
+      return index;
     }
-    return asset.localUri;
-  } catch (error) {
-    console.error('Erreur chargement asset:', error);
-    return null;
-  }
-}
+  } catch {}
 
-function mergeQuranData(translationData: any[], phoneticData: any[]): QuranSurah[] {
-  return translationData.map((surah) => {
-    const surahPhone = phoneticData.find((s: any) => s.id === surah.id);
-
-    const mergedVerses = surah.verses.map((verse: any) => {
-      const versePhone = surahPhone?.verses.find((v: any) => v.id === verse.id);
-      
-      return {
-        id: verse.id,
-        text: verse.text,
-        translation: verse.translation,
-        transliteration: versePhone?.transliteration || "",
-      };
-    });
-
-    return {
-      ...surah,
-      verses: mergedVerses
-    };
-  });
-}
-
-export async function initQuranLoader(): Promise<void> {
-  if (memoryCache.isInitialized) return;
-
-  try {
-    const dirInfo = await FileSystem.getInfoAsync(QURAN_DIR);
-    if (!dirInfo.exists) {
-      await FileSystem.makeDirectoryAsync(QURAN_DIR, { intermediates: true });
-    }
-
-    // Copier FR
-    const frInfo = await FileSystem.getInfoAsync(FR_FILE);
-    if (!frInfo.exists) {
-      const frSource = await loadRawAsset(FR_ASSET);
-      if (frSource) {
-        await FileSystem.copyAsync({ from: frSource, to: FR_FILE });
-        console.log('✅ Quran FR copié');
-      }
-    }
-
-    // Copier EN
-    const enInfo = await FileSystem.getInfoAsync(EN_FILE);
-    if (!enInfo.exists) {
-      const enSource = await loadRawAsset(EN_ASSET);
-      if (enSource) {
-        await FileSystem.copyAsync({ from: enSource, to: EN_FILE });
-        console.log('✅ Quran EN copié');
-      }
-    }
-
-    // Copier translitération
-    const phoneticInfo = await FileSystem.getInfoAsync(PHONETIC_FILE);
-    if (!phoneticInfo.exists) {
-      const phoneticSource = await loadRawAsset(PHONETIC_ASSET);
-      if (phoneticSource) {
-        await FileSystem.copyAsync({ from: phoneticSource, to: PHONETIC_FILE });
-        console.log('✅ Quran Transliteration copié');
-      }
-    }
-
-    memoryCache.isInitialized = true;
-    console.log('✅ QuranLoader initialisé');
-  } catch (error) {
-    console.error('Erreur initialisation QuranLoader:', error);
-    throw error;
-  }
-}
-
-async function getQuranData(language: string = "fr"): Promise<QuranSurah[]> {
-  const isFr = language === "fr";
-  const storageKey = isFr ? ASYNC_STORAGE_FR_DATA : ASYNC_STORAGE_EN_DATA;
-  const cacheKey = isFr ? "frData" : "enData";
-
-  if (memoryCache[cacheKey]) {
-    return memoryCache[cacheKey]!;
-  }
-
-  const storedData = await loadFromStorage(storageKey);
-  if (storedData) {
-    memoryCache[cacheKey] = storedData;
-    return storedData;
-  }
-
-  if (!memoryCache.isInitialized) {
-    await initQuranLoader();
-  }
-
-  const translationContent = await FileSystem.readAsStringAsync(isFr ? FR_FILE : EN_FILE);
-  const phoneticContent = await FileSystem.readAsStringAsync(PHONETIC_FILE);
-  
-  const translationJson = JSON.parse(translationContent);
-  const phoneticJson = JSON.parse(phoneticContent);
-  
-  const mergedData = mergeQuranData(translationJson, phoneticJson);
-  
-  memoryCache[cacheKey] = mergedData;
-  await saveToStorage(storageKey, mergedData);
-  
-  return mergedData;
-}
-
-export function getSurahIndexSync(language: string = "fr"): SurahIndexInfo[] | null {
-  return language === "fr" ? memoryCache.frIndex : memoryCache.enIndex;
-}
-
-export async function loadSurahIndex(language: string = "fr"): Promise<SurahIndexInfo[]> {
-  const isFr = language === "fr";
-  const cacheKey = isFr ? "frIndex" : "enIndex";
-  const storageKey = isFr ? ASYNC_STORAGE_FR_INDEX : ASYNC_STORAGE_EN_INDEX;
-
-  if (memoryCache[cacheKey]) {
-    return memoryCache[cacheKey]!;
-  }
-
-  const storedIndex = await loadFromStorage(storageKey);
-  if (storedIndex) {
-    memoryCache[cacheKey] = storedIndex;
-    return storedIndex;
-  }
-
-  const data = await getQuranData(language);
-  const index: SurahIndexInfo[] = data.map((surah) => ({
-    id: surah.id,
-    name: surah.name,
-    transliteration: surah.transliteration,
-    translation: surah.translation,
-    type: surah.type,
-    total_verses: surah.total_verses,
+  // Construire depuis le fichier index
+  const indexData = await loadIndexFile();
+  const index: SurahIndexInfo[] = indexData.map((s) => ({
+    id: s.id,
+    name: s.name,
+    transliteration: s.transliteration,
+    translation: isFr ? s.translation_fr : s.translation_en,
+    type: s.type,
+    total_verses: s.total_verses,
   }));
 
-  memoryCache[cacheKey] = index;
-  await saveToStorage(storageKey, index);
-  
+  if (isFr) indexCacheFr = index; else indexCacheEn = index;
+  await AsyncStorage.setItem(storageKey, JSON.stringify(index));
   return index;
 }
 
-export async function isQuranPersisted(): Promise<boolean> {
-  const frData = await AsyncStorage.getItem(ASYNC_STORAGE_FR_DATA);
-  return frData !== null;
-}
-
-export async function preloadQuranToStorage(): Promise<void> {
-  const isPersisted = await isQuranPersisted();
-  
-  if (!isPersisted) {
-    console.log('📚 Premier lancement : Préchargement du Quran...');
-    await getQuranData('fr');
-    await getQuranData('en');
-    await loadSurahIndex('fr');
-    await loadSurahIndex('en');
-    console.log('✅ Quran préchargé !');
+async function loadIndexFile(): Promise<Array<{
+  id: number; name: string; transliteration: string;
+  translation_fr: string; translation_en: string;
+  type: 'meccan' | 'medinan'; total_verses: number;
+}>> {
+  const info = await FileSystem.getInfoAsync(INDEX_FILE);
+  if (!info.exists) {
+    await ensureSurahsDir();
+    await copyAssetToFs(QURAN_INDEX_ASSET, INDEX_FILE);
   }
+  const content = await FileSystem.readAsStringAsync(INDEX_FILE);
+  return JSON.parse(content);
 }
 
-export function isSurahIndexCached(language: string = "fr"): boolean {
-  return language === "fr" ? memoryCache.frIndex !== null : memoryCache.enIndex !== null;
-}
+// ── Chargement d'une sourate ──────────────────────────────────────────────────
 
 export async function loadSurah(
   surahNumber: number,
-  language: string = "fr"
+  language = 'fr',
 ): Promise<QuranSurah | null> {
-  const data = await getQuranData(language);
-  return data.find((s) => s.id === surahNumber) || null;
+  if (surahNumber < 1 || surahNumber > 114) return null;
+
+  // 1. Cache mémoire
+  if (surahCache.has(surahNumber)) {
+    return mapToPublic(surahCache.get(surahNumber)!, language);
+  }
+
+  // 2. Filesystem
+  const filePath = SURAHS_DIR + `surah_${surahNumber}.bin`;
+  const info = await FileSystem.getInfoAsync(filePath);
+
+  if (!info.exists) {
+    await ensureSurahsDir();
+    const asset = SURAH_ASSETS[surahNumber];
+    if (!asset) return null;
+    await copyAssetToFs(asset, filePath);
+  }
+
+  const content = await FileSystem.readAsStringAsync(filePath);
+  const stored: StoredSurah = JSON.parse(content);
+  surahCache.set(surahNumber, stored);
+
+  return mapToPublic(stored, language);
 }
+
+function mapToPublic(stored: StoredSurah, language: string): QuranSurah {
+  const isFr = language === 'fr';
+  return {
+    id: stored.id,
+    name: stored.name,
+    transliteration: stored.transliteration,
+    translation: isFr ? stored.translation_fr : stored.translation_en,
+    type: stored.type,
+    total_verses: stored.total_verses,
+    verses: stored.verses.map((v) => ({
+      id: v.id,
+      text: v.text,
+      translation: isFr ? v.translation_fr : v.translation_en,
+      transliteration: v.transliteration,
+    })),
+  };
+}
+
+// ── Préchargement au démarrage ────────────────────────────────────────────────
+
+export async function preloadQuranToStorage(): Promise<void> {
+  // Préchauffer les index (18 Ko seulement)
+  await Promise.all([loadSurahIndex('fr'), loadSurahIndex('en')]);
+}
+
+// ── Utilitaires ───────────────────────────────────────────────────────────────
 
 export async function getVerse(
   surahNumber: number,
   verseNumber: number,
-  language: string = "fr"
+  language = 'fr',
 ): Promise<QuranVerse | null> {
   const surah = await loadSurah(surahNumber, language);
-  if (!surah) return null;
-  return surah.verses.find((v) => v.id === verseNumber) || null;
+  return surah?.verses.find((v) => v.id === verseNumber) ?? null;
 }
 
-export async function loadEssentialSurahs(language: string = "fr"): Promise<QuranSurah[]> {
+export async function loadEssentialSurahs(language = 'fr'): Promise<QuranSurah[]> {
   const essentialIds = [1, 67, 18, 94, 112, 113, 114];
-  const surahs = await Promise.all(
-    essentialIds.map((id) => loadSurah(id, language))
-  );
-  return surahs.filter((s): s is QuranSurah => s !== null);
+  const results = await Promise.all(essentialIds.map((id) => loadSurah(id, language)));
+  return results.filter((s): s is QuranSurah => s !== null);
+}
+
+export function isSurahIndexCached(language = 'fr'): boolean {
+  return language === 'fr' ? indexCacheFr !== null : indexCacheEn !== null;
 }
 
 export async function clearQuranCache(): Promise<void> {
-  memoryCache.frData = null;
-  memoryCache.enData = null;
-  memoryCache.frIndex = null;
-  memoryCache.enIndex = null;
-  
-  await AsyncStorage.multiRemove([
-    ASYNC_STORAGE_FR_DATA,
-    ASYNC_STORAGE_EN_DATA,
-    ASYNC_STORAGE_PHONETIC_DATA,
-    ASYNC_STORAGE_FR_INDEX,
-    ASYNC_STORAGE_EN_INDEX,
-  ]);
+  surahCache.clear();
+  indexCacheFr = null;
+  indexCacheEn = null;
+  await AsyncStorage.multiRemove([ASYNC_INDEX_FR, ASYNC_INDEX_EN]);
 }
 
 export async function resetQuranLoader(): Promise<void> {
   await clearQuranCache();
-  memoryCache.isInitialized = false;
-  
   try {
-    const dirInfo = await FileSystem.getInfoAsync(QURAN_DIR);
-    if (dirInfo.exists) {
-      await FileSystem.deleteAsync(QURAN_DIR, { idempotent: true });
+    const info = await FileSystem.getInfoAsync(SURAHS_DIR);
+    if (info.exists) {
+      await FileSystem.deleteAsync(SURAHS_DIR, { idempotent: true });
+    }
+    const indexInfo = await FileSystem.getInfoAsync(INDEX_FILE);
+    if (indexInfo.exists) {
+      await FileSystem.deleteAsync(INDEX_FILE, { idempotent: true });
     }
   } catch (error) {
-    console.warn('Erreur lors du reset:', error);
+    console.warn('Erreur reset QuranLoader:', error);
   }
+}
+
+// ── Compat avec l'ancien loader ───────────────────────────────────────────────
+
+/** @deprecated — conservé pour compatibilité, ne fait plus rien de coûteux */
+export async function initQuranLoader(): Promise<void> {
+  await preloadQuranToStorage();
+}
+
+export async function isQuranPersisted(): Promise<boolean> {
+  const info = await FileSystem.getInfoAsync(INDEX_FILE);
+  return info.exists;
 }

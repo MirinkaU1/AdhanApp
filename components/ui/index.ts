@@ -14,3 +14,4 @@ export { Switch } from "./switch";
 // Alias pour rétro-compatibilité
 export { Switch as ModernSwitch } from "./switch";
 export { default as AlertDialog } from "./AlertDialog";
+export { default as AppLoader } from "./AppLoader";

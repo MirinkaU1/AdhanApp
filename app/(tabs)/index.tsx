@@ -34,6 +34,7 @@ import { usePrayerLocation } from "@/hooks/usePrayerLocation";
 import { useGamification } from "@/hooks/useGamification";
 import { useTranslation } from "react-i18next";
 import { AppText } from "@/components/ui";
+import { loadSurah } from "@/utils/quranLoader";
 import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
 
 // Configuration des prières avec icônes Material
@@ -76,7 +77,7 @@ const HADITHS = [
 ];
 
 export default function DashboardScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [now, setNow] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showSurahReader, setShowSurahReader] = useState(false);
@@ -456,15 +457,17 @@ export default function DashboardScreen() {
               </Pressable>
             </View>
 
-            {/* Badge prochaine prière */}
-            {nextPrayer && headerCountdown && (
+            {/* Badge prochaine prière — toujours visible si nextPrayer existe */}
+            {nextPrayer && (
               <View className="self-center bg-black/25 px-4 py-2 rounded-full mb-5 flex-row items-center">
                 <Text className="text-white text-sm font-outfit-medium">
                   {t(`home.${nextPrayer}`)}{" "}
                   {!isWaitingForMidnight && t("home.inTime", { time: "" })}
                 </Text>
                 <Text className="text-accent text-sm font-outfit-bold">
-                  {headerCountdown.value} {headerCountdown.unit}
+                  {headerCountdown
+                    ? `${headerCountdown.value}${headerCountdown.unit ? ` ${headerCountdown.unit}` : ""}`
+                    : t("home.now")}
                 </Text>
               </View>
             )}
@@ -583,7 +586,7 @@ export default function DashboardScreen() {
                     shadowOpacity: isNext ? 0.15 : 0.05,
                     shadowOffset: { width: 0, height: 6 },
                     shadowRadius: isNext ? 12 : 6,
-                    elevation: isNext ? 6 : 2,
+                    elevation: isNext ? 2 : 0,
                     cursor: "pointer" as any,
                   }}
                   accessibilityRole="button"
@@ -691,41 +694,10 @@ export default function DashboardScreen() {
           {/* Sagesse du Jour (Alternance Verset/Hadith) */}
           <View className="mt-6">
             <DailyWisdomCard
-              onVersePress={(surahId: string, verseNumber: number) => {
-                // Map surahId to surahNumber
-                const surahNumberMap: Record<string, number> = {
-                  mulk: 67,
-                  fajr: 89,
-                  ikhlas: 112,
-                  falaq: 113,
-                  nas: 114,
-                  kahf: 18,
-                  yasin: 36,
-                  waqia: 56,
-                  rahman: 55,
-                  shams: 91,
-                  layl: 92,
-                  duha: 93,
-                  sharh: 94,
-                  tin: 95,
-                  alaq: 96,
-                  qadr: 97,
-                  bayyinah: 98,
-                  zilzal: 99,
-                  adiyat: 100,
-                  qariah: 101,
-                  takathur: 102,
-                  asr: 103,
-                  humazah: 104,
-                  fil: 105,
-                  quraish: 106,
-                  maun: 107,
-                  kawthar: 108,
-                  kafirun: 109,
-                  nasr: 110,
-                  masad: 111,
-                };
-                setSelectedSurahNumber(surahNumberMap[surahId] || 67);
+              onVersePress={(surahNumber: number, verseNumber: number) => {
+                const lang = i18n.language.startsWith("en") ? "en" : "fr";
+                loadSurah(surahNumber, lang); // prefetch pendant l'animation d'ouverture
+                setSelectedSurahNumber(surahNumber);
                 setTargetVerse(verseNumber);
                 setShowSurahReader(true);
               }}

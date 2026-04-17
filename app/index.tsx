@@ -1,9 +1,8 @@
 import { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
+import { AppLoader } from "@/components/ui";
 
 /**
  * Page d'entrée de l'app - Redirige vers la bonne destination
@@ -42,14 +41,5 @@ export default function IndexScreen() {
     }
   };
 
-  // Afficher un loader pendant la vérification
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <LinearGradient
-        colors={["#115E59", "#0d4542"]}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-      />
-      <ActivityIndicator size="large" color="#fff" />
-    </View>
-  );
+  return <AppLoader variant="fullscreen" />;
 }

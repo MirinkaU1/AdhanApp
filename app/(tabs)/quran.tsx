@@ -25,13 +25,6 @@ const QURAN_ACTIVITIES = [
     color: "#115E59",
   },
   {
-    id: "hadith",
-    title: "hadiths",
-    subtitle: "teachings",
-    icon: "format-quote",
-    color: "#D97706",
-  },
-  {
     id: "dhikr",
     title: "dhikr",
     subtitle: "invocations",

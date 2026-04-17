@@ -74,7 +74,7 @@ export function ContinueReadingCard() {
 
   const progress = displayReading.percentage;
   const versesRemaining =
-    displayReading.totalVerses - displayReading.currentVerse;
+    displayReading.totalVerses - (displayReading.versesRead?.length ?? 0);
 
   // Nom arabe depuis le mapping (ou on pourrait l'ajouter au store)
   const surahNameAr =
@@ -118,7 +118,7 @@ export function ContinueReadingCard() {
               className="text-xs font-outfit-medium"
               style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
             >
-              {t("quran.verse")} {displayReading.currentVerse}/
+              {t("quran.verse")} {displayReading.versesRead?.length ?? 0}/
               {displayReading.totalVerses}
             </Text>
           </View>

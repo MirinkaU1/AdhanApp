@@ -56,20 +56,16 @@ export const useDhikrStore = create<DhikrState>()(
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           set({
             count: 0,
-            totalLifetimeCount: totalLifetimeCount + newCount,
+            totalLifetimeCount: totalLifetimeCount + 1,
             completedCycles: completedCycles + 1,
           });
         } else {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          set({
-            count: newCount,
-            totalLifetimeCount: totalLifetimeCount + 1,
-          });
+          set({ count: newCount, totalLifetimeCount: totalLifetimeCount + 1 });
         }
       },
 
       reset: () => {
-        set({ count: 0 });
+        set({ count: 0, totalLifetimeCount: 0, completedCycles: 0 });
       },
 
       setTarget: (target: TargetCount) => {

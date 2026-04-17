@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   Platform,
-  ActivityIndicator,
   Image,
   ScrollView,
   KeyboardAvoidingView,

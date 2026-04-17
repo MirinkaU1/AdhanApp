@@ -20,7 +20,7 @@ interface VerseOptionsDrawerProps {
   surahName: string;
   surahTransliteration: string;
   isRead: boolean;
-  onMarkAsRead: () => void;
+  onToggleRead: () => void;
 }
 
 interface OptionItemProps {
@@ -111,7 +111,7 @@ export function VerseOptionsDrawer({
   surahName,
   surahTransliteration,
   isRead,
-  onMarkAsRead,
+  onToggleRead,
 }: VerseOptionsDrawerProps) {
   const { t } = useTranslation();
   const isDark = useIsDark();
@@ -140,7 +140,7 @@ export function VerseOptionsDrawer({
   };
 
   const handleMarkAsRead = () => {
-    onMarkAsRead();
+    onToggleRead();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onClose();
   };
@@ -195,8 +195,9 @@ export function VerseOptionsDrawer({
 
       <View className="py-2">
         <OptionItem
-          icon={isRead ? "check-circle" : "radio-button-unchecked"}
+          icon={isRead ? "remove-done" : "check-circle-outline"}
           title={isRead ? t("quran.markAsUnread") : t("quran.markAsRead")}
+          subtitle={isRead ? t("quran.markAsUnreadDesc") : t("quran.markAsReadDesc")}
           onPress={handleMarkAsRead}
           isActive={isRead}
         />

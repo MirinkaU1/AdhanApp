@@ -40,6 +40,7 @@ export default {
     yes: "Oui",
     no: "Non",
     close: "Fermer",
+    reset: "Réinitialiser",
   },
 
   // Home / Dashboard
@@ -595,6 +596,8 @@ export default {
     addToFavoritesDesc: "Retrouver facilement ce verset",
     removeFromFavorites: "Retirer des favoris",
     removedFromFavorites: "Retiré des favoris",
+    confirmRemoveFavorite: "Retirer des favoris ?",
+    confirmRemoveFavoriteDesc: "Ce verset sera supprimé de vos favoris.",
     favorites: "Favoris",
     savedVerses: "Versets enregistrés",
     verseSaved: "verset enregistré",
@@ -618,6 +621,8 @@ export default {
     selectDhikr: "Choisir l'invocation",
     selectTarget: "Objectif",
     reset: "Réinitialiser",
+    resetTitle: "Réinitialiser le Tasbih ?",
+    resetDesc: "Le compteur, le total et le nombre de tours seront remis à zéro.",
     history: "Historique",
     round: "Tour",
     settings: "Paramètres du Tasbih",

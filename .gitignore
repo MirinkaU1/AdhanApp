@@ -48,3 +48,6 @@ releases/*.aab
 releases/*.ipa
 
 docs/
+
+.agents/
+.claude/

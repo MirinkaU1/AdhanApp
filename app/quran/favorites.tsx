@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import { AppText, AppCard } from "@/components/ui";
+import { AppText, AppCard, AlertDialog } from "@/components/ui";
 import { useQuranStore, FavoriteVerse } from "@/stores/useQuranStore";
 import * as Haptics from "expo-haptics";
 
@@ -140,6 +140,10 @@ export default function FavoritesScreen() {
     message: "",
     visible: false,
   });
+  const [pendingRemove, setPendingRemove] = useState<{
+    surahId: number;
+    verseNumber: number;
+  } | null>(null);
 
   const showToast = (message: string) => {
     setToast({ message, visible: true });
@@ -172,14 +176,33 @@ export default function FavoritesScreen() {
   };
 
   const handleRemove = (surahId: number, verseNumber: number) => {
-    removeFromFavorites(surahId, verseNumber);
+    setPendingRemove({ surahId, verseNumber });
+  };
+
+  const confirmRemove = () => {
+    if (!pendingRemove) return;
+    removeFromFavorites(pendingRemove.surahId, pendingRemove.verseNumber);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    showToast(t("quran.removedFromFavorites") || "Retiré des favoris");
+    showToast(t("quran.removedFromFavorites"));
+    setPendingRemove(null);
   };
 
   return (
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       <Toast message={toast.message} visible={toast.visible} />
+
+      <AlertDialog
+        visible={!!pendingRemove}
+        title={t("quran.confirmRemoveFavorite")}
+        message={t("quran.confirmRemoveFavoriteDesc")}
+        icon="bookmark-remove"
+        iconColor="#EF4444"
+        onDismiss={() => setPendingRemove(null)}
+        buttons={[
+          { text: t("common.cancel"), style: "default", onPress: () => setPendingRemove(null) },
+          { text: t("quran.removeFromFavorites"), style: "destructive", onPress: confirmRemove },
+        ]}
+      />
       <FlatList
         className="flex-1"
         data={groupedFavorites}
