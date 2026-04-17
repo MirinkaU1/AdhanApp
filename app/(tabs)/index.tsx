@@ -35,6 +35,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useTranslation } from "react-i18next";
 import { AppText } from "@/components/ui";
 import { loadSurah } from "@/utils/quranLoader";
+import useRamadanStore from "@/stores/useRamadanStore";
 import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
 
 // Configuration des prières avec icônes Material
@@ -107,6 +108,7 @@ export default function DashboardScreen() {
     getLevelFromXp,
   } = useQuestStore();
   const { onPrayerCompleted, checkPrayerOnTime } = useGamification();
+  const { isRamadanMode, moonCoins } = useRamadanStore();
 
   // Nombre de quêtes à réclamer
   const unclaimedQuests = getUnclaimedQuestsCount();
@@ -367,7 +369,7 @@ export default function DashboardScreen() {
           />
 
           {/* Icône notification en absolute */}
-          <Pressable
+          {/* <Pressable
             onPress={() => router.push("/settings/notifications")}
             className="absolute top-10 right-6 z-10 p-2"
           >
@@ -376,34 +378,65 @@ export default function DashboardScreen() {
               size={26}
               color="#fff"
             />
-          </Pressable>
+          </Pressable> */}
 
           {/* Contenu du header */}
           <View className="px-4 pt-12 pb-4">
-            {/* Badge localisation */}
-            <Pressable
-              onPress={refreshLocation}
-              className="self-start flex-row items-center bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-5 active:opacity-70"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              {isLoadingLocation ? (
-                <ActivityIndicator
-                  size="small"
-                  color="#D97706"
-                  style={{ marginRight: 6 }}
-                />
-              ) : (
-                <MaterialIconsRound
-                  name="location-on"
-                  size={16}
-                  color="#D97706"
-                  style={{ marginRight: 6 }}
-                />
-              )}
-              <Text className="text-white text-xs font-outfit-medium">
-                {cityDisplay}
-              </Text>
-            </Pressable>
+            {/* Badges ligne gauche — location + lunes côte à côte, loin du bouton notif absolu */}
+            <View className="flex-row w-full justify-between items-center gap-2 mb-5">
+              {/* Badge localisation */}
+              <Pressable
+                onPress={refreshLocation}
+                className="flex-row items-center bg-white/10 px-3 py-1.5 rounded-full border border-white/10 active:opacity-70"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {isLoadingLocation ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#D97706"
+                    style={{ marginRight: 6 }}
+                  />
+                ) : (
+                  <MaterialIconsRound
+                    name="location-on"
+                    size={16}
+                    color="#D97706"
+                    style={{ marginRight: 6 }}
+                  />
+                )}
+                <Text className="text-white text-xs font-outfit-medium">
+                  {cityDisplay}
+                </Text>
+              </Pressable>
+
+              <View className="flex-row items-center gap-2">
+                {/* Badge lunes Ramadan */}
+                {isRamadanMode && (
+                  <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/10 gap-1.5">
+                    <MaterialIconsRound
+                      name="nightlight"
+                      size={14}
+                      color="#FCD34D"
+                    />
+                    <Text className="text-white text-sm font-outfit-bold">
+                      {moonCoins}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Icône notification en absolute */}
+                <Pressable
+                  onPress={() => router.push("/settings/notifications")}
+                  className="p-2"
+                >
+                  <MaterialIconsRound
+                    name="notifications-none"
+                    size={26}
+                    color="#fff"
+                  />
+                </Pressable>
+              </View>
+            </View>
 
             {/* Date Hijri */}
             <Text className="text-white/70 text-[11px] font-outfit-regular text-center tracking-widest mb-2 uppercase">

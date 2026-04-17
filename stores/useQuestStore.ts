@@ -12,6 +12,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { format } from "date-fns";
+import useRamadanStore from "@/stores/useRamadanStore";
 
 // =====================================================
 // TYPES
@@ -52,6 +53,7 @@ export interface RamadanQuest {
   titleKey: string;
   descriptionKey: string;
   xpReward: number;
+  moonReward: number;
   icon: string;
   requirement: number;
   progress: number;
@@ -204,6 +206,7 @@ const createDefaultRamadanWeeklyQuests = (): Record<RamadanQuestId, RamadanQuest
     titleKey: "quests.ramadan.weekPerfect.title",
     descriptionKey: "quests.ramadan.weekPerfect.description",
     xpReward: 200,
+    moonReward: 5,
     icon: "emoji-events",
     requirement: 7,
     progress: 0,
@@ -215,6 +218,7 @@ const createDefaultRamadanWeeklyQuests = (): Record<RamadanQuestId, RamadanQuest
     titleKey: "quests.ramadan.weekJuz.title",
     descriptionKey: "quests.ramadan.weekJuz.description",
     xpReward: 150,
+    moonReward: 3,
     icon: "import-contacts",
     requirement: 240,
     progress: 0,
@@ -226,6 +230,7 @@ const createDefaultRamadanWeeklyQuests = (): Record<RamadanQuestId, RamadanQuest
     titleKey: "quests.ramadan.weekSurahs.title",
     descriptionKey: "quests.ramadan.weekSurahs.description",
     xpReward: 100,
+    moonReward: 2,
     icon: "library-books",
     requirement: 10,
     progress: 0,
@@ -536,9 +541,13 @@ const useQuestStore = create<QuestStoreState>()(
 
       getUnclaimedQuestsCount: () => {
         const state = get();
-        return Object.values(state.dailyQuests).filter(
-          (quest) => quest.status === "completed",
+        const dailyCompleted = Object.values(state.dailyQuests).filter(
+          (q) => q.status === "completed",
         ).length;
+        const ramadanCompleted = Object.values(state.ramadanWeeklyQuests).filter(
+          (q) => q.status === "completed",
+        ).length;
+        return dailyCompleted + ramadanCompleted;
       },
 
       updateQuestProgress: (questId: QuestId, progress: number) => {
@@ -768,31 +777,41 @@ const useQuestStore = create<QuestStoreState>()(
       // ── Ramadan weekly quests ─────────────────────────────────────────────
 
       updateRamadanQuestProgress: (questId, progress) => {
+        let justCompleted = false;
         set((state) => {
           const quest = state.ramadanWeeklyQuests[questId];
           if (!quest || quest.status === "completed" || quest.status === "claimed") {
             return state;
           }
           const newProgress = Math.min(progress, quest.requirement);
+          const isNowCompleted = newProgress >= quest.requirement;
+          if (isNowCompleted) justCompleted = true;
           return {
             ramadanWeeklyQuests: {
               ...state.ramadanWeeklyQuests,
               [questId]: {
                 ...quest,
                 progress: newProgress,
-                status: newProgress >= quest.requirement ? "completed" : quest.status,
+                status: isNowCompleted ? "completed" : quest.status,
               },
             },
           };
         });
+        // Toast "prête à réclamer" — affiche l'XP de la quête sans l'attribuer
+        if (justCompleted) {
+          const quest = get().ramadanWeeklyQuests[questId];
+          get().enqueueXpToast(quest?.xpReward ?? 0, `ramadan_quest_${questId}`);
+        }
       },
 
       claimRamadanQuestReward: (questId) => {
         let xpToAdd = 0;
+        let moonToAdd = 0;
         set((state) => {
           const quest = state.ramadanWeeklyQuests[questId];
           if (!quest || quest.status !== "completed") return state;
           xpToAdd = quest.xpReward;
+          moonToAdd = quest.moonReward;
           return {
             ramadanWeeklyQuests: {
               ...state.ramadanWeeklyQuests,
@@ -802,6 +821,9 @@ const useQuestStore = create<QuestStoreState>()(
         });
         if (xpToAdd > 0) {
           get().addXp(xpToAdd, `ramadan_quest_${questId}`, true);
+          if (moonToAdd > 0) {
+            useRamadanStore.getState().addMoonCoins(moonToAdd);
+          }
           return true;
         }
         return false;
@@ -858,6 +880,12 @@ const useQuestStore = create<QuestStoreState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state._hasHydrated = true;
+          // Migration : si les quêtes Ramadan persistées n'ont pas moonReward, on les réinitialise
+          const quests = Object.values(state.ramadanWeeklyQuests ?? {});
+          const needsMigration = quests.some((q: any) => q.moonReward === undefined);
+          if (needsMigration) {
+            state.ramadanWeeklyQuests = createDefaultRamadanWeeklyQuests();
+          }
         }
       },
     },

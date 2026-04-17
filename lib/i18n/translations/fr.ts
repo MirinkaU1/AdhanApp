@@ -497,6 +497,20 @@ export default {
       title: "Série d'une semaine",
       description: "Maintenez une série de 7 jours consécutifs",
     },
+    ramadan: {
+      weekPerfect: {
+        title: "Semaine parfaite",
+        description: "Accomplissez les 5 prières chaque jour pendant 7 jours",
+      },
+      weekJuz: {
+        title: "Juz de la semaine",
+        description: "Lisez au moins 240 versets cette semaine",
+      },
+      weekSurahs: {
+        title: "Tour du Coran",
+        description: "Lisez 10 sourates différentes cette semaine",
+      },
+    },
   },
 
   // Notifications XP
@@ -506,6 +520,8 @@ export default {
     fajrBonus: "Bonus Fajr !",
     streakBonus: "Bonus série !",
     questCompleted: "Quête accomplie !",
+    ramadanQuestCompleted: "Quête Ramadan accomplie !",
+    readyToClaim: "Prête à réclamer !",
     levelUp: "Niveau supérieur !",
   },
 

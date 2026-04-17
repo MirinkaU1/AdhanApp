@@ -493,6 +493,20 @@ export default {
       title: "Week Streak",
       description: "Maintain a 7-day streak",
     },
+    ramadan: {
+      weekPerfect: {
+        title: "Perfect Week",
+        description: "Complete all 5 prayers every day for 7 days",
+      },
+      weekJuz: {
+        title: "Weekly Juz",
+        description: "Read at least 240 verses this week",
+      },
+      weekSurahs: {
+        title: "Quran Tour",
+        description: "Read 10 different surahs this week",
+      },
+    },
   },
 
   // XP Notifications
@@ -502,6 +516,8 @@ export default {
     fajrBonus: "Fajr bonus!",
     streakBonus: "Streak bonus!",
     questCompleted: "Quest completed!",
+    ramadanQuestCompleted: "Ramadan quest completed!",
+    readyToClaim: "Ready to claim!",
     levelUp: "Level up!",
   },
 

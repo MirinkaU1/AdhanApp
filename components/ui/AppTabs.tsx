@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Pressable, View, Text, LayoutChangeEvent } from "react-native";
+import { useIsDark } from "@/components/useColorScheme";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,6 +11,7 @@ import Animated, {
 export interface TabOption<T extends string = string> {
   key: T;
   label: string;
+  badge?: number;
 }
 
 interface AppTabsProps<T extends string = string> {
@@ -28,6 +30,7 @@ export default function AppTabs<T extends string = string>({
   onTabChange,
   containerClassName = "",
 }: AppTabsProps<T>) {
+  const isDark = useIsDark();
   const [tabWidths, setTabWidths] = useState<number[]>([]);
   const [containerPadding] = useState(4); // p-1 = 4px
 
@@ -77,12 +80,21 @@ export default function AppTabs<T extends string = string>({
 
   return (
     <View
-      className={`flex-row bg-gray-100 dark:bg-slate-800 rounded-2xl p-1 relative ${containerClassName}`}
+      className={`flex-row rounded-2xl p-1 relative ${containerClassName}`}
+      style={{
+        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)",
+      }}
     >
       {/* Animated indicator */}
       <Animated.View
-        className="absolute top-1 bottom-1 bg-white dark:bg-slate-900 rounded-xl"
-        style={[indicatorStyle, { left: containerPadding }]}
+        className="absolute top-1 bottom-1 rounded-xl"
+        style={[
+          indicatorStyle,
+          {
+            left: containerPadding,
+            backgroundColor: isDark ? "#334155" : "#FFFFFF",
+          },
+        ]}
       />
 
       {/* Tabs */}
@@ -91,17 +103,44 @@ export default function AppTabs<T extends string = string>({
           key={tab.key}
           onPress={() => onTabChange(tab.key)}
           onLayout={(e) => handleTabLayout(index, e)}
-          className="flex-1 py-2 rounded-xl z-10"
+          className="flex-1 py-2 rounded-xl z-10 flex-row items-center justify-center gap-1.5"
         >
           <Text
-            className={`text-center font-outfit-semibold ${
-              activeTab === tab.key
-                ? "text-slate-900 dark:text-slate-100"
-                : "text-gray-500 dark:text-slate-400"
-            }`}
+            style={{
+              fontFamily: "Outfit_600SemiBold",
+              fontSize: 14,
+              color:
+                activeTab === tab.key
+                  ? isDark ? "#F1F5F9" : "#0F172A"
+                  : isDark ? "#94A3B8" : "#64748B",
+            }}
           >
             {tab.label}
           </Text>
+          {!!tab.badge && tab.badge > 0 && (
+            <View
+              style={{
+                minWidth: 18,
+                height: 18,
+                borderRadius: 9,
+                paddingHorizontal: 4,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#F97316",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: "Outfit_700Bold",
+                  color: "#FFFFFF",
+                  lineHeight: 13,
+                }}
+              >
+                {tab.badge > 9 ? "9+" : tab.badge}
+              </Text>
+            </View>
+          )}
         </Pressable>
       ))}
     </View>

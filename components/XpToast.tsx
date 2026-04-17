@@ -114,12 +114,10 @@ export default function XpToast() {
       streak_bonus: t("xp.streakBonus"),
     };
 
-    // Check if it's a quest reward
-    if (reason.startsWith("quest_")) {
-      return t("xp.questCompleted");
-    }
+    if (reason.startsWith("ramadan_quest_")) return t("xp.ramadanQuestCompleted");
+    if (reason.startsWith("quest_")) return t("xp.questCompleted");
 
-    return reasonMap[reason] || t("xp.prayerCompleted");
+    return reasonMap[reason] || t("xp.questCompleted");
   };
 
   if (!currentGain) return null;
@@ -137,7 +135,11 @@ export default function XpToast() {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.xpText}>+{currentGain.amount} XP</Text>
+          <Text style={styles.xpText}>
+            {currentGain.reason.startsWith("ramadan_quest_")
+              ? t("xp.readyToClaim")
+              : `+${currentGain.amount} XP`}
+          </Text>
           <Text style={styles.reasonText}>
             {getReasonText(currentGain.reason)}
           </Text>

@@ -34,6 +34,7 @@ import SyncProvider from "@/components/SyncProvider";
 
 import { useColorScheme } from "nativewind";
 import { useQuranStore } from "@/stores/useQuranStore";
+import useRamadanStore from "@/stores/useRamadanStore";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -149,6 +150,8 @@ function RootLayoutNav() {
           await useAuthStore.getState().refreshSession();
           // Charger la progression Quran depuis Supabase
           await useQuranStore.getState().loadFromSupabase();
+          // Charger les lunes Ramadan depuis Supabase
+          await useRamadanStore.getState().loadMoonCoins();
         }
       });
 
