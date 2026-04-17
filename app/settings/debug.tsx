@@ -543,7 +543,7 @@ export default function DebugScreen() {
 
         {/* Section Ramadan */}
         <AppText variant="h3" className="mb-4 mt-2">
-          Mode Ramadan
+          Évènement Ramadan
         </AppText>
 
         <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark mb-6">
@@ -578,14 +578,14 @@ export default function DebugScreen() {
                 className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
                 style={{ fontSize: 16 }}
               >
-                Activer le mode Ramadan
+                Activer l'évènement Ramadan
               </Text>
               <Text
                 className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
                 style={{ fontSize: 13 }}
               >
                 {isRamadanMode
-                  ? "Mode Ramadan activé"
+                  ? "Évènement Ramadan actif"
                   : "Quêtes et thème spéciaux"}
               </Text>
             </View>

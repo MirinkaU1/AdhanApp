@@ -6,8 +6,10 @@ import { supabase } from "@/lib/supabase";
 interface RamadanState {
   isRamadanMode: boolean;
   moonCoins: number;
+  hasSeenRamadanWelcome: boolean;
   toggleRamadanMode: () => void;
   setRamadanMode: (value: boolean) => void;
+  markWelcomeSeen: () => void;
   addMoonCoins: (amount: number) => void;
   spendMoonCoins: (amount: number) => boolean;
   syncMoonCoins: () => Promise<void>;
@@ -19,11 +21,23 @@ export const useRamadanStore = create<RamadanState>()(
     (set, get) => ({
       isRamadanMode: false,
       moonCoins: 0,
+      hasSeenRamadanWelcome: false,
 
       toggleRamadanMode: () =>
-        set((state) => ({ isRamadanMode: !state.isRamadanMode })),
+        set((state) => ({
+          isRamadanMode: !state.isRamadanMode,
+          hasSeenRamadanWelcome: state.isRamadanMode
+            ? false
+            : state.hasSeenRamadanWelcome,
+        })),
 
-      setRamadanMode: (value) => set({ isRamadanMode: value }),
+      setRamadanMode: (value) =>
+        set((state) => ({
+          isRamadanMode: value,
+          hasSeenRamadanWelcome: value ? state.hasSeenRamadanWelcome : false,
+        })),
+
+      markWelcomeSeen: () => set({ hasSeenRamadanWelcome: true }),
 
       addMoonCoins: (amount) => {
         set((state) => ({ moonCoins: state.moonCoins + amount }));
@@ -78,6 +92,7 @@ export const useRamadanStore = create<RamadanState>()(
       partialize: (state) => ({
         isRamadanMode: state.isRamadanMode,
         moonCoins: state.moonCoins,
+        hasSeenRamadanWelcome: state.hasSeenRamadanWelcome,
       }),
     },
   ),

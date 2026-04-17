@@ -337,19 +337,37 @@ function RamadanQuestCard({
             <View className="flex-row items-center gap-1.5">
               <View
                 className="flex-row items-center gap-1 px-2 py-1 rounded-full"
-                style={{ backgroundColor: isDark ? "rgba(217,119,6,0.2)" : "#FEF3C7" }}
+                style={{
+                  backgroundColor: isDark ? "rgba(217,119,6,0.2)" : "#FEF3C7",
+                }}
               >
-                <MaterialIconsRound name="star" size={12} color={isDark ? "#FBBF24" : "#D97706"} />
-                <Text className="font-outfit-bold text-xs" style={{ color: isDark ? "#FBBF24" : "#D97706" }}>
+                <MaterialIconsRound
+                  name="star"
+                  size={12}
+                  color={isDark ? "#FBBF24" : "#D97706"}
+                />
+                <Text
+                  className="font-outfit-bold text-xs"
+                  style={{ color: isDark ? "#FBBF24" : "#D97706" }}
+                >
                   +{quest.xpReward}
                 </Text>
               </View>
               <View
                 className="flex-row items-center gap-1 px-2 py-1 rounded-full"
-                style={{ backgroundColor: isDark ? "rgba(252,211,77,0.15)" : "#FEFCE8" }}
+                style={{
+                  backgroundColor: isDark ? "rgba(252,211,77,0.15)" : "#FEFCE8",
+                }}
               >
-                <MaterialIconsRound name="nightlight" size={12} color="#FCD34D" />
-                <Text className="font-outfit-bold text-xs" style={{ color: isDark ? "#FCD34D" : "#92400E" }}>
+                <MaterialIconsRound
+                  name="nightlight"
+                  size={12}
+                  color="#FCD34D"
+                />
+                <Text
+                  className="font-outfit-bold text-xs"
+                  style={{ color: isDark ? "#FCD34D" : "#92400E" }}
+                >
                   +{quest.moonReward ?? "?"}
                 </Text>
               </View>
@@ -428,16 +446,19 @@ export default function QuestsScreen() {
 
   const { xpInLevel } = getLevelFromXp(xp);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("daily");
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    isRamadanMode ? "event" : "daily",
+  );
 
   useEffect(() => {
     checkAndResetDailyQuests();
     checkAndResetWeeklyQuests();
   }, []);
 
-  // Si le mode Ramadan est désactivé mais qu'on est sur l'onglet event → revenir
+  // Si l'évènement Ramadan est désactivé mais qu'on est sur l'onglet event → revenir
   useEffect(() => {
     if (!isRamadanMode && activeTab === "event") setActiveTab("daily");
+    if (isRamadanMode) setActiveTab("event");
   }, [isRamadanMode]);
 
   const dailyList = Object.values(dailyQuests).filter((q: Quest) => q.isDaily);
@@ -450,14 +471,22 @@ export default function QuestsScreen() {
     (q: Quest) => q.status === "completed" || q.status === "claimed",
   ).length;
 
-  const dailyBadge       = dailyList.filter((q: Quest) => q.status === "completed").length;
-  const achievementBadge = achievementList.filter((q: Quest) => q.status === "completed").length;
-  const ramadanBadge     = ramadanList.filter((q) => q.status === "completed").length;
+  const dailyBadge = dailyList.filter(
+    (q: Quest) => q.status === "completed",
+  ).length;
+  const achievementBadge = achievementList.filter(
+    (q: Quest) => q.status === "completed",
+  ).length;
+  const ramadanBadge = ramadanList.filter(
+    (q) => q.status === "completed",
+  ).length;
 
   const tabs: TabOption<TabKey>[] = [
+    ...(isRamadanMode
+      ? [{ key: "event" as TabKey, label: "Évènement", badge: ramadanBadge }]
+      : []),
     { key: "daily", label: "Quotidien", badge: dailyBadge },
     { key: "achievements", label: "Succès", badge: achievementBadge },
-    ...(isRamadanMode ? [{ key: "event" as TabKey, label: "Évènement", badge: ramadanBadge }] : []),
   ];
 
   return (
@@ -537,8 +566,12 @@ export default function QuestsScreen() {
                   <Text className="text-white/60 font-outfit-regular text-xs">
                     Lunes
                   </Text>
-                  <View className="flex-row items-center gap-1 mt-0.5">
-                    <MaterialIconsRound name="nightlight" size={16} color="#FCD34D" />
+                  <View className="flex-row items-center gap-1">
+                    <MaterialIconsRound
+                      name="nightlight"
+                      size={16}
+                      color="#FCD34D"
+                    />
                     <Text className="text-white font-outfit-bold text-xl">
                       {moonCoins}
                     </Text>

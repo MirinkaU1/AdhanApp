@@ -513,6 +513,30 @@ export default {
     },
   },
 
+  // Ramadan
+  ramadan: {
+    welcome: {
+      title: "Ramadan Mubarak",
+      subtitle: "Que ce mois béni soit source de paix et de grâce",
+      feature1: "Accomplissez vos 5 prières quotidiennes",
+      feature2: "Lisez le Coran et suivez votre progression",
+      feature3: "Complétez des quêtes et gagnez des lunes",
+      coinsTitle: "À quoi servent les lunes ?",
+      coinsUse1: "Débloquer des thèmes exclusifs Ramadan",
+      coinsUse2: "Obtenir des récompenses spéciales",
+      coinsUse3: "Plus de surprises à venir...",
+      moreInfo: "À quoi servent les lunes ?",
+      coinsInfo: "Vous avez {{count}} lune(s)",
+      start: "Bismillah, commençons !",
+      bottomNote: "Que Allah accepte vos adorations",
+    },
+    banner: {
+      title: "Ramadan Mubarak",
+      subtitle: "Évènement en cours",
+      quests: "Voir les quêtes",
+    },
+  },
+
   // Notifications XP
   xp: {
     prayerCompleted: "Prière accomplie",

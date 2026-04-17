@@ -509,6 +509,30 @@ export default {
     },
   },
 
+  // Ramadan
+  ramadan: {
+    welcome: {
+      title: "Ramadan Mubarak",
+      subtitle: "May this blessed month bring peace and grace",
+      feature1: "Complete your 5 daily prayers",
+      feature2: "Read the Quran and track your progress",
+      feature3: "Complete quests and earn moon coins",
+      coinsTitle: "What are moons for?",
+      coinsUse1: "Unlock exclusive Ramadan themes",
+      coinsUse2: "Obtain special rewards",
+      coinsUse3: "More surprises coming...",
+      moreInfo: "What are moons for?",
+      coinsInfo: "You have {{count}} moon(s)",
+      start: "Bismillah, let's begin!",
+      bottomNote: "May Allah accept your worship",
+    },
+    banner: {
+      title: "Ramadan Mubarak",
+      subtitle: "Event in progress",
+      quests: "See quests",
+    },
+  },
+
   // XP Notifications
   xp: {
     prayerCompleted: "Prayer completed",

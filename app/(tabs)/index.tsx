@@ -37,6 +37,7 @@ import { AppText } from "@/components/ui";
 import { loadSurah } from "@/utils/quranLoader";
 import useRamadanStore from "@/stores/useRamadanStore";
 import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
+import RamadanWelcomeModal from "@/components/RamadanWelcomeModal";
 
 // Configuration des prières avec icônes Material
 const PRAYER_ICONS: Record<string, MaterialIconName> = {
@@ -108,7 +109,10 @@ export default function DashboardScreen() {
     getLevelFromXp,
   } = useQuestStore();
   const { onPrayerCompleted, checkPrayerOnTime } = useGamification();
-  const { isRamadanMode, moonCoins } = useRamadanStore();
+  const { isRamadanMode, moonCoins, hasSeenRamadanWelcome, markWelcomeSeen } =
+    useRamadanStore();
+
+  const showRamadanWelcome = isRamadanMode && !hasSeenRamadanWelcome;
 
   // Nombre de quêtes à réclamer
   const unclaimedQuests = getUnclaimedQuestsCount();
@@ -335,6 +339,10 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
+      <RamadanWelcomeModal
+        visible={showRamadanWelcome}
+        onClose={markWelcomeSeen}
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -548,6 +556,75 @@ export default function DashboardScreen() {
             </View>
           </View>
         </View>
+
+        {/* ===== BANNIÈRE RAMADAN ===== */}
+        {isRamadanMode && (
+          <Pressable
+            onPress={() => router.push("/quests")}
+            className="mx-4 mt-5 active:opacity-80"
+          >
+            <LinearGradient
+              colors={isDark ? ["#78350F", "#451A03"] : ["#B45309", "#92400E"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                borderRadius: 20,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: "rgba(252,211,77,0.25)",
+              }}
+            >
+              <View className="flex-row items-center gap-3">
+                {/* Moon icon */}
+                <View
+                  className="w-11 h-11 rounded-2xl items-center justify-center"
+                  style={{ backgroundColor: "rgba(252,211,77,0.15)" }}
+                >
+                  <MaterialIconsRound
+                    name="nights-stay"
+                    size={24}
+                    color="#FCD34D"
+                  />
+                </View>
+
+                {/* Text */}
+                <View className="flex-1">
+                  <Text className="font-outfit-bold text-[15px] text-white">
+                    {t("ramadan.banner.title")}
+                  </Text>
+                  <Text
+                    className="font-outfit-regular text-xs mt-0.5"
+                    style={{ color: "rgba(255,255,255,0.65)" }}
+                  >
+                    {t("ramadan.banner.subtitle")}
+                  </Text>
+                </View>
+
+                {/* Coins badge + arrow */}
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="flex-row items-center gap-1 rounded-xl px-2.5 py-1"
+                    style={{ backgroundColor: "rgba(252,211,77,0.18)" }}
+                  >
+                    <MaterialIconsRound
+                      name="nightlight"
+                      size={13}
+                      color="#FCD34D"
+                    />
+                    <Text className="font-outfit-bold text-sm text-yellow-300">
+                      {moonCoins}
+                    </Text>
+                  </View>
+                  <MaterialIconsRound
+                    name="chevron-right"
+                    size={20}
+                    color="rgba(255,255,255,0.5)"
+                  />
+                </View>
+              </View>
+            </LinearGradient>
+          </Pressable>
+        )}
 
         {/* ===== CONTENU PRINCIPAL ===== */}
         <View className="pt-6 px-4">
