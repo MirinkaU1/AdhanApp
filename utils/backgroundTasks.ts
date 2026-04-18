@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import useThemeStore from "@/stores/useThemeStore";
+import { getThemeById } from "@/constants/appThemes";
 
 // Vérifier si on est dans Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
@@ -28,6 +30,11 @@ const DAILY_REMINDER_ID = "daily-progress-reminder";
 
 // Clé pour stocker le statut des prières (synchronisé avec le store)
 const PRAYER_STATUS_KEY = "prayer-store";
+
+const getThemePrimaryColor = () => {
+  const activeThemeId = useThemeStore.getState().activeThemeId;
+  return getThemeById(activeThemeId).primary;
+};
 
 // Messages pour le rappel quotidien selon le nombre de prières manquées
 const dailyReminderMessages = {
@@ -113,6 +120,7 @@ const checkPrayerStatus = async (): Promise<number> => {
 
     // Créer le canal pour Android si nécessaire
     if (Platform.OS === "android") {
+      const themePrimary = getThemePrimaryColor();
       await Notifications.setNotificationChannelAsync(
         DAILY_REMINDER_CHANNEL_ID,
         {
@@ -121,7 +129,7 @@ const checkPrayerStatus = async (): Promise<number> => {
           importance: Notifications.AndroidImportance.DEFAULT,
           sound: "default",
           vibrationPattern: [0, 250],
-          lightColor: "#115E59",
+          lightColor: themePrimary,
         },
       );
     }
@@ -135,7 +143,7 @@ const checkPrayerStatus = async (): Promise<number> => {
         sound: true,
         data: { type: "daily-reminder", prayersDone },
         ...(Platform.OS === "android" && {
-          color: "#115E59",
+          color: getThemePrimaryColor(),
         }),
       },
       trigger: null, // Immédiat
@@ -255,6 +263,7 @@ export const scheduleEveningReminder = async (): Promise<void> => {
 
     // Créer le canal pour Android si nécessaire
     if (Platform.OS === "android") {
+      const themePrimary = getThemePrimaryColor();
       await Notifications.setNotificationChannelAsync(
         DAILY_REMINDER_CHANNEL_ID,
         {
@@ -263,7 +272,7 @@ export const scheduleEveningReminder = async (): Promise<void> => {
           importance: Notifications.AndroidImportance.DEFAULT,
           sound: "default",
           vibrationPattern: [0, 250],
-          lightColor: "#115E59",
+          lightColor: themePrimary,
         },
       );
     }
@@ -277,7 +286,7 @@ export const scheduleEveningReminder = async (): Promise<void> => {
         sound: true,
         data: { type: "daily-reminder-scheduled" },
         ...(Platform.OS === "android" && {
-          color: "#115E59",
+          color: getThemePrimaryColor(),
         }),
       },
       trigger: {

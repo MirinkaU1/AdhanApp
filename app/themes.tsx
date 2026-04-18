@@ -19,6 +19,7 @@ import { AlertDialog } from "@/components/ui";
 import useThemeStore from "@/stores/useThemeStore";
 import useCoinsStore from "@/stores/useCoinsStore";
 import useQuestStore from "@/stores/useQuestStore";
+import useAuthStore from "@/stores/useAuthStore";
 import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
 
 // ─────────────────────────────────────────────
@@ -39,9 +40,11 @@ function ShopThemeCard({
   const { level } = useQuestStore();
   const { coins } = useCoinsStore();
 
-  const isLevelLocked = theme.unlock.type === "level" && level < theme.unlock.level;
+  const isLevelLocked =
+    theme.unlock.type === "level" && level < theme.unlock.level;
   const isEvent = theme.unlock.type === "event";
-  const canAfford = theme.unlock.type === "coins" ? coins >= theme.unlock.price : false;
+  const canAfford =
+    theme.unlock.type === "coins" ? coins >= theme.unlock.price : false;
   const isLocked = isLevelLocked || isEvent;
 
   return (
@@ -85,11 +88,21 @@ function ShopThemeCard({
             className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full"
             style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
           >
-            <MaterialIconsRound name="lock" size={10} color="rgba(255,255,255,0.9)" />
-            <Text className="font-outfit-medium" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)" }}>
+            <MaterialIconsRound
+              name="lock"
+              size={10}
+              color="rgba(255,255,255,0.9)"
+            />
+            <Text
+              className="font-outfit-medium"
+              style={{ fontSize: 10, color: "rgba(255,255,255,0.9)" }}
+            >
               {isEvent
                 ? t("themes.event")
-                : t("themes.unlockLevelShort", { level: (theme.unlock as { type: "level"; level: number }).level })}
+                : t("themes.unlockLevelShort", {
+                    level: (theme.unlock as { type: "level"; level: number })
+                      .level,
+                  })}
             </Text>
           </View>
         )}
@@ -113,7 +126,9 @@ function ShopThemeCard({
           numberOfLines={1}
         >
           {isLevelLocked
-            ? t("themes.unlockLevel", { level: (theme.unlock as { type: "level"; level: number }).level })
+            ? t("themes.unlockLevel", {
+                level: (theme.unlock as { type: "level"; level: number }).level,
+              })
             : isEvent
               ? t("themes.eventDesc")
               : t(theme.descriptionKey)}
@@ -126,15 +141,27 @@ function ShopThemeCard({
             className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1 active:opacity-80"
             style={{
               backgroundColor: canAfford
-                ? isDark ? "rgba(217,119,6,0.2)" : "#FEF3C7"
-                : isDark ? "#1E293B" : "#F8FAFC",
+                ? isDark
+                  ? "rgba(217,119,6,0.2)"
+                  : "#FEF3C7"
+                : isDark
+                  ? "#1E293B"
+                  : "#F8FAFC",
               borderWidth: 1,
               borderColor: canAfford
-                ? isDark ? "rgba(217,119,6,0.4)" : "#FDE68A"
-                : isDark ? "#334155" : "#E2E8F0",
+                ? isDark
+                  ? "rgba(217,119,6,0.4)"
+                  : "#FDE68A"
+                : isDark
+                  ? "#334155"
+                  : "#E2E8F0",
             }}
           >
-            <MaterialIconsRound name="toll" size={13} color={canAfford ? "#D97706" : "#94A3B8"} />
+            <MaterialIconsRound
+              name="toll"
+              size={13}
+              color={canAfford ? "#D97706" : "#94A3B8"}
+            />
             <Text
               className="font-outfit-bold"
               style={{ fontSize: 11, color: canAfford ? "#D97706" : "#94A3B8" }}
@@ -148,8 +175,13 @@ function ShopThemeCard({
             style={{ backgroundColor: isDark ? "#0F172A" : "#F1F5F9" }}
           >
             <MaterialIconsRound name="lock" size={12} color="#94A3B8" />
-            <Text className="font-outfit-medium" style={{ fontSize: 11, color: "#94A3B8" }}>
-              {isEvent ? t("themes.event") : `Niv. ${(theme.unlock as { type: "level"; level: number }).level}`}
+            <Text
+              className="font-outfit-medium"
+              style={{ fontSize: 11, color: "#94A3B8" }}
+            >
+              {isEvent
+                ? t("themes.event")
+                : `Niv. ${(theme.unlock as { type: "level"; level: number }).level}`}
             </Text>
           </View>
         )}
@@ -210,6 +242,7 @@ export default function ThemesShopScreen() {
   const isDark = useIsDark();
   const appTheme = useAppTheme();
   const { width } = useWindowDimensions();
+  const { user } = useAuthStore();
   const { coins } = useCoinsStore();
   const { isThemeUnlocked, purchaseTheme, setActiveTheme } = useThemeStore();
 
@@ -236,17 +269,21 @@ export default function ThemesShopScreen() {
     setConfirmTheme(theme);
   };
 
-  const handleConfirmPurchase = () => {
+  const handleConfirmPurchase = async () => {
     if (!confirmTheme || confirmTheme.unlock.type !== "coins") return;
-    const success = purchaseTheme(confirmTheme.id, confirmTheme.unlock.price);
+    const success = await purchaseTheme(
+      confirmTheme.id,
+      confirmTheme.unlock.price,
+      user?.id,
+    );
     const bought = confirmTheme;
     setConfirmTheme(null);
     if (success) setPurchasedTheme(bought);
   };
 
-  const handleApplyPurchased = () => {
+  const handleApplyPurchased = async () => {
     if (!purchasedTheme) return;
-    setActiveTheme(purchasedTheme.id);
+    await setActiveTheme(purchasedTheme.id, user?.id);
     setPurchasedTheme(null);
   };
 
@@ -277,10 +314,16 @@ export default function ThemesShopScreen() {
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-white font-outfit-bold" style={{ fontSize: 24 }}>
+            <Text
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
+            >
               {t("themes.shopTitle")}
             </Text>
-            <Text className="text-white/70 font-outfit-regular" style={{ fontSize: 14 }}>
+            <Text
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
+            >
               {t("themes.shopSubtitle")}
             </Text>
           </View>
@@ -306,7 +349,11 @@ export default function ThemesShopScreen() {
       >
         {lockedThemes.length === 0 ? (
           <View className="items-center justify-center py-20">
-            <MaterialIconsRound name="check-circle" size={52} color={isDark ? "#334155" : "#CBD5E1"} />
+            <MaterialIconsRound
+              name="check-circle"
+              size={52}
+              color={isDark ? "#334155" : "#CBD5E1"}
+            />
             <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-lg mt-4">
               {t("themes.allOwned")}
             </Text>
@@ -369,7 +416,10 @@ export default function ThemesShopScreen() {
           confirmTheme
             ? t("themes.confirmPurchaseDesc", {
                 name: t(confirmTheme.nameKey),
-                price: confirmTheme.unlock.type === "coins" ? confirmTheme.unlock.price : 0,
+                price:
+                  confirmTheme.unlock.type === "coins"
+                    ? confirmTheme.unlock.price
+                    : 0,
               })
             : ""
         }
@@ -396,7 +446,9 @@ export default function ThemesShopScreen() {
         title={t("themes.purchaseSuccess")}
         message={
           purchasedTheme
-            ? t("themes.purchaseSuccessDesc", { name: t(purchasedTheme.nameKey) })
+            ? t("themes.purchaseSuccessDesc", {
+                name: t(purchasedTheme.nameKey),
+              })
             : ""
         }
         icon="palette"

@@ -89,15 +89,21 @@ export default function DebugScreen() {
   const enqueueXpToast = useQuestStore((s) => s.enqueueXpToast);
   const enqueueLevelUpToast = useQuestStore((s) => s.enqueueLevelUpToast);
   const level = useQuestStore((s) => s.level);
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, hasHydrated } = useAuthStore();
   const { addCoins, coins } = useCoinsStore();
 
   // Guard : seuls dev et tester peuvent accéder
   useEffect(() => {
-    if (user && user.role !== "dev" && user.role !== "tester") {
+    if (!hasHydrated) return;
+
+    if (
+      !isAuthenticated ||
+      !user ||
+      (user.role !== "dev" && user.role !== "tester")
+    ) {
       router.replace("/settings");
     }
-  }, [user]);
+  }, [hasHydrated, isAuthenticated, user]);
 
   // Afficher une notification de test
   const showTestNotification = async (prayerId: PrayerName) => {
@@ -552,7 +558,12 @@ export default function DebugScreen() {
 
         <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark mb-6">
           <Pressable
-            onPress={() => addCoins(10)}
+            onPress={() => {
+              void addCoins(10, {
+                reason: "debug_manual",
+                referenceKey: `debug_manual:${Date.now()}`,
+              });
+            }}
             className="p-4 flex-row items-center gap-3 active:opacity-70"
           >
             <View
@@ -580,7 +591,10 @@ export default function DebugScreen() {
               style={{ backgroundColor: isDark ? "#78350F" : "#FDE68A" }}
             >
               <MaterialIconsRound name="add" size={16} color="#D97706" />
-              <Text className="font-outfit-bold text-sm" style={{ color: "#D97706" }}>
+              <Text
+                className="font-outfit-bold text-sm"
+                style={{ color: "#D97706" }}
+              >
                 10
               </Text>
             </View>

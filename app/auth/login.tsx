@@ -13,10 +13,12 @@ import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 export default function LoginScreen() {
   const { signInWithEmail, isLoading } = useAuthStore();
   const navigation = useNavigation();
+  const appTheme = useAppTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +64,7 @@ export default function LoginScreen() {
       >
         {/* Header avec logo */}
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           className="h-[45%] items-center justify-center relative"
@@ -143,7 +145,10 @@ export default function LoginScreen() {
 
           {/* Mot de passe oublié */}
           <Pressable className="self-end mb-6">
-            <Text className="text-base font-outfit-semibold text-teal-800">
+            <Text
+              className="text-base font-outfit-semibold"
+              style={{ color: appTheme.primary }}
+            >
               Mot de passe oublié ?
             </Text>
           </Pressable>

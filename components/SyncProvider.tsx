@@ -19,6 +19,7 @@ import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
 import useQuestStore from "@/stores/useQuestStore";
 import { useQuranStore } from "@/stores/useQuranStore";
+import useThemeStore from "@/stores/useThemeStore";
 import { supabase } from "@/lib/supabase";
 
 export default function SyncProvider() {
@@ -40,6 +41,12 @@ export default function SyncProvider() {
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       loadFromSupabase();
+    }
+  }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      void useThemeStore.getState().syncFromServer(user.id);
     }
   }, [isAuthenticated, user?.id]);
 
@@ -93,6 +100,8 @@ export default function SyncProvider() {
               lastQuranSyncRef.current = now;
               await loadFromSupabase();
             }
+
+            await useThemeStore.getState().syncFromServer(user.id);
           }
         }
       }

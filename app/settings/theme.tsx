@@ -1,4 +1,10 @@
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -7,6 +13,7 @@ import MaterialIconsRound, {
 } from "@/components/MaterialIconsRound";
 import useThemeStore, { ThemeMode } from "@/stores/useThemeStore";
 import useCoinsStore from "@/stores/useCoinsStore";
+import useAuthStore from "@/stores/useAuthStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { APP_THEMES } from "@/constants/appThemes";
@@ -47,11 +54,7 @@ const MODE_OPTIONS: ThemeOption[] = [
 // Aperçu du thème actif
 // ─────────────────────────────────────────────
 
-function ActiveThemePreview({
-  themeId,
-}: {
-  themeId: string;
-}) {
+function ActiveThemePreview({ themeId }: { themeId: string }) {
   const { t } = useTranslation();
   const isDark = useIsDark();
   const theme = APP_THEMES.find((th) => th.id === themeId);
@@ -89,7 +92,8 @@ function ActiveThemePreview({
         </View>
 
         {/* Badge actif */}
-        <View className="flex-row items-center gap-1.5 self-start px-3 py-1.5 rounded-full"
+        <View
+          className="flex-row items-center gap-1.5 self-start px-3 py-1.5 rounded-full"
           style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
         >
           <MaterialIconsRound name="check-circle" size={14} color="#fff" />
@@ -185,7 +189,10 @@ function CollectionCard({
             style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
           >
             <MaterialIconsRound name="check" size={10} color="#fff" />
-            <Text className="font-outfit-bold text-white" style={{ fontSize: 10 }}>
+            <Text
+              className="font-outfit-bold text-white"
+              style={{ fontSize: 10 }}
+            >
               {t("themes.active")}
             </Text>
           </View>
@@ -208,8 +215,12 @@ function CollectionCard({
           className="mt-1.5 rounded-lg py-1 items-center"
           style={{
             backgroundColor: isActive
-              ? isDark ? "rgba(217,119,6,0.2)" : "#FEF3C7"
-              : isDark ? "#334155" : "#F1F5F9",
+              ? isDark
+                ? "rgba(217,119,6,0.2)"
+                : "#FEF3C7"
+              : isDark
+                ? "#334155"
+                : "#F1F5F9",
           }}
         >
           <Text
@@ -235,8 +246,15 @@ export default function ThemeScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
   const appTheme = useAppTheme();
+  const { user } = useAuthStore();
   const { width } = useWindowDimensions();
-  const { mode: themeMode, setMode, activeThemeId, setActiveTheme, isThemeUnlocked } = useThemeStore();
+  const {
+    mode: themeMode,
+    setMode,
+    activeThemeId,
+    setActiveTheme,
+    isThemeUnlocked,
+  } = useThemeStore();
   const { coins } = useCoinsStore();
 
   const ownedThemes = APP_THEMES.filter((th) => isThemeUnlocked(th.id));
@@ -275,10 +293,16 @@ export default function ThemeScreen() {
             <MaterialIconsRound name="arrow-back" size={24} color="#fff" />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-white font-outfit-bold" style={{ fontSize: 24 }}>
+            <Text
+              className="text-white font-outfit-bold"
+              style={{ fontSize: 24 }}
+            >
               {t("theme.title")}
             </Text>
-            <Text className="text-white/70 font-outfit-regular" style={{ fontSize: 14 }}>
+            <Text
+              className="text-white/70 font-outfit-regular"
+              style={{ fontSize: 14 }}
+            >
               {t("theme.subtitle")}
             </Text>
           </View>
@@ -293,7 +317,11 @@ export default function ThemeScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingVertical: 24, paddingHorizontal: 16, paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingVertical: 24,
+          paddingHorizontal: 16,
+          paddingBottom: 100,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Aperçu thème actif ── */}
@@ -319,7 +347,9 @@ export default function ThemeScreen() {
                   borderBottomWidth: index < MODE_OPTIONS.length - 1 ? 1 : 0,
                   borderBottomColor: isDark ? "#334155" : "#F1F5F9",
                   backgroundColor: isSelected
-                    ? isDark ? "#422006" : "#FEF3C7"
+                    ? isDark
+                      ? "#422006"
+                      : "#FEF3C7"
                     : "transparent",
                 }}
               >
@@ -328,18 +358,27 @@ export default function ThemeScreen() {
                     className="w-11 h-11 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: isSelected
-                        ? isDark ? "#78350F" : "#FDE68A"
-                        : isDark ? "#334155" : "#F1F5F9",
+                        ? isDark
+                          ? "#78350F"
+                          : "#FDE68A"
+                        : isDark
+                          ? "#334155"
+                          : "#F1F5F9",
                     }}
                   >
                     <MaterialIconsRound
                       name={option.icon}
                       size={22}
-                      color={isSelected ? "#F59E0B" : isDark ? "#94A3B8" : "#64748B"}
+                      color={
+                        isSelected ? "#F59E0B" : isDark ? "#94A3B8" : "#64748B"
+                      }
                     />
                   </View>
                   <View>
-                    <Text className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold" style={{ fontSize: 15 }}>
+                    <Text
+                      className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                      style={{ fontSize: 15 }}
+                    >
                       {t(option.nameKey)}
                     </Text>
                     <Text className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular text-xs mt-0.5">
@@ -374,7 +413,10 @@ export default function ThemeScreen() {
             }}
           >
             <MaterialIconsRound name="toll" size={13} color="#D97706" />
-            <Text className="font-outfit-bold text-xs" style={{ color: "#D97706" }}>
+            <Text
+              className="font-outfit-bold text-xs"
+              style={{ color: "#D97706" }}
+            >
               {coins}
             </Text>
             <MaterialIconsRound name="storefront" size={13} color="#D97706" />
@@ -383,13 +425,19 @@ export default function ThemeScreen() {
 
         {/* Grille 2 colonnes */}
         {themePairs.map((pair, rowIndex) => (
-          <View key={rowIndex} className="flex-row mb-3" style={{ gap: GRID_GAP }}>
+          <View
+            key={rowIndex}
+            className="flex-row mb-3"
+            style={{ gap: GRID_GAP }}
+          >
             {pair.map((theme) => (
               <CollectionCard
                 key={theme.id}
                 themeId={theme.id}
                 isActive={activeThemeId === theme.id}
-                onSelect={() => setActiveTheme(theme.id)}
+                onSelect={() => {
+                  void setActiveTheme(theme.id, user?.id);
+                }}
                 cardWidth={cardWidth}
               />
             ))}

@@ -14,9 +14,13 @@ import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { useIsDark } from "@/components/useColorScheme";
 
 export default function RegisterScreen() {
   const { signUpWithEmail, isLoading } = useAuthStore();
+  const appTheme = useAppTheme();
+  const isDark = useIsDark();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -82,7 +86,7 @@ export default function RegisterScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           className="pt-16 pb-12 px-6 relative"
@@ -172,11 +176,15 @@ export default function RegisterScreen() {
             className="flex-row items-start mb-6"
           >
             <View
-              className={`w-6 h-6 rounded-md border-2 items-center justify-center mr-3 mt-0.5 ${
-                acceptTerms
-                  ? "bg-teal-800 border-teal-800"
-                  : "bg-transparent border-gray-300 dark:border-slate-600"
-              }`}
+              className="w-6 h-6 rounded-md border-2 items-center justify-center mr-3 mt-0.5"
+              style={{
+                backgroundColor: acceptTerms ? appTheme.primary : "transparent",
+                borderColor: acceptTerms
+                  ? appTheme.primary
+                  : isDark
+                    ? "#475569"
+                    : "#D1D5DB",
+              }}
             >
               {acceptTerms && (
                 <MaterialIconsRound name="check" size={16} color="#fff" />
@@ -184,7 +192,10 @@ export default function RegisterScreen() {
             </View>
             <Text className="flex-1 text-base font-outfit-medium text-gray-500 dark:text-slate-400 leading-5">
               J'accepte les{" "}
-              <Text className="text-teal-800 font-outfit-bold underline">
+              <Text
+                className="font-outfit-bold underline"
+                style={{ color: appTheme.primary }}
+              >
                 conditions d'utilisation
               </Text>{" "}
               et la politique de confidentialité.
@@ -212,7 +223,10 @@ export default function RegisterScreen() {
               Déjà un compte ?
             </Text>
             <Pressable onPress={() => router.back()}>
-              <Text className="text-base font-outfit-bold text-teal-800 ml-2">
+              <Text
+                className="text-base font-outfit-bold ml-2"
+                style={{ color: appTheme.primary }}
+              >
                 Se connecter
               </Text>
             </Pressable>

@@ -15,9 +15,11 @@ import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 export default function WelcomeScreen() {
   const { login } = useAuthStore();
+  const appTheme = useAppTheme();
 
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState("");
@@ -64,6 +66,7 @@ export default function WelcomeScreen() {
             id: `guest_${Date.now()}`,
             name: firstName.trim(),
             email: "",
+            role: "user",
             memberSince: new Date().toISOString(),
             isGuest: true,
             xp: 0,
@@ -94,6 +97,7 @@ export default function WelcomeScreen() {
             id: data.user.id,
             name: firstName.trim(),
             email: "",
+            role: "user",
             memberSince: new Date().toISOString(),
             isGuest: true,
             xp: 0,
@@ -105,6 +109,7 @@ export default function WelcomeScreen() {
           id: `guest_${Date.now()}`,
           name: firstName.trim(),
           email: "",
+          role: "user",
           memberSince: new Date().toISOString(),
           isGuest: true,
           xp: 0,
@@ -119,6 +124,7 @@ export default function WelcomeScreen() {
         id: `guest_${Date.now()}`,
         name: firstName.trim(),
         email: "",
+        role: "user",
         memberSince: new Date().toISOString(),
         isGuest: true,
         xp: 0,
@@ -161,7 +167,7 @@ export default function WelcomeScreen() {
     <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       {/* Header avec logo */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         className="h-[40%] items-center justify-center"
@@ -210,10 +216,16 @@ export default function WelcomeScreen() {
           {/* Indicateur d'étape */}
           <View className="flex-row items-center justify-center mb-6 gap-2">
             <View
-              className={`h-2 rounded ${step === 1 ? "w-6 bg-teal-800" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
+              className={`h-2 rounded ${step === 1 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
+              style={
+                step === 1 ? { backgroundColor: appTheme.primary } : undefined
+              }
             />
             <View
-              className={`h-2 rounded ${step === 2 ? "w-6 bg-teal-800" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
+              className={`h-2 rounded ${step === 2 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
+              style={
+                step === 2 ? { backgroundColor: appTheme.primary } : undefined
+              }
             />
           </View>
 
@@ -263,9 +275,12 @@ export default function WelcomeScreen() {
                 <MaterialIconsRound
                   name="arrow-back"
                   size={20}
-                  color="#115E59"
+                  color={appTheme.primary}
                 />
-                <Text className="text-base font-outfit-medium text-teal-800">
+                <Text
+                  className="text-base font-outfit-medium"
+                  style={{ color: appTheme.primary }}
+                >
                   Retour
                 </Text>
               </Pressable>
@@ -325,7 +340,10 @@ export default function WelcomeScreen() {
           <Pressable onPress={handleLogin} className="items-center py-3">
             <Text className="text-base font-outfit-regular text-gray-500 dark:text-slate-400">
               Vous avez déjà un compte ?{" "}
-              <Text className="font-outfit-semibold text-teal-800">
+              <Text
+                className="font-outfit-semibold"
+                style={{ color: appTheme.primary }}
+              >
                 Se connecter
               </Text>
             </Text>
@@ -334,9 +352,13 @@ export default function WelcomeScreen() {
           {/* Terms */}
           <Text className="text-sm font-outfit-regular text-gray-400 dark:text-slate-500 text-center mt-6 leading-5">
             En continuant, vous acceptez nos{" "}
-            <Text className="text-teal-800">Conditions d'utilisation</Text> et
-            notre{" "}
-            <Text className="text-teal-800">Politique de confidentialité</Text>
+            <Text style={{ color: appTheme.primary }}>
+              Conditions d'utilisation
+            </Text>{" "}
+            et notre{" "}
+            <Text style={{ color: appTheme.primary }}>
+              Politique de confidentialité
+            </Text>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -130,9 +130,19 @@ const useAuthStore = create<AuthState>()(
           await import("@/stores/usePrayerStore").then((m) =>
             m.default.getState(),
           );
+        const { clearAllData: clearCoinsData } =
+          await import("@/stores/useCoinsStore").then((m) =>
+            m.default.getState(),
+          );
+        const { clearAllData: clearThemeData } =
+          await import("@/stores/useThemeStore").then((m) =>
+            m.default.getState(),
+          );
 
         clearQuestData();
         clearPrayerData();
+        clearCoinsData();
+        clearThemeData();
 
         get().clearAuth();
         console.log("[AuthStore] All user data cleared");

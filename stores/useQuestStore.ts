@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import useCoinsStore from "@/stores/useCoinsStore";
 import useThemeStore from "@/stores/useThemeStore";
 import { APP_THEMES } from "@/constants/appThemes";
+import type { CoinAwardReason } from "@/lib/themeEconomy";
 
 // =====================================================
 // TYPES
@@ -144,18 +145,14 @@ export const XP_REWARDS = {
   FAJR_BONUS: 10,
 };
 
-// Coins gagnés par quête réclamée
-const QUEST_COIN_REWARDS: Record<QuestId, number> = {
-  first_prayer_today: 3,
-  pray_fajr: 5,
-  pray_all_5: 15,
-  pray_on_time: 8,
-  complete_streak_3: 20,
-  complete_streak_7: 50,
+const QUEST_COIN_REWARD_REASONS: Record<QuestId, CoinAwardReason> = {
+  first_prayer_today: "quest_first_prayer_today",
+  pray_fajr: "quest_pray_fajr",
+  pray_all_5: "quest_pray_all_5",
+  pray_on_time: "quest_pray_on_time",
+  complete_streak_3: "quest_complete_streak_3",
+  complete_streak_7: "quest_complete_streak_7",
 };
-
-// Coins gagnés à chaque passage de niveau
-const LEVEL_UP_COIN_REWARD = 10;
 
 // Noms des niveaux (rangs)
 export const LEVEL_NAMES: Record<number, string> = {
@@ -349,7 +346,9 @@ const useQuestStore = create<QuestStoreState>()(
 
         // Récompenses au passage de niveau
         if (hasLeveledUp) {
-          useCoinsStore.getState().addCoins(LEVEL_UP_COIN_REWARD);
+          void useCoinsStore
+            .getState()
+            .awardCoins("level_up", `level_up:${level}`);
           // Débloquer les thèmes dont le niveau requis est atteint
           const themeStore = useThemeStore.getState();
           APP_THEMES.forEach((theme) => {
@@ -581,9 +580,12 @@ const useQuestStore = create<QuestStoreState>()(
         // Si xpToAdd > 0, c'est qu'on a bien fait le claim
         if (xpToAdd > 0) {
           get().addXp(xpToAdd, `quest_${questId}`, true);
-          // Récompense en coins
-          const coinReward = QUEST_COIN_REWARDS[questId] ?? 0;
-          if (coinReward > 0) useCoinsStore.getState().addCoins(coinReward);
+          const coinReason = QUEST_COIN_REWARD_REASONS[questId];
+          if (coinReason) {
+            void useCoinsStore
+              .getState()
+              .awardCoins(coinReason, `quest:${questId}:${getDateKey()}`);
+          }
 
           // Débloquer quête suivante
           if (shouldUnlockNext) {
@@ -648,6 +650,18 @@ const useQuestStore = create<QuestStoreState>()(
             totalXpEarned: finalTotalXpEarned,
           });
         }
+
+        // Debloquer les themes conditionnes par niveau meme sans nouveau level-up local
+        const themeStore = useThemeStore.getState();
+        APP_THEMES.forEach((theme) => {
+          if (
+            theme.unlock.type === "level" &&
+            finalLevel >= theme.unlock.level &&
+            !themeStore.isThemeUnlocked(theme.id)
+          ) {
+            themeStore.unlockTheme(theme.id);
+          }
+        });
       },
 
       resetDailyQuests: () => {
