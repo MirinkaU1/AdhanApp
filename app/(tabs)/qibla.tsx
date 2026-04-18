@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AppLoader } from "@/components/ui";
 import { useTranslation } from "react-i18next";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -20,6 +21,7 @@ import { AppText } from "@/components/ui";
 export default function QiblaScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const wasAlignedRef = useRef(false);
   const { rs3, fontSize, iconSize } = useResponsive();
 
@@ -121,7 +123,7 @@ export default function QiblaScreen() {
     return (
       <View className="flex-1 bg-bg-light dark:bg-bg-dark items-center justify-center px-8">
         <View className="w-20 h-20 rounded-full bg-primary/20 items-center justify-center mb-6">
-          <MaterialIconsRound name="location-off" size={40} color="#115E59" />
+          <MaterialIconsRound name="location-off" size={40} color={appTheme.primary} />
         </View>
         <AppText variant="h2" className="text-center mb-3">
           {t("qibla.permissionDenied")}
@@ -145,7 +147,7 @@ export default function QiblaScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Background gradient */}
       <LinearGradient
-        colors={["#115E59", "#0d4542", isDark ? "#0F172A" : "#F6F8F8"]}
+        colors={[appTheme.headerGradient[0], appTheme.headerGradient[1], isDark ? "#0F172A" : "#F6F8F8"]}
         locations={[0, 0.35, 0.65]}
         className="absolute top-0 left-0 right-0"
         style={{ height: "60%" }}
@@ -197,7 +199,7 @@ export default function QiblaScreen() {
               backgroundColor: isDark ? "#1a2c2b" : "#FFFFFF",
               borderWidth: compassBorder,
               borderColor: "#D4AF37",
-              shadowColor: "#115E59",
+              shadowColor: appTheme.primary,
               shadowOffset: { width: 0, height: 20 },
               shadowOpacity: 0.25,
               shadowRadius: 50,
@@ -289,7 +291,7 @@ export default function QiblaScreen() {
                   borderBottomWidth: needleHeight,
                   borderLeftColor: "transparent",
                   borderRightColor: "transparent",
-                  borderBottomColor: "#115E59",
+                  borderBottomColor: appTheme.primary,
                 }}
               />
 
@@ -416,7 +418,7 @@ export default function QiblaScreen() {
             <MaterialIconsRound
               name={isAligned ? "check" : "screen-rotation"}
               size={iconSize.xs}
-              color={isAligned ? "#10B981" : isDark ? "#5EEAD4" : "#115E59"}
+              color={isAligned ? "#10B981" : isDark ? "#5EEAD4" : appTheme.primary}
             />
           </View>
           <Text

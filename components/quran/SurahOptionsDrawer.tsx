@@ -3,6 +3,7 @@ import React from "react";
 import { View, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import AppDrawer from "@/components/ui/AppDrawer";
@@ -33,6 +34,7 @@ function OptionItem({
   isDestructive,
 }: OptionItemProps) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   return (
     <Pressable
@@ -58,7 +60,7 @@ function OptionItem({
         <MaterialIconsRound
           name={icon as any}
           size={20}
-          color={isDestructive ? "#EF4444" : isDark ? "#5EEAD4" : "#115E59"}
+          color={isDestructive ? "#EF4444" : isDark ? "#5EEAD4" : appTheme.primary}
         />
       </View>
       <View className="flex-1">

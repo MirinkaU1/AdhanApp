@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard, AlertDialog } from "@/components/ui";
 import { useQuranStore, FavoriteVerse } from "@/stores/useQuranStore";
@@ -56,6 +57,7 @@ function FavoriteVerseCard({
   t: (key: string) => string;
 }) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   return (
     <Pressable
@@ -75,7 +77,7 @@ function FavoriteVerseCard({
             >
               <Text
                 className="text-sm font-outfit-bold"
-                style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+                style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
               >
                 {verse.surahId}
               </Text>
@@ -134,6 +136,7 @@ export default function FavoritesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const favorites = useQuranStore((state) => state.getAllFavorites());
   const removeFromFavorites = useQuranStore((state) => state.removeFromFavorites);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
@@ -214,7 +217,7 @@ export default function FavoritesScreen() {
               style={{ minHeight: 200 }}
             >
               <LinearGradient
-                colors={["#115E59", "#0d4542"]}
+                colors={appTheme.headerGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -290,7 +293,7 @@ export default function FavoritesScreen() {
               <View className="flex-row items-center">
                 <Text
                   className="text-lg font-outfit-bold mr-2"
-                  style={{ color: isDark ? "#5EEAD4" : "#115E59", fontFamily: "Amiri_400Regular" }}
+                  style={{ color: isDark ? "#5EEAD4" : appTheme.primary, fontFamily: "Amiri_400Regular" }}
                 >
                   {item.surahName}
                 </Text>

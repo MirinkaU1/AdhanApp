@@ -2,6 +2,7 @@ import React from "react";
 import { View, Pressable, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import AppDrawer from "@/components/ui/AppDrawer";
@@ -32,6 +33,7 @@ export default function DhikrSettingsDrawer({
 }: DhikrSettingsDrawerProps) {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   return (
     <AppDrawer
@@ -72,7 +74,7 @@ export default function DhikrSettingsDrawer({
                         : "#F8FAFC",
                     borderWidth: isSelected ? 2 : 1,
                     borderColor: isSelected
-                      ? "#115E59"
+                      ? appTheme.primary
                       : isDark
                         ? "#334155"
                         : "#E2E8F0",
@@ -99,7 +101,7 @@ export default function DhikrSettingsDrawer({
                     <MaterialIconsRound
                       name="check-circle"
                       size={24}
-                      color="#115E59"
+                      color={appTheme.primary}
                     />
                   )}
                 </Pressable>
@@ -127,13 +129,13 @@ export default function DhikrSettingsDrawer({
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{
                     backgroundColor: isSelected
-                      ? "#115E59"
+                      ? appTheme.primary
                       : isDark
                         ? "#1E293B"
                         : "#F8FAFC",
                     borderWidth: 1,
                     borderColor: isSelected
-                      ? "#115E59"
+                      ? appTheme.primary
                       : isDark
                         ? "#334155"
                         : "#E2E8F0",

@@ -3,6 +3,7 @@ import { Pressable, Text, View, StyleSheet, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard, AlertDialog } from "@/components/ui";
 import { DhikrSettingsDrawer, DigitalCounter } from "@/components/quran/dhikr";
@@ -12,6 +13,7 @@ import { router } from "expo-router";
 export default function DhikrScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -40,7 +42,7 @@ export default function DhikrScreen() {
         style={{ minHeight: 180 }}
       >
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}

@@ -5,10 +5,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 export default function HijriScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const [adjustment, setAdjustment] = useState(0);
 
   // Simulation de la date Hijri
@@ -21,7 +23,7 @@ export default function HijriScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{

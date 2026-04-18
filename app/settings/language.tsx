@@ -6,6 +6,7 @@ import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useThemeStore from "@/stores/useThemeStore";
 import { changeLanguage } from "@/lib/i18n";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { clearQuranCache } from "@/utils/quranLoader";
 
 interface Language {
@@ -23,6 +24,7 @@ const LANGUAGES: Language[] = [
 export default function LanguageScreen() {
   const { t, i18n } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   const currentLanguage = i18n.language as "fr" | "en";
 
@@ -36,7 +38,7 @@ export default function LanguageScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{

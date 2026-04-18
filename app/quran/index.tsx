@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard } from "@/components/ui";
 import { ContinueReadingCard, SurahSkeleton } from "@/components/quran";
@@ -27,6 +28,7 @@ import { useQuranStore } from "@/stores/useQuranStore";
 
 export default function QuranListScreen() {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { t, i18n } = useTranslation();
   const router = useRouter();
 
@@ -101,7 +103,7 @@ export default function QuranListScreen() {
               style={{ minHeight: 200 }}
             >
               <LinearGradient
-                colors={["#115E59", "#0d4542"]}
+                colors={appTheme.headerGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFill}

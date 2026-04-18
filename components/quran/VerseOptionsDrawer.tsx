@@ -4,6 +4,7 @@ import { View, Pressable, Share } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import AppDrawer from "@/components/ui/AppDrawer";
@@ -41,6 +42,7 @@ function OptionItem({
   danger,
 }: OptionItemProps) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   return (
     <Pressable
@@ -74,10 +76,10 @@ function OptionItem({
             danger
               ? "#EF4444"
               : isActive
-                ? "#115E59"
+                ? appTheme.primary
                 : isDark
                   ? "#5EEAD4"
-                  : "#115E59"
+                  : appTheme.primary
           }
         />
       </View>
@@ -95,7 +97,7 @@ function OptionItem({
         )}
       </View>
       {isActive && !danger && (
-        <MaterialIconsRound name="check" size={20} color="#115E59" />
+        <MaterialIconsRound name="check" size={20} color={appTheme.primary} />
       )}
     </Pressable>
   );
