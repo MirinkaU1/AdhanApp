@@ -7,6 +7,7 @@ import MaterialIconsRound, {
 } from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useStatistics, {
   WeekData,
   MonthData,
@@ -104,37 +105,31 @@ function WeekBar({
   maxHeight?: number;
 }) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const height = Math.max((data.percentage * maxHeight) / 100, 4);
   const isEmpty = data.completed === 0;
+  const barColor = data.isToday ? appTheme.accent : appTheme.primary;
+  const labelColor = data.isToday
+    ? appTheme.accent
+    : isDark ? "#94A3B8" : "#64748B";
 
   return (
     <View className="items-center flex-1">
       <View style={{ height: maxHeight }} className="justify-end">
         <View
-          className={`w-7 rounded-lg ${
-            data.isToday ? "bg-accent" : "bg-primary"
-          }`}
-          style={{
-            height,
-            opacity: isEmpty ? 0.2 : 1,
-          }}
+          className="w-7 rounded-lg"
+          style={{ height, opacity: isEmpty ? 0.2 : 1, backgroundColor: barColor }}
         />
       </View>
       <Text
-        className={`text-xs mt-2 font-outfit-medium ${
-          data.isToday
-            ? "text-accent"
-            : "text-text-secondary-light dark:text-text-secondary-dark"
-        }`}
+        className="text-xs mt-2 font-outfit-medium"
+        style={{ color: labelColor }}
       >
         {data.dayLabel}
       </Text>
       <Text
-        className={`text-[10px] font-outfit-regular ${
-          data.isToday
-            ? "text-accent"
-            : "text-text-tertiary-light dark:text-text-tertiary-dark"
-        }`}
+        className="text-[10px] font-outfit-regular"
+        style={{ color: labelColor, opacity: data.isToday ? 1 : 0.7 }}
       >
         {data.completed}/5
       </Text>
@@ -146,30 +141,33 @@ function WeekBar({
  * Cellule du calendrier mensuel
  */
 function CalendarCell({ data }: { data: MonthData }) {
+  const appTheme = useAppTheme();
+
   if (!data.isCurrentMonth) {
     return <View className="flex-1 h-9" />;
   }
 
   const bgColor = data.isToday
-    ? "bg-accent"
+    ? appTheme.accent
     : data.isComplete
-      ? "bg-primary"
+      ? appTheme.primary
       : data.completed > 0
-        ? "bg-primary/30"
-        : "bg-transparent";
+        ? `${appTheme.primary}4D`   // ~30% opacity
+        : "transparent";
 
   const textColor =
-    data.isToday || data.isComplete
-      ? "text-white"
-      : "text-text-primary-light dark:text-text-primary-dark";
+    data.isToday || data.isComplete ? "#fff" : undefined;
 
   return (
     <View className="flex-1 h-9 items-center justify-center">
       <View
-        className={`w-7 h-7 rounded-full items-center justify-center ${bgColor}`}
-        style={{ opacity: data.isFuture ? 0.3 : 1 }}
+        className="w-7 h-7 rounded-full items-center justify-center"
+        style={{ backgroundColor: bgColor, opacity: data.isFuture ? 0.3 : 1 }}
       >
-        <Text className={`text-xs font-outfit-medium ${textColor}`}>
+        <Text
+          className="text-xs font-outfit-medium text-text-primary-light dark:text-text-primary-dark"
+          style={textColor ? { color: textColor } : undefined}
+        >
           {data.dayNum}
         </Text>
       </View>
@@ -291,6 +289,7 @@ function CircularProgress({
 export default function StatisticsScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const stats = useStatistics();
 
   const dayLabels =
@@ -309,7 +308,7 @@ export default function StatisticsScreen() {
       >
         {/* Header avec gradient */}
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={{
@@ -347,7 +346,7 @@ export default function StatisticsScreen() {
               percentage={stats.monthPercentage}
               size={100}
               strokeWidth={8}
-              color="#5EEAD4"
+              color={appTheme.accent}
             />
           </View>
         </LinearGradient>

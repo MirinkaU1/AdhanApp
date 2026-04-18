@@ -11,6 +11,7 @@ import MaterialIconsRound, {
 } from "@/components/MaterialIconsRound";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 const ACCENT_COLOR = "#D97706"; // Amber
 const TEAL_BASE = "#115E59";
@@ -48,6 +49,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const isDark = useIsDark();
   const { width } = useWindowDimensions();
+  const appTheme = useAppTheme();
 
   // Responsive sizing
   const isSmall = width < 360;
@@ -122,7 +124,7 @@ export default function TabLayout() {
                 width: centerButtonSize,
                 height: centerButtonSize,
                 marginTop: centerButtonMargin,
-                backgroundColor: TEAL_BASE,
+                backgroundColor: appTheme.primary,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,

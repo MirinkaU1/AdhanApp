@@ -6,6 +6,7 @@ import {
   View,
   Alert,
 } from "react-native";
+import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -14,9 +15,12 @@ import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { AppText } from "@/components/ui";
 import type { PrayerName } from "@/stores/useNotificationStore";
 import useQuestStore from "@/stores/useQuestStore";
+import useAuthStore from "@/stores/useAuthStore";
+import useCoinsStore from "@/stores/useCoinsStore";
 import {
   triggerDailyReminderManually,
   getDailyReminderTaskStatus,
@@ -81,9 +85,19 @@ const testMessages: Record<PrayerName, string> = {
 export default function DebugScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const enqueueXpToast = useQuestStore((s) => s.enqueueXpToast);
   const enqueueLevelUpToast = useQuestStore((s) => s.enqueueLevelUpToast);
   const level = useQuestStore((s) => s.level);
+  const { user } = useAuthStore();
+  const { addCoins, coins } = useCoinsStore();
+
+  // Guard : seuls dev et tester peuvent accéder
+  useEffect(() => {
+    if (user && user.role !== "dev" && user.role !== "tester") {
+      router.replace("/settings");
+    }
+  }, [user]);
 
   // Afficher une notification de test
   const showTestNotification = async (prayerId: PrayerName) => {
@@ -233,7 +247,7 @@ export default function DebugScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
@@ -528,6 +542,48 @@ export default function DebugScreen() {
               size={20}
               color={isDark ? "#94A3B8" : "#64748B"}
             />
+          </Pressable>
+        </View>
+
+        {/* Section Coins */}
+        <AppText variant="h3" className="mb-4">
+          {t("debug.coins")}
+        </AppText>
+
+        <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark mb-6">
+          <Pressable
+            onPress={() => addCoins(10)}
+            className="p-4 flex-row items-center gap-3 active:opacity-70"
+          >
+            <View
+              className="w-11 h-11 rounded-full items-center justify-center"
+              style={{ backgroundColor: isDark ? "#334155" : "#FEF3C7" }}
+            >
+              <MaterialIconsRound name="toll" size={22} color="#D97706" />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-text-primary-light dark:text-text-primary-dark font-outfit-semibold"
+                style={{ fontSize: 16 }}
+              >
+                {t("debug.addCoins")}
+              </Text>
+              <Text
+                className="text-text-secondary-light dark:text-text-secondary-dark font-outfit-regular"
+                style={{ fontSize: 13 }}
+              >
+                {t("debug.addCoinsDesc", { coins })}
+              </Text>
+            </View>
+            <View
+              className="flex-row items-center gap-1 px-3 py-1.5 rounded-xl"
+              style={{ backgroundColor: isDark ? "#78350F" : "#FDE68A" }}
+            >
+              <MaterialIconsRound name="add" size={16} color="#D97706" />
+              <Text className="font-outfit-bold text-sm" style={{ color: "#D97706" }}>
+                10
+              </Text>
+            </View>
           </Pressable>
         </View>
 

@@ -19,10 +19,13 @@ const formatBirthDateFromDB = (
   return date;
 };
 
+export type UserRole = "user" | "tester" | "dev";
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
   avatar?: string; // Legacy - compatibilité
   avatar_id?: string; // ID de l'avatar prédéfini (01-06)
   avatar_url?: string; // URL custom depuis Supabase Storage
@@ -572,6 +575,7 @@ const useAuthStore = create<AuthState>()(
               id: data.user.id,
               name: "Invité",
               email: "",
+              role: "user",
               memberSince: new Date().toISOString().split("T")[0],
               isGuest: true,
               xp: 0,
@@ -663,6 +667,7 @@ const useAuthStore = create<AuthState>()(
               name:
                 profile?.username || data.user.email?.split("@")[0] || "User",
               email: data.user.email || "",
+              role: (profile?.role as UserRole) || "user",
               avatar: profile?.avatar_url || undefined, // Legacy
               avatar_id: profile?.avatar_id || undefined,
               avatar_url: profile?.avatar_url || undefined,
@@ -759,6 +764,7 @@ const useAuthStore = create<AuthState>()(
               id: data.user.id,
               name,
               email: data.user.email || email,
+              role: "user",
               memberSince: new Date().toISOString().split("T")[0],
               isGuest: false,
               xp: 0,
@@ -945,6 +951,7 @@ const useAuthStore = create<AuthState>()(
               xp: profile?.xp || 0,
               level: profile?.level || 1,
               isSupporter: profile?.is_supporter || false,
+              role: (profile?.role as UserRole) || "user",
               // Stats de suivi
               totalXpEarned: profile?.total_xp_earned || 0,
               streakCurrent: profile?.streak_current || 0,

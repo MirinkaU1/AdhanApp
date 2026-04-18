@@ -7,6 +7,7 @@ import MaterialIconsRound, {
 } from "@/components/MaterialIconsRound";
 import { Switch } from "@/components/ui";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useNotificationStore, {
   PrayerName,
 } from "@/stores/useNotificationStore";
@@ -54,6 +55,7 @@ const PRAYER_CONFIG: PrayerNotificationConfig[] = [
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   // Utiliser le store pour persister les préférences
   const { enabled, preferences, togglePrayer, setEnabled } =
@@ -63,7 +65,7 @@ export default function NotificationsScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{
