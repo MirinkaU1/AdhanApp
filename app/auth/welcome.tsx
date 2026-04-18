@@ -15,11 +15,8 @@ import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
-import { useAppTheme } from "@/hooks/useAppTheme";
-
 export default function WelcomeScreen() {
   const { login } = useAuthStore();
-  const appTheme = useAppTheme();
 
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState("");
@@ -167,7 +164,7 @@ export default function WelcomeScreen() {
     <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       {/* Header avec logo */}
       <LinearGradient
-        colors={appTheme.headerGradient}
+        colors={["#115E59", "#0d4542"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         className="h-[40%] items-center justify-center"
@@ -218,13 +215,13 @@ export default function WelcomeScreen() {
             <View
               className={`h-2 rounded ${step === 1 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
               style={
-                step === 1 ? { backgroundColor: appTheme.primary } : undefined
+                step === 1 ? { backgroundColor: "#115E59" } : undefined
               }
             />
             <View
               className={`h-2 rounded ${step === 2 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
               style={
-                step === 2 ? { backgroundColor: appTheme.primary } : undefined
+                step === 2 ? { backgroundColor: "#115E59" } : undefined
               }
             />
           </View>
@@ -275,11 +272,11 @@ export default function WelcomeScreen() {
                 <MaterialIconsRound
                   name="arrow-back"
                   size={20}
-                  color={appTheme.primary}
+                  color={"#115E59"}
                 />
                 <Text
                   className="text-base font-outfit-medium"
-                  style={{ color: appTheme.primary }}
+                  style={{ color: "#115E59" }}
                 >
                   Retour
                 </Text>
@@ -342,7 +339,7 @@ export default function WelcomeScreen() {
               Vous avez déjà un compte ?{" "}
               <Text
                 className="font-outfit-semibold"
-                style={{ color: appTheme.primary }}
+                style={{ color: "#115E59" }}
               >
                 Se connecter
               </Text>
@@ -352,11 +349,11 @@ export default function WelcomeScreen() {
           {/* Terms */}
           <Text className="text-sm font-outfit-regular text-gray-400 dark:text-slate-500 text-center mt-6 leading-5">
             En continuant, vous acceptez nos{" "}
-            <Text style={{ color: appTheme.primary }}>
+            <Text style={{ color: "#115E59" }}>
               Conditions d'utilisation
             </Text>{" "}
             et notre{" "}
-            <Text style={{ color: appTheme.primary }}>
+            <Text style={{ color: "#115E59" }}>
               Politique de confidentialité
             </Text>
           </Text>

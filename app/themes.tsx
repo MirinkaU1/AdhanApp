@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
+import type { MaterialIconName } from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { AlertDialog } from "@/components/ui";
@@ -22,16 +23,29 @@ import useQuestStore from "@/stores/useQuestStore";
 import useAuthStore from "@/stores/useAuthStore";
 import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
 
+type ShopCategory = "all" | "themes" | "avatars" | "qiblaSkins" | "others";
+
+function withAlpha(hex: string, alpha: number) {
+  const value = hex.replace("#", "");
+  if (value.length !== 6) return hex;
+  const r = Number.parseInt(value.slice(0, 2), 16);
+  const g = Number.parseInt(value.slice(2, 4), 16);
+  const b = Number.parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // ─────────────────────────────────────────────
 // Carte thème boutique (2 colonnes)
 // ─────────────────────────────────────────────
 
 function ShopThemeCard({
   theme,
+  isOwned,
   onPurchase,
   cardWidth,
 }: {
   theme: AppTheme;
+  isOwned: boolean;
   onPurchase: () => void;
   cardWidth: number;
 }) {
@@ -136,39 +150,65 @@ function ShopThemeCard({
 
         {/* Bouton achat ou verrou */}
         {theme.unlock.type === "coins" && !isLocked ? (
-          <Pressable
-            onPress={onPurchase}
-            className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1 active:opacity-80"
-            style={{
-              backgroundColor: canAfford
-                ? isDark
-                  ? "rgba(217,119,6,0.2)"
-                  : "#FEF3C7"
-                : isDark
-                  ? "#1E293B"
-                  : "#F8FAFC",
-              borderWidth: 1,
-              borderColor: canAfford
-                ? isDark
-                  ? "rgba(217,119,6,0.4)"
-                  : "#FDE68A"
-                : isDark
-                  ? "#334155"
-                  : "#E2E8F0",
-            }}
-          >
-            <MaterialIconsRound
-              name="toll"
-              size={13}
-              color={canAfford ? "#D97706" : "#94A3B8"}
-            />
-            <Text
-              className="font-outfit-bold"
-              style={{ fontSize: 11, color: canAfford ? "#D97706" : "#94A3B8" }}
+          isOwned ? (
+            <View
+              className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1"
+              style={{
+                backgroundColor: isDark ? "rgba(34,197,94,0.18)" : "#DCFCE7",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(34,197,94,0.35)" : "#86EFAC",
+              }}
             >
-              {theme.unlock.price}
-            </Text>
-          </Pressable>
+              <MaterialIconsRound
+                name="check-circle"
+                size={12}
+                color="#16A34A"
+              />
+              <Text
+                className="font-outfit-bold"
+                style={{ fontSize: 11, color: "#16A34A" }}
+              >
+                {t("themes.obtained")}
+              </Text>
+            </View>
+          ) : (
+            <Pressable
+              onPress={onPurchase}
+              className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1 active:opacity-80"
+              style={{
+                backgroundColor: canAfford
+                  ? isDark
+                    ? "rgba(217,119,6,0.2)"
+                    : "#FEF3C7"
+                  : isDark
+                    ? "#1E293B"
+                    : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: canAfford
+                  ? isDark
+                    ? "rgba(217,119,6,0.4)"
+                    : "#FDE68A"
+                  : isDark
+                    ? "#334155"
+                    : "#E2E8F0",
+              }}
+            >
+              <MaterialIconsRound
+                name="toll"
+                size={13}
+                color={canAfford ? "#D97706" : "#94A3B8"}
+              />
+              <Text
+                className="font-outfit-bold"
+                style={{
+                  fontSize: 11,
+                  color: canAfford ? "#D97706" : "#94A3B8",
+                }}
+              >
+                {theme.unlock.price}
+              </Text>
+            </Pressable>
+          )
         ) : (
           <View
             className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1"
@@ -200,11 +240,13 @@ function ShopThemeCard({
 
 function ThemeGrid({
   themes,
+  isThemeOwned,
   onPurchase,
   cardWidth,
   gap,
 }: {
   themes: AppTheme[];
+  isThemeOwned: (themeId: string) => boolean;
   onPurchase: (theme: AppTheme) => void;
   cardWidth: number;
   gap: number;
@@ -222,6 +264,7 @@ function ThemeGrid({
             <ShopThemeCard
               key={theme.id}
               theme={theme}
+              isOwned={isThemeOwned(theme.id)}
               onPurchase={() => onPurchase(theme)}
               cardWidth={cardWidth}
             />
@@ -230,6 +273,53 @@ function ThemeGrid({
         </View>
       ))}
     </>
+  );
+}
+
+function ComingSoonSection({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  const { t } = useTranslation();
+  const isDark = useIsDark();
+
+  return (
+    <View
+      className="rounded-2xl p-4"
+      style={{
+        backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
+        borderWidth: 1,
+        borderColor: isDark ? "#334155" : "#E2E8F0",
+      }}
+    >
+      <View className="flex-row items-center gap-2 mb-2">
+        <MaterialIconsRound name="schedule" size={18} color="#F59E0B" />
+        <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base">
+          {title}
+        </Text>
+      </View>
+      <Text className="font-outfit-regular text-text-secondary-light dark:text-text-secondary-dark text-sm">
+        {description}
+      </Text>
+      <View
+        className="self-start mt-3 px-2.5 py-1 rounded-full"
+        style={{
+          backgroundColor: isDark ? "rgba(245,158,11,0.2)" : "#FEF3C7",
+          borderWidth: 1,
+          borderColor: isDark ? "rgba(245,158,11,0.35)" : "#FCD34D",
+        }}
+      >
+        <Text
+          className="font-outfit-bold"
+          style={{ color: "#D97706", fontSize: 11 }}
+        >
+          {t("themes.comingSoonBadge")}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -254,11 +344,13 @@ export default function ThemesShopScreen() {
   const [confirmTheme, setConfirmTheme] = useState<AppTheme | null>(null);
   const [purchasedTheme, setPurchasedTheme] = useState<AppTheme | null>(null);
   const [showNoCoins, setShowNoCoins] = useState<{ need: number } | null>(null);
+  const [activeCategory, setActiveCategory] = useState<ShopCategory>("all");
 
   const lockedThemes = APP_THEMES.filter((th) => !isThemeUnlocked(th.id));
 
   const handlePurchase = (theme: AppTheme) => {
     if (theme.unlock.type !== "coins") return;
+    if (isThemeUnlocked(theme.id)) return;
     const price = theme.unlock.price;
 
     if (coins < price) {
@@ -287,9 +379,49 @@ export default function ThemesShopScreen() {
     setPurchasedTheme(null);
   };
 
-  const byCoins = lockedThemes.filter((t) => t.unlock.type === "coins");
+  const byCoins = APP_THEMES.filter((t) => t.unlock.type === "coins");
   const byLevel = lockedThemes.filter((t) => t.unlock.type === "level");
   const byEvent = lockedThemes.filter((t) => t.unlock.type === "event");
+
+  const categories: Array<{
+    key: ShopCategory;
+    label: string;
+    icon: MaterialIconName;
+  }> = [
+    { key: "all", label: t("themes.categoryAll"), icon: "apps" },
+    { key: "themes", label: t("themes.categoryThemes"), icon: "palette" },
+    { key: "avatars", label: t("themes.categoryAvatars"), icon: "face" },
+    {
+      key: "qiblaSkins",
+      label: t("themes.categoryQiblaSkins"),
+      icon: "explore",
+    },
+    { key: "others", label: t("themes.categoryOthers"), icon: "widgets" },
+  ];
+
+  const comingSoonDescriptionByCategory: Record<
+    Exclude<ShopCategory, "themes" | "all">,
+    string
+  > = {
+    avatars: t("themes.comingSoonAvatars"),
+    qiblaSkins: t("themes.comingSoonQiblaSkins"),
+    others: t("themes.comingSoonOthers"),
+  };
+
+  const shouldShowThemes =
+    activeCategory === "themes" || activeCategory === "all";
+  const activeTabBackground = withAlpha(appTheme.primary, isDark ? 0.24 : 0.12);
+  const activeTabBorder = withAlpha(appTheme.primary, isDark ? 0.48 : 0.3);
+  const activeTabText = isDark ? appTheme.accent : appTheme.primary;
+
+  const comingSoonCategories: Array<Exclude<ShopCategory, "themes" | "all">> =
+    activeCategory === "all"
+      ? ["avatars", "qiblaSkins", "others"]
+      : activeCategory === "avatars" ||
+          activeCategory === "qiblaSkins" ||
+          activeCategory === "others"
+        ? [activeCategory]
+        : [];
 
   return (
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
@@ -347,8 +479,55 @@ export default function ThemesShopScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        {lockedThemes.length === 0 ? (
-          <View className="items-center justify-center py-20">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 12 }}
+        >
+          <View className="flex-row" style={{ gap: 8 }}>
+            {categories.map((category) => {
+              const isActive = activeCategory === category.key;
+              return (
+                <Pressable
+                  key={category.key}
+                  onPress={() => setActiveCategory(category.key)}
+                  className="flex-row items-center gap-1.5 px-3 py-2 rounded-full"
+                  style={{
+                    backgroundColor: isActive
+                      ? activeTabBackground
+                      : isDark
+                        ? "#0F172A"
+                        : "#F8FAFC",
+                    borderWidth: 1,
+                    borderColor: isActive
+                      ? activeTabBorder
+                      : isDark
+                        ? "#334155"
+                        : "#E2E8F0",
+                  }}
+                >
+                  <MaterialIconsRound
+                    name={category.icon}
+                    size={15}
+                    color={isActive ? activeTabText : "#64748B"}
+                  />
+                  <Text
+                    className="font-outfit-medium"
+                    style={{
+                      fontSize: 12,
+                      color: isActive ? activeTabText : "#64748B",
+                    }}
+                  >
+                    {category.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        {shouldShowThemes && lockedThemes.length === 0 && (
+          <View className="items-center justify-center py-8">
             <MaterialIconsRound
               name="check-circle"
               size={52}
@@ -361,51 +540,64 @@ export default function ThemesShopScreen() {
               {t("themes.allOwnedDesc")}
             </Text>
           </View>
-        ) : (
+        )}
+
+        {shouldShowThemes && byCoins.length > 0 && (
           <>
-            {byCoins.length > 0 && (
-              <>
-                <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3">
-                  {t("themes.available")}
-                </Text>
-                <ThemeGrid
-                  themes={byCoins}
-                  onPurchase={handlePurchase}
-                  cardWidth={cardWidth}
-                  gap={GRID_GAP}
-                />
-              </>
-            )}
-
-            {byLevel.length > 0 && (
-              <>
-                <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
-                  {t("themes.byLevel")}
-                </Text>
-                <ThemeGrid
-                  themes={byLevel}
-                  onPurchase={() => {}}
-                  cardWidth={cardWidth}
-                  gap={GRID_GAP}
-                />
-              </>
-            )}
-
-            {byEvent.length > 0 && (
-              <>
-                <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
-                  {t("themes.events")}
-                </Text>
-                <ThemeGrid
-                  themes={byEvent}
-                  onPurchase={() => {}}
-                  cardWidth={cardWidth}
-                  gap={GRID_GAP}
-                />
-              </>
-            )}
+            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3">
+              {t("themes.available")}
+            </Text>
+            <ThemeGrid
+              themes={byCoins}
+              isThemeOwned={isThemeUnlocked}
+              onPurchase={handlePurchase}
+              cardWidth={cardWidth}
+              gap={GRID_GAP}
+            />
           </>
         )}
+
+        {shouldShowThemes && byLevel.length > 0 && (
+          <>
+            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
+              {t("themes.byLevel")}
+            </Text>
+            <ThemeGrid
+              themes={byLevel}
+              isThemeOwned={isThemeUnlocked}
+              onPurchase={() => {}}
+              cardWidth={cardWidth}
+              gap={GRID_GAP}
+            />
+          </>
+        )}
+
+        {shouldShowThemes && byEvent.length > 0 && (
+          <>
+            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
+              {t("themes.events")}
+            </Text>
+            <ThemeGrid
+              themes={byEvent}
+              isThemeOwned={isThemeUnlocked}
+              onPurchase={() => {}}
+              cardWidth={cardWidth}
+              gap={GRID_GAP}
+            />
+          </>
+        )}
+
+        {comingSoonCategories.map((category) => (
+          <View key={category} className="mb-3">
+            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
+              {categories.find((c) => c.key === category)?.label}
+            </Text>
+            <ComingSoonSection
+              title={t("themes.comingSoonTitle")}
+              description={comingSoonDescriptionByCategory[category]}
+            />
+          </View>
+        ))}
       </ScrollView>
 
       {/* Modal confirmation d'achat */}

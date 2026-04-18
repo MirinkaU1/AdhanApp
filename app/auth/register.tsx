@@ -14,12 +14,10 @@ import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
-import { useAppTheme } from "@/hooks/useAppTheme";
 import { useIsDark } from "@/components/useColorScheme";
 
 export default function RegisterScreen() {
   const { signUpWithEmail, isLoading } = useAuthStore();
-  const appTheme = useAppTheme();
   const isDark = useIsDark();
 
   const [name, setName] = useState("");
@@ -86,7 +84,7 @@ export default function RegisterScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={appTheme.headerGradient}
+          colors={["#115E59", "#0d4542"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           className="pt-16 pb-12 px-6 relative"
@@ -178,9 +176,9 @@ export default function RegisterScreen() {
             <View
               className="w-6 h-6 rounded-md border-2 items-center justify-center mr-3 mt-0.5"
               style={{
-                backgroundColor: acceptTerms ? appTheme.primary : "transparent",
+                backgroundColor: acceptTerms ? "#115E59" : "transparent",
                 borderColor: acceptTerms
-                  ? appTheme.primary
+                  ? "#115E59"
                   : isDark
                     ? "#475569"
                     : "#D1D5DB",
@@ -194,7 +192,7 @@ export default function RegisterScreen() {
               J'accepte les{" "}
               <Text
                 className="font-outfit-bold underline"
-                style={{ color: appTheme.primary }}
+                style={{ color: "#115E59" }}
               >
                 conditions d'utilisation
               </Text>{" "}
@@ -225,7 +223,7 @@ export default function RegisterScreen() {
             <Pressable onPress={() => router.back()}>
               <Text
                 className="text-base font-outfit-bold ml-2"
-                style={{ color: appTheme.primary }}
+                style={{ color: "#115E59" }}
               >
                 Se connecter
               </Text>
