@@ -1,10 +1,17 @@
-import * as React from 'react';
-import renderer from 'react-test-renderer';
+import * as React from "react";
+import renderer from "react-test-renderer";
+import { act } from "react-test-renderer";
 
-import { MonoText } from '../StyledText';
+jest.mock("../Themed");
+
+import { MonoText } from "../StyledText";
 
 it(`renders correctly`, () => {
-  const tree = renderer.create(<MonoText>Snapshot test!</MonoText>).toJSON();
+  let tree;
+
+  act(() => {
+    tree = renderer.create(<MonoText>Snapshot test!</MonoText>).toJSON();
+  });
 
   expect(tree).toMatchSnapshot();
 });

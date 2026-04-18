@@ -15,6 +15,7 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { initRevenueCat } from "@/lib/revenuecat";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
@@ -73,6 +74,7 @@ type PurchaseState = {
 export default function SupportScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const navigation = useNavigation();
   const confettiRef = useRef<ConfettiCannon>(null);
 
@@ -172,7 +174,7 @@ export default function SupportScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header avec gradient */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         className="pt-[60px] pb-8 px-5"
       >
         {/* Bouton retour */}
@@ -319,7 +321,7 @@ export default function SupportScreen() {
           {/* Coûts serveurs */}
           <View className="flex-row items-start gap-3.5 mb-4">
             <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
-              <MaterialIconsRound name="dns" size={22} color="#115E59" />
+              <MaterialIconsRound name="dns" size={22} color={appTheme.primary} />
             </View>
             <View className="flex-1">
               <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">
@@ -334,7 +336,7 @@ export default function SupportScreen() {
           {/* Développement */}
           <View className="flex-row items-start gap-3.5 mb-4">
             <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
-              <MaterialIconsRound name="code" size={22} color="#115E59" />
+              <MaterialIconsRound name="code" size={22} color={appTheme.primary} />
             </View>
             <View className="flex-1">
               <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">
@@ -349,7 +351,7 @@ export default function SupportScreen() {
           {/* Sadaqah Jariyah */}
           <View className="flex-row items-start gap-3.5">
             <View className="w-11 h-11 rounded-full bg-teal-800/10 items-center justify-center">
-              <MaterialIconsRound name="favorite" size={22} color="#115E59" />
+              <MaterialIconsRound name="favorite" size={22} color={appTheme.primary} />
             </View>
             <View className="flex-1">
               <Text className="font-outfit-semibold text-[15px] text-text-primary-light dark:text-text-primary-dark mb-1">

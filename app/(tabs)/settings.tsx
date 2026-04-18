@@ -16,6 +16,7 @@ import MaterialIconsRound, {
 import { AlertDialog, AppText, AppButtonGroup } from "@/components/ui";
 import type { ButtonGroupItem } from "@/components/ui/AppButtonGroup";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useAuthStore from "@/stores/useAuthStore";
 import usePrayerStore from "@/stores/usePrayerStore";
 import { getAvatarSource } from "@/lib/avatarService";
@@ -74,6 +75,13 @@ const APP_PREFERENCES: PreferenceItem[] = [
     iconBgColor: "#FEF3C7",
     iconColor: "#F59E0B",
     labelKey: "settings.theme",
+  },
+  {
+    id: "themes",
+    icon: "palette",
+    iconBgColor: "#F3E8FF",
+    iconColor: "#9333EA",
+    labelKey: "settings.themes",
   },
 ];
 
@@ -146,6 +154,7 @@ function SettingsSection({
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -197,6 +206,9 @@ export default function ProfileScreen() {
       case "theme":
         router.push("/settings/theme");
         break;
+      case "themes":
+        router.push("/themes");
+        break;
       case "support":
         router.push("/support");
         break;
@@ -237,7 +249,7 @@ export default function ProfileScreen() {
             style={{ minHeight: 320 }}
           >
             <LinearGradient
-              colors={["#115E59", "#0d4542"]}
+              colors={appTheme.headerGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -373,7 +385,7 @@ export default function ProfileScreen() {
           style={{ minHeight: 320, paddingTop: 36 }}
         >
           <LinearGradient
-            colors={["#115E59", "#0d4542"]}
+            colors={appTheme.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -401,7 +413,7 @@ export default function ProfileScreen() {
             >
               <View
                 className="w-full h-full rounded-full bg-white/10 items-center justify-center"
-                style={{ borderWidth: 2, borderColor: "#115E59" }}
+                style={{ borderWidth: 2, borderColor: appTheme.primary }}
               >
                 {avatarSource ? (
                   <Image
@@ -591,11 +603,11 @@ export default function ProfileScreen() {
 
           <SettingsSection
             title={t("settings.accountSupport")}
-            items={
-              user?.isGuest
-                ? ACCOUNT_PREFERENCES.filter((item) => item.id !== "password")
-                : ACCOUNT_PREFERENCES
-            }
+            items={ACCOUNT_PREFERENCES.filter((item) => {
+              if (item.id === "password" && user?.isGuest) return false;
+              if (item.id === "debug" && user?.role !== "dev" && user?.role !== "tester") return false;
+              return true;
+            })}
             onItemPress={handlePreferencePress}
           />
 

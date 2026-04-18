@@ -38,6 +38,8 @@ import { loadSurah } from "@/utils/quranLoader";
 import useRamadanStore from "@/stores/useRamadanStore";
 import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
 import RamadanWelcomeModal from "@/components/RamadanWelcomeModal";
+import useCoinsStore from "@/stores/useCoinsStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 // Configuration des prières avec icônes Material
 const PRAYER_ICONS: Record<string, MaterialIconName> = {
@@ -111,8 +113,9 @@ export default function DashboardScreen() {
   const { onPrayerCompleted, checkPrayerOnTime } = useGamification();
   const { isRamadanMode, moonCoins, hasSeenRamadanWelcome, markWelcomeSeen } =
     useRamadanStore();
-
   const showRamadanWelcome = isRamadanMode && !hasSeenRamadanWelcome;
+  const { coins } = useCoinsStore();
+  const appTheme = useAppTheme();
 
   // Nombre de quêtes à réclamer
   const unclaimedQuests = getUnclaimedQuestsCount();
@@ -351,8 +354,8 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#115E59"
-            colors={["#115E59"]}
+            tintColor={appTheme.primary}
+            colors={[appTheme.primary]}
             progressBackgroundColor={isDark ? "#1E293B" : "#FFFFFF"}
           />
         }
@@ -363,7 +366,7 @@ export default function DashboardScreen() {
           style={{ minHeight: 360 }}
         >
           <LinearGradient
-            colors={["#115E59", "#0d4542"]}
+            colors={appTheme.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -376,22 +379,10 @@ export default function DashboardScreen() {
             resizeMode="cover"
           />
 
-          {/* Icône notification en absolute */}
-          {/* <Pressable
-            onPress={() => router.push("/settings/notifications")}
-            className="absolute top-10 right-6 z-10 p-2"
-          >
-            <MaterialIconsRound
-              name="notifications-none"
-              size={26}
-              color="#fff"
-            />
-          </Pressable> */}
-
           {/* Contenu du header */}
           <View className="px-4 pt-12 pb-4">
-            {/* Badges ligne gauche — location + lunes côte à côte, loin du bouton notif absolu */}
-            <View className="flex-row w-full justify-between items-center gap-2 mb-5">
+            {/* Barre top : localisation | pièces + cloche */}
+            <View className="flex-row items-center justify-between mb-5">
               {/* Badge localisation */}
               <Pressable
                 onPress={refreshLocation}
@@ -417,6 +408,7 @@ export default function DashboardScreen() {
                 </Text>
               </Pressable>
 
+              {/* Droite : lunes Ramadan + pièces + notifications */}
               <View className="flex-row items-center gap-2">
                 {/* Badge lunes Ramadan */}
                 {isRamadanMode && (
@@ -432,7 +424,18 @@ export default function DashboardScreen() {
                   </View>
                 )}
 
-                {/* Icône notification en absolute */}
+                {/* Badge pièces — navigue vers les thèmes */}
+                <Pressable
+                  onPress={() => router.push("/themes")}
+                  className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/10 gap-1.5 active:opacity-70"
+                >
+                  <MaterialIconsRound name="toll" size={14} color="#FCD34D" />
+                  <Text className="text-white text-sm font-outfit-bold">
+                    {coins}
+                  </Text>
+                </Pressable>
+
+                {/* Cloche notifications */}
                 <Pressable
                   onPress={() => router.push("/settings/notifications")}
                   className="p-2"

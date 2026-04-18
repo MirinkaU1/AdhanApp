@@ -3,6 +3,7 @@ import { View, ActivityIndicator, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 type LoaderVariant = "fullscreen" | "overlay" | "inline";
 type LoaderSize = "small" | "medium" | "large";
@@ -31,6 +32,7 @@ export default function AppLoader({
   message,
 }: AppLoaderProps) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   // ── Inline ───────────────────────────────────────────────────────────────
   if (variant === "inline") {
@@ -38,7 +40,7 @@ export default function AppLoader({
       <View className="items-center justify-center gap-2">
         <ActivityIndicator
           size={RN_SIZE[size]}
-          color={isDark ? "#2DD4BF" : "#115E59"}
+          color={isDark ? "#2DD4BF" : appTheme.primary}
         />
         {message && (
           <Text className={`font-outfit-regular text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
@@ -67,7 +69,7 @@ export default function AppLoader({
         >
           <ActivityIndicator
             size={RN_SIZE[size]}
-            color={isDark ? "#2DD4BF" : "#115E59"}
+            color={isDark ? "#2DD4BF" : appTheme.primary}
           />
           {message && (
             <Text className={`font-outfit-medium text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}>
@@ -83,7 +85,7 @@ export default function AppLoader({
   return (
     <View className="flex-1 items-center justify-center">
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
       <ActivityIndicator size={RN_SIZE[size]} color="#ffffff" />

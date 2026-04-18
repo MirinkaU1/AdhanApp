@@ -14,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
-
 export default function LinkAccountScreen() {
   const { t } = useTranslation();
   const { linkIdentity, isLoading } = useAuthStore();

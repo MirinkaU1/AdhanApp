@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import {
@@ -23,6 +24,7 @@ export function DailyVerseCard({
 }: DailyVerseCardProps) {
   const [verse, setVerse] = useState<DailyVerse | null>(null);
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   useEffect(() => {
     const selectedVerse =
@@ -85,7 +87,7 @@ export function DailyVerseCard({
           >
             <Text
               className="text-xs font-outfit-semibold"
-              style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+              style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
             >
               {verse.surahName} : {verse.ayahNumber}
             </Text>
@@ -132,7 +134,7 @@ export function DailyVerseCard({
           >
             <Text
               className="text-xs font-outfit-medium"
-              style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+              style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
             >
               {verse.theme}
             </Text>

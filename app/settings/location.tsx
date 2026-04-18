@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import usePrayerStore from "@/stores/usePrayerStore";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { usePrayerLocation } from "@/hooks/usePrayerLocation";
 import {
   Switch,
@@ -26,6 +27,7 @@ import {
 export default function LocationScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   // Store et Hooks
   const {
@@ -282,7 +284,7 @@ export default function LocationScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{

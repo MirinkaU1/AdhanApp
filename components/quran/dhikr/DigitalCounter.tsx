@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import useDhikrStore from "@/stores/useDhikrStore";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 const { width } = Dimensions.get("window");
 
@@ -33,6 +34,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export default function DigitalCounter() {
   const { count, target, increment } = useDhikrStore();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
 
   const scale = useSharedValue(1);
   // Initialisées à -1 → opacité = 0 avant le premier appui
@@ -205,7 +207,7 @@ export default function DigitalCounter() {
                 }}
               >
                 <LinearGradient
-                  colors={["#1e8a83", "#115E59", "#092e2c"]}
+                  colors={[appTheme.headerGradient[0], appTheme.primary, appTheme.headerGradient[1]]}
                   start={{ x: 0.2, y: 0 }}
                   end={{ x: 0.8, y: 1 }}
                   style={{

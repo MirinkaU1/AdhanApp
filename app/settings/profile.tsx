@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useAuthStore from "@/stores/useAuthStore";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { AvatarDrawer } from "@/components/ui";
 import {
   PRESET_AVATARS,
@@ -30,6 +31,7 @@ import {
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { user, updateProfile, isLoading, setAvatarLocal } = useAuthStore();
 
   const [firstName, setFirstName] = useState(user?.name || "");
@@ -200,7 +202,7 @@ export default function ProfileScreen() {
     <View className="flex-1 bg-gray-100 dark:bg-slate-900">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{

@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppLoader } from "@/components/ui";
 import {
@@ -116,6 +117,7 @@ export default function QuranReaderScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { t, i18n } = useTranslation();
   const flatListRef = useRef<FlatList<QuranVerse>>(null);
 
@@ -260,7 +262,7 @@ export default function QuranReaderScreen() {
       {/* ── Header — s'affiche immédiatement depuis l'index ── */}
       <View className="rounded-b-3xl overflow-hidden">
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={{ paddingTop: 60, paddingBottom: 16, paddingHorizontal: 16 }}
