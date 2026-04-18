@@ -60,28 +60,45 @@ const useThemeStore = create<ThemeState>()(
         }
       },
 
-      purchaseTheme: async (id, _price, userId) => {
+      purchaseTheme: async (id, price, userId) => {
         if (get().isThemeUnlocked(id)) return false;
 
+        // ── Tentative serveur ──────────────────────────────────────────────
         const result = await purchaseThemeServer(
           id,
           userId,
           `theme_purchase:${id}`,
         );
-        if (!result || !result.success) return false;
 
-        const unlockedThemeIds = Array.from(
-          new Set([...FREE_THEME_IDS, ...result.unlockedThemeIds]),
+        if (result && result.success) {
+          // Succès serveur : mettre à jour l'état depuis la réponse autoritaire
+          const unlockedThemeIds = Array.from(
+            new Set([...FREE_THEME_IDS, ...result.unlockedThemeIds]),
+          );
+          set({
+            activeThemeId: unlockedThemeIds.includes(result.activeThemeId)
+              ? result.activeThemeId
+              : "default",
+            unlockedThemeIds,
+          });
+          useCoinsStore.getState().setCoins(result.newBalance);
+          return true;
+        }
+
+        // ── Fallback local ─────────────────────────────────────────────────
+        // Le serveur a échoué (thème absent du catalogue DB, mode offline,
+        // utilisateur invité…). On traite l'achat localement.
+        console.warn(
+          `[ThemeStore] purchaseThemeServer failed for "${id}", falling back to local purchase`,
         );
+        const spent = useCoinsStore.getState().spendCoins(price);
+        if (!spent) return false; // Solde insuffisant localement
 
-        set({
-          activeThemeId: unlockedThemeIds.includes(result.activeThemeId)
-            ? result.activeThemeId
-            : "default",
-          unlockedThemeIds,
-        });
-        useCoinsStore.getState().setCoins(result.newBalance);
-
+        set((state) => ({
+          unlockedThemeIds: Array.from(
+            new Set([...state.unlockedThemeIds, id]),
+          ),
+        }));
         return true;
       },
 
