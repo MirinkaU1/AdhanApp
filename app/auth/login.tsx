@@ -13,7 +13,6 @@ import { useState } from "react";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
-
 export default function LoginScreen() {
   const { signInWithEmail, isLoading } = useAuthStore();
   const navigation = useNavigation();
@@ -143,7 +142,10 @@ export default function LoginScreen() {
 
           {/* Mot de passe oublié */}
           <Pressable className="self-end mb-6">
-            <Text className="text-base font-outfit-semibold text-teal-800">
+            <Text
+              className="text-base font-outfit-semibold"
+              style={{ color: "#115E59" }}
+            >
               Mot de passe oublié ?
             </Text>
           </Pressable>

@@ -5,6 +5,7 @@ import Constants from "expo-constants";
 import type { PrayerName } from "@/stores/useNotificationStore";
 import usePrayerStore from "@/stores/usePrayerStore";
 import useAuthStore from "@/stores/useAuthStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 // Vérifier si on est dans Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
@@ -91,6 +92,7 @@ export const usePrayerNotifications = (options: {
   enabled: boolean;
   preferences: Record<PrayerName, boolean>;
 }) => {
+  const appTheme = useAppTheme();
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
   const responseListenerRef = useRef<{ remove: () => void } | null>(null);
 
@@ -124,7 +126,7 @@ export const usePrayerNotifications = (options: {
         importance: Notifications.AndroidImportance.HIGH,
         sound: "adhan", // Son personnalisé de l'adhan (res/raw/adhan.mp3)
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#115E59",
+        lightColor: appTheme.primary,
         lockscreenVisibility:
           Notifications.AndroidNotificationVisibility.PUBLIC,
         bypassDnd: false,
@@ -141,7 +143,7 @@ export const usePrayerNotifications = (options: {
           importance: Notifications.AndroidImportance.DEFAULT,
           sound: "default",
           vibrationPattern: [0, 250],
-          lightColor: "#115E59",
+          lightColor: appTheme.primary,
           lockscreenVisibility:
             Notifications.AndroidNotificationVisibility.PUBLIC,
           bypassDnd: false,
@@ -150,7 +152,7 @@ export const usePrayerNotifications = (options: {
         },
       );
     }
-  }, []);
+  }, [appTheme.primary]);
 
   // Créer la catégorie avec les boutons d'action
   const setupNotificationCategory = useCallback(async () => {
@@ -295,7 +297,7 @@ export const usePrayerNotifications = (options: {
             data: { prayer: key },
             // Android spécifique
             ...(Platform.OS === "android" && {
-              color: "#115E59",
+              color: appTheme.primary,
             }),
           },
           trigger: {
@@ -308,6 +310,7 @@ export const usePrayerNotifications = (options: {
     );
     // Note: Le rappel quotidien est géré par la tâche en arrière-plan (utils/backgroundTasks.ts)
   }, [
+    appTheme.primary,
     ensureChannel,
     options.enabled,
     options.preferences,

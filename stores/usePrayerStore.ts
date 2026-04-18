@@ -493,7 +493,7 @@ const usePrayerStore = create<PrayerStoreState>()(
           dateKey: today,
           status: createDefaultStatus(),
           logs: {},
-          dirtyDates: [],
+          dirtyDates: {},
 
           // Reset sync
           pendingSyncQueue: [],

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, Pressable, Share } from "react-native";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard } from "@/components/ui";
 import { useTranslation } from "react-i18next";
@@ -18,6 +19,7 @@ export function DailyWisdomCard({
   className = "",
 }: DailyWisdomCardProps) {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { t } = useTranslation();
 
   const verse = useMemo(
@@ -109,7 +111,7 @@ export function DailyWisdomCard({
           >
             <Text
               className="text-xs font-outfit-medium"
-              style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+              style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
             >
               {verse.surahName} : {verse.ayahNumber}
             </Text>

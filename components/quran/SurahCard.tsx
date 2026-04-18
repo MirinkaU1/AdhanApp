@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { SurahIndexInfo } from "@/utils/quranLoader";
 import { AppCard, AppText } from "@/components/ui";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { useTranslation } from "react-i18next";
 import { useQuranStore } from "@/stores/useQuranStore";
 
@@ -14,6 +15,7 @@ interface SurahCardProps {
 const SurahCardComponent = ({ surah, onPress }: SurahCardProps) => {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const progress = useQuranStore((state) => state.progress[surah.id]);
 
   const percentage = progress?.percentage || 0;
@@ -35,7 +37,7 @@ const SurahCardComponent = ({ surah, onPress }: SurahCardProps) => {
         >
           <Text
             className="text-sm font-outfit-bold"
-            style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+            style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
           >
             {surah.id}
           </Text>

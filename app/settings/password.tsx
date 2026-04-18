@@ -14,9 +14,11 @@ import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 export default function PasswordScreen() {
   const { t } = useTranslation();
+  const appTheme = useAppTheme();
   const { changePassword, isLoading } = useAuthStore();
   const navigation = useNavigation();
 
@@ -91,7 +93,7 @@ export default function PasswordScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={["#115E59", "#0d4542"]}
+          colors={appTheme.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           className="h-[35%] items-center justify-center relative"

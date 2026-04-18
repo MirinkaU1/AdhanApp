@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard } from "@/components/ui";
 import { SurahReaderDrawer, ContinueReadingCard } from "@/components/quran";
@@ -22,7 +23,7 @@ const QURAN_ACTIVITIES = [
     title: "readQuran",
     subtitle: "essentialSurahs",
     icon: "menu-book",
-    color: "#115E59",
+    color: "#115E59", // Fallback — remplacé dynamiquement par appTheme.primary dans le rendu
   },
   {
     id: "dhikr",
@@ -50,6 +51,7 @@ const QURAN_ACTIVITIES = [
 export default function QuranScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const appTheme = useAppTheme();
   const { width } = useWindowDimensions();
   const [showSurahReader, setShowSurahReader] = useState(false);
   const [selectedSurahNumber, setSelectedSurahNumber] = useState(67);
@@ -94,7 +96,7 @@ export default function QuranScreen() {
         {/* ===== HEADER ===== */}
         <View className="rounded-b-4xl min-h-52 overflow-hidden">
           <LinearGradient
-            colors={["#115E59", "#0d4542"]}
+            colors={appTheme.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -130,7 +132,9 @@ export default function QuranScreen() {
           </AppText>
 
           <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
-            {QURAN_ACTIVITIES.map((activity) => (
+            {QURAN_ACTIVITIES.map((activity) => {
+              const activityColor = activity.id === "read" ? appTheme.primary : activity.color;
+              return (
               <View
                 key={activity.id}
                 style={{ width: "50%", paddingHorizontal: 6, marginBottom: 12 }}
@@ -143,18 +147,18 @@ export default function QuranScreen() {
                   <AppCard className="p-4 h-full justify-between">
                     <View
                       className="w-12 h-12 rounded-xl items-center justify-center mb-3"
-                      style={{ backgroundColor: activity.color + "15" }}
+                      style={{ backgroundColor: activityColor + "15" }}
                     >
                       <MaterialIconsRound
                         name={activity.icon as any}
                         size={24}
-                        color={activity.color}
+                        color={activityColor}
                       />
                     </View>
                     <View>
                       <AppText
                         variant="bodyMedium"
-                        style={{ color: activity.color }}
+                        style={{ color: activityColor }}
                       >
                         {activity.id === "dhikr"
                           ? t("dhikr.title")
@@ -167,7 +171,8 @@ export default function QuranScreen() {
                   </AppCard>
                 </Pressable>
               </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 

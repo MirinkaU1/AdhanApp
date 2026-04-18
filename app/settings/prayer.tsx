@@ -6,6 +6,7 @@ import MaterialIconsRound, {
   MaterialIconName,
 } from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import usePrayerStore, {
   CalculationMethodName,
   MadhabName,
@@ -182,6 +183,7 @@ function OptionCard<T extends string>({
 export default function PrayerSettingsScreen() {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { calculationMethod, madhab, setCalculationMethod, setMadhab } =
     usePrayerStore();
 
@@ -189,7 +191,7 @@ export default function PrayerSettingsScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Header */}
       <LinearGradient
-        colors={["#115E59", "#0d4542"]}
+        colors={appTheme.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{

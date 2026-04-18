@@ -12,6 +12,10 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { format } from "date-fns";
+import useCoinsStore from "@/stores/useCoinsStore";
+import useThemeStore from "@/stores/useThemeStore";
+import { APP_THEMES } from "@/constants/appThemes";
+import type { CoinAwardReason } from "@/lib/themeEconomy";
 
 // =====================================================
 // TYPES
@@ -139,6 +143,15 @@ export const XP_REWARDS = {
   STREAK_DAY: 20,
   QUEST_BONUS: 25,
   FAJR_BONUS: 10,
+};
+
+const QUEST_COIN_REWARD_REASONS: Record<QuestId, CoinAwardReason> = {
+  first_prayer_today: "quest_first_prayer_today",
+  pray_fajr: "quest_pray_fajr",
+  pray_all_5: "quest_pray_all_5",
+  pray_on_time: "quest_pray_on_time",
+  complete_streak_3: "quest_complete_streak_3",
+  complete_streak_7: "quest_complete_streak_7",
 };
 
 // Noms des niveaux (rangs)
@@ -324,14 +337,30 @@ const useQuestStore = create<QuestStoreState>()(
           level,
           xpToNextLevel: xpToNext,
           totalXpEarned: state.totalXpEarned + amount,
-          // Ajouter au pendingXpGains UNIQUEMENT si showToast = true
           pendingXpGains: showToast
             ? [...state.pendingXpGains, xpGain]
             : state.pendingXpGains,
           xpHistory: [xpGain, ...state.xpHistory.slice(0, 49)],
-          // Ajouter la notification de level up si on a monté de niveau
           pendingLevelUp: levelUpNotification || state.pendingLevelUp,
         });
+
+        // Récompenses au passage de niveau
+        if (hasLeveledUp) {
+          void useCoinsStore
+            .getState()
+            .awardCoins("level_up", `level_up:${level}`);
+          // Débloquer les thèmes dont le niveau requis est atteint
+          const themeStore = useThemeStore.getState();
+          APP_THEMES.forEach((theme) => {
+            if (
+              theme.unlock.type === "level" &&
+              level >= theme.unlock.level &&
+              !themeStore.isThemeUnlocked(theme.id)
+            ) {
+              themeStore.unlockTheme(theme.id);
+            }
+          });
+        }
       },
 
       // Debug: déclencher un toast XP sans modifier l'XP
@@ -550,8 +579,13 @@ const useQuestStore = create<QuestStoreState>()(
 
         // Si xpToAdd > 0, c'est qu'on a bien fait le claim
         if (xpToAdd > 0) {
-          // showToast = true pour afficher le toast de récompense
           get().addXp(xpToAdd, `quest_${questId}`, true);
+          const coinReason = QUEST_COIN_REWARD_REASONS[questId];
+          if (coinReason) {
+            void useCoinsStore
+              .getState()
+              .awardCoins(coinReason, `quest:${questId}:${getDateKey()}`);
+          }
 
           // Débloquer quête suivante
           if (shouldUnlockNext) {
@@ -616,6 +650,18 @@ const useQuestStore = create<QuestStoreState>()(
             totalXpEarned: finalTotalXpEarned,
           });
         }
+
+        // Debloquer les themes conditionnes par niveau meme sans nouveau level-up local
+        const themeStore = useThemeStore.getState();
+        APP_THEMES.forEach((theme) => {
+          if (
+            theme.unlock.type === "level" &&
+            finalLevel >= theme.unlock.level &&
+            !themeStore.isThemeUnlocked(theme.id)
+          ) {
+            themeStore.unlockTheme(theme.id);
+          }
+        });
       },
 
       resetDailyQuests: () => {

@@ -9,6 +9,7 @@ import React, {
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { AppText, AppLoader } from "@/components/ui";
 import AppDrawer from "@/components/ui/AppDrawer";
 import { useTranslation } from "react-i18next";
@@ -33,6 +34,7 @@ const VerseItem = memo(function VerseItem({
   isLast,
   isDark,
 }: VerseItemProps) {
+  const appTheme = useAppTheme();
   return (
     <View
       style={[
@@ -65,7 +67,7 @@ const VerseItem = memo(function VerseItem({
                     : "#D97706"
                   : isDark
                     ? "#5EEAD4"
-                    : "#115E59",
+                    : appTheme.primary,
               },
             ]}
           >

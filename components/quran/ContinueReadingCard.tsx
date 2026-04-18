@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useIsDark } from "@/components/useColorScheme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText, AppCard } from "@/components/ui";
 import { useTranslation } from "react-i18next";
@@ -52,6 +53,7 @@ const SURAH_META: Record<
 
 export function ContinueReadingCard() {
   const isDark = useIsDark();
+  const appTheme = useAppTheme();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -116,7 +118,7 @@ export function ContinueReadingCard() {
           >
             <Text
               className="text-xs font-outfit-medium"
-              style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+              style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
             >
               {t("quran.verse")} {displayReading.versesRead?.length ?? 0}/
               {displayReading.totalVerses}
@@ -136,7 +138,7 @@ export function ContinueReadingCard() {
               className="h-full rounded-full"
               style={{
                 width: `${progress}%`,
-                backgroundColor: "#115E59",
+                backgroundColor: appTheme.primary,
               }}
             />
           </View>
@@ -163,11 +165,11 @@ export function ContinueReadingCard() {
           <MaterialIconsRound
             name="play-arrow"
             size={18}
-            color={isDark ? "#5EEAD4" : "#115E59"}
+            color={isDark ? "#5EEAD4" : appTheme.primary}
           />
           <Text
             className="font-outfit-semibold"
-            style={{ color: isDark ? "#5EEAD4" : "#115E59" }}
+            style={{ color: isDark ? "#5EEAD4" : appTheme.primary }}
           >
             {lastReading ? t("quran.resume") : t("quran.start")}
           </Text>

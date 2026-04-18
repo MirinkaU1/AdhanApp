@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Pressable, View, FlatList, Dimensions, Text } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppText } from "@/components/ui";
 import { DHIKR_OPTIONS, DhikrType } from "@/stores/useDhikrStore";
@@ -21,6 +22,7 @@ export default function DhikrCarousel({
 }: DhikrCarouselProps) {
   const flatListRef = useRef<FlatList>(null);
   const { t } = useTranslation();
+  const appTheme = useAppTheme();
 
   const currentIndex = DHIKR_OPTIONS.findIndex((d) => d.value === currentDhikr);
 
@@ -70,7 +72,7 @@ export default function DhikrCarousel({
                   paddingVertical: 12,
                   paddingHorizontal: 8,
                   borderRadius: 16,
-                  backgroundColor: isSelected ? "#115E59" : "transparent",
+                  backgroundColor: isSelected ? appTheme.primary : "transparent",
                   borderWidth: isSelected ? 0 : 1,
                   borderColor: isDark ? "#334155" : "#E2E8F0",
                   alignItems: "center",
