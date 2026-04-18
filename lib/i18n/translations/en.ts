@@ -296,6 +296,18 @@ export default {
     sunset: { name: "Sunset", desc: "Warm and fiery hues" },
     midnight: { name: "Midnight", desc: "Elegant nocturnal purple" },
     rose: { name: "Rose", desc: "Softness and delicacy" },
+    golden: {
+      name: "Golden Sand",
+      desc: "Warm tones with golden dot pattern",
+    },
+    lattice: {
+      name: "Moucharabieh",
+      desc: "Deep blue with Islamic geometric lattice",
+    },
+    starnight: {
+      name: "Starry Night",
+      desc: "Midnight indigo with eight-pointed stars",
+    },
   },
 
   // Notifications

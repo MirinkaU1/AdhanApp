@@ -22,6 +22,7 @@ import useCoinsStore from "@/stores/useCoinsStore";
 import useQuestStore from "@/stores/useQuestStore";
 import useAuthStore from "@/stores/useAuthStore";
 import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
+import { ThemePattern } from "@/components/ThemePattern";
 
 type ShopCategory = "all" | "themes" | "avatars" | "qiblaSkins" | "others";
 
@@ -79,6 +80,10 @@ function ShopThemeCard({
         end={{ x: 1, y: 1 }}
         style={{ height: 90, padding: 12, justifyContent: "space-between" }}
       >
+        {/* Motif de fond */}
+        {theme.pattern && (
+          <ThemePattern pattern={theme.pattern} width={cardWidth} height={90} />
+        )}
         {/* Pastilles */}
         <View className="flex-row gap-1.5">
           {theme.preview.map((color, i) => (

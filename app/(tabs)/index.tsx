@@ -40,6 +40,7 @@ import { DailyWisdomCard, SurahReaderDrawer } from "@/components/quran";
 import RamadanWelcomeModal from "@/components/RamadanWelcomeModal";
 import useCoinsStore from "@/stores/useCoinsStore";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { ThemePattern } from "@/components/ThemePattern";
 
 // Configuration des prières avec icônes Material
 const PRAYER_ICONS: Record<string, MaterialIconName> = {
@@ -371,13 +372,21 @@ export default function DashboardScreen() {
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-          <Image
-            source={{
-              uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDdQO7DmBVbuu03IH4BocFKDFkHmlUe2HE1SMJ8hEEP0N9z-aKcbbSzlGU3DVcXn-D1v-uxMZ2Q_WWZudOeijOi0hrg4Jk0GT83F2Mo31sUwByC3xc1deVXN2ubGgZVyVREHzB26yPLeEwviGWxhQcpIR25bjDWHkZbfz8f7Mbm_HNa368vc9k55RodXtXsFNZZm_u91vUH82knn_hPTGfdAi0dWm0qcPJBjs1uyWZUCGthXhCIpJKfERne5HKVvMzjBkZIEfHly_w",
-            }}
-            style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
-            resizeMode="cover"
-          />
+          {appTheme.pattern ? (
+            <ThemePattern
+              pattern={appTheme.pattern}
+              width={screenWidth}
+              height={400}
+            />
+          ) : (
+            <Image
+              source={{
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDdQO7DmBVbuu03IH4BocFKDFkHmlUe2HE1SMJ8hEEP0N9z-aKcbbSzlGU3DVcXn-D1v-uxMZ2Q_WWZudOeijOi0hrg4Jk0GT83F2Mo31sUwByC3xc1deVXN2ubGgZVyVREHzB26yPLeEwviGWxhQcpIR25bjDWHkZbfz8f7Mbm_HNa368vc9k55RodXtXsFNZZm_u91vUH82knn_hPTGfdAi0dWm0qcPJBjs1uyWZUCGthXhCIpJKfERne5HKVvMzjBkZIEfHly_w",
+              }}
+              style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+              resizeMode="cover"
+            />
+          )}
 
           {/* Contenu du header */}
           <View className="px-4 pt-12 pb-4">

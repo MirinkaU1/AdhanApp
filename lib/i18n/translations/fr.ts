@@ -302,6 +302,18 @@ export default {
     },
     midnight: { name: "Minuit", desc: "L'élégance du violet nocturne" },
     rose: { name: "Rose", desc: "La douceur et la délicatesse" },
+    golden: {
+      name: "Sable doré",
+      desc: "Tons chauds avec motif de points dorés",
+    },
+    lattice: {
+      name: "Moucharabieh",
+      desc: "Bleu profond avec motif géométrique islamique",
+    },
+    starnight: {
+      name: "Nuit étoilée",
+      desc: "Indigo nuit avec étoiles à huit branches",
+    },
   },
 
   // Notifications

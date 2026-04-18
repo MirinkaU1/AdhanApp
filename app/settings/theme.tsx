@@ -17,6 +17,7 @@ import useAuthStore from "@/stores/useAuthStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { APP_THEMES } from "@/constants/appThemes";
+import { ThemePattern } from "@/components/ThemePattern";
 
 // ─────────────────────────────────────────────
 // Mode clair / sombre
@@ -57,6 +58,7 @@ const MODE_OPTIONS: ThemeOption[] = [
 function ActiveThemePreview({ themeId }: { themeId: string }) {
   const { t } = useTranslation();
   const isDark = useIsDark();
+  const { width: screenWidth } = useWindowDimensions();
   const theme = APP_THEMES.find((th) => th.id === themeId);
   if (!theme) return null;
 
@@ -74,6 +76,9 @@ function ActiveThemePreview({ themeId }: { themeId: string }) {
         end={{ x: 1, y: 1 }}
         style={{ height: 120, padding: 16, justifyContent: "space-between" }}
       >
+        {theme.pattern && (
+          <ThemePattern pattern={theme.pattern} width={screenWidth - 32} height={120} />
+        )}
         {/* Pastilles couleur */}
         <View className="flex-row gap-2.5">
           {theme.preview.map((color, i) => (
@@ -165,6 +170,9 @@ function CollectionCard({
         end={{ x: 1, y: 1 }}
         style={{ height: 90, padding: 12, justifyContent: "space-between" }}
       >
+        {theme.pattern && (
+          <ThemePattern pattern={theme.pattern} width={cardWidth} height={90} />
+        )}
         {/* Pastilles */}
         <View className="flex-row gap-1.5">
           {theme.preview.map((color, i) => (
