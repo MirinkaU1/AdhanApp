@@ -527,6 +527,7 @@ export default {
     level: "Niveau",
     totalXp: "XP Total",
     todayProgress: "Progression du jour",
+    coins: "Pièces",
     dailyQuests: "Quêtes Journalières",
     achievements: "Accomplissements",
     claim: "Réclamer",

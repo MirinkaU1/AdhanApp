@@ -520,6 +520,7 @@ export default {
     level: "Level",
     totalXp: "Total XP",
     todayProgress: "Today's Progress",
+    coins: "Coins",
     dailyQuests: "Daily Quests",
     achievements: "Achievements",
     claim: "Claim",

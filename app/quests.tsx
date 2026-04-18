@@ -15,6 +15,7 @@ import useQuestStore, {
   RamadanQuestId,
 } from "@/stores/useQuestStore";
 import useRamadanStore from "@/stores/useRamadanStore";
+import useCoinsStore from "@/stores/useCoinsStore";
 import { useEffect, useState, useCallback } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -164,16 +165,36 @@ function QuestCard({
             >
               {t(quest.titleKey)}
             </Text>
-            <View
-              className="flex-row items-center gap-1 px-2 py-1 rounded-full"
-              style={{
-                backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
-              }}
-            >
-              <MaterialIconsRound name="star" size={13} color="#F59E0B" />
-              <Text className="text-amber-600 dark:text-amber-400 font-outfit-bold text-xs">
-                +{quest.xpReward}
-              </Text>
+            <View className="flex-row items-center gap-1.5">
+              {/* Badge XP */}
+              <View
+                className="flex-row items-center gap-1 px-2 py-1 rounded-full"
+                style={{
+                  backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
+                }}
+              >
+                <MaterialIconsRound name="star" size={12} color="#F59E0B" />
+                <Text className="text-amber-600 dark:text-amber-400 font-outfit-bold text-xs">
+                  +{quest.xpReward}
+                </Text>
+              </View>
+              {/* Badge pièces */}
+              {quest.coinReward > 0 && (
+                <View
+                  className="flex-row items-center gap-1 px-2 py-1 rounded-full"
+                  style={{
+                    backgroundColor: isDark ? "rgba(217,119,6,0.18)" : "#FEF9C3",
+                  }}
+                >
+                  <MaterialIconsRound name="toll" size={12} color="#D97706" />
+                  <Text
+                    className="font-outfit-bold text-xs"
+                    style={{ color: isDark ? "#FCD34D" : "#92400E" }}
+                  >
+                    +{quest.coinReward}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -443,6 +464,7 @@ export default function QuestsScreen() {
     checkAndResetWeeklyQuests,
   } = useQuestStore();
   const { isRamadanMode, moonCoins } = useRamadanStore();
+  const { coins } = useCoinsStore();
 
   const { xpInLevel } = getLevelFromXp(xp);
 
@@ -558,6 +580,19 @@ export default function QuestsScreen() {
               <Text className="text-white font-outfit-bold text-xl">
                 {completedDaily}/{dailyList.length}
               </Text>
+            </View>
+            <View className="w-px h-8 bg-white/20" />
+            {/* Pièces */}
+            <View className="items-center">
+              <Text className="text-white/60 font-outfit-regular text-xs">
+                {t("quests.coins")}
+              </Text>
+              <View className="flex-row items-center gap-1">
+                <MaterialIconsRound name="toll" size={16} color="#FCD34D" />
+                <Text className="text-white font-outfit-bold text-xl">
+                  {coins}
+                </Text>
+              </View>
             </View>
             {isRamadanMode && (
               <>

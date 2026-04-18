@@ -45,6 +45,7 @@ export interface Quest {
   titleKey: string;
   descriptionKey: string;
   xpReward: number;
+  coinReward: number;
   icon: string;
   requirement: number;
   progress: number;
@@ -184,6 +185,16 @@ const QUEST_COIN_REWARD_REASONS: Record<QuestId, CoinAwardReason> = {
   complete_streak_7: "quest_complete_streak_7",
 };
 
+// Montants de pièces par quête — doit rester synchronisé avec la fonction SQL award_coins
+export const QUEST_COIN_REWARDS: Record<QuestId, number> = {
+  first_prayer_today: 3,
+  pray_fajr: 5,
+  pray_all_5: 15,
+  pray_on_time: 8,
+  complete_streak_3: 20,
+  complete_streak_7: 50,
+};
+
 // Noms des niveaux (rangs)
 export const LEVEL_NAMES: Record<number, string> = {
   1: "Débutant",
@@ -271,6 +282,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.firstPrayer.title",
     descriptionKey: "quests.firstPrayer.description",
     xpReward: 15,
+    coinReward: QUEST_COIN_REWARDS.first_prayer_today,
     icon: "wb-sunny",
     requirement: 1,
     progress: 0,
@@ -282,6 +294,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayFajr.title",
     descriptionKey: "quests.prayFajr.description",
     xpReward: 25,
+    coinReward: QUEST_COIN_REWARDS.pray_fajr,
     icon: "dark-mode",
     requirement: 1,
     progress: 0,
@@ -293,6 +306,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayAll5.title",
     descriptionKey: "quests.prayAll5.description",
     xpReward: 75,
+    coinReward: QUEST_COIN_REWARDS.pray_all_5,
     icon: "star",
     requirement: 5,
     progress: 0,
@@ -304,6 +318,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayOnTime.title",
     descriptionKey: "quests.prayOnTime.description",
     xpReward: 30,
+    coinReward: QUEST_COIN_REWARDS.pray_on_time,
     icon: "schedule",
     requirement: 3,
     progress: 0,
@@ -315,6 +330,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.streak3.title",
     descriptionKey: "quests.streak3.description",
     xpReward: 100,
+    coinReward: QUEST_COIN_REWARDS.complete_streak_3,
     icon: "local-fire-department",
     requirement: 3,
     progress: 0,
@@ -326,6 +342,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.streak7.title",
     descriptionKey: "quests.streak7.description",
     xpReward: 250,
+    coinReward: QUEST_COIN_REWARDS.complete_streak_7,
     icon: "emoji-events",
     requirement: 7,
     progress: 0,
@@ -927,10 +944,25 @@ const useQuestStore = create<QuestStoreState>()(
         if (state) {
           state._hasHydrated = true;
           // Migration : si les quêtes Ramadan persistées n'ont pas moonReward, on les réinitialise
-          const quests = Object.values(state.ramadanWeeklyQuests ?? {});
-          const needsMigration = quests.some((q: any) => q.moonReward === undefined);
-          if (needsMigration) {
+          const ramadanQuests = Object.values(state.ramadanWeeklyQuests ?? {});
+          if (ramadanQuests.some((q: any) => q.moonReward === undefined)) {
             state.ramadanWeeklyQuests = createDefaultRamadanWeeklyQuests();
+          }
+          // Migration : si les quêtes normales persistées n'ont pas coinReward, on les reconstruits
+          const dailyQuests = Object.values(state.dailyQuests ?? {});
+          if (dailyQuests.some((q: any) => q.coinReward === undefined)) {
+            const defaults = createDefaultDailyQuests();
+            // Fusionner : conserver progress/status mais ajouter coinReward
+            const migrated: Record<string, Quest> = {};
+            for (const [id, quest] of Object.entries(state.dailyQuests ?? {})) {
+              const qid = id as QuestId;
+              migrated[qid] = {
+                ...(defaults[qid] ?? quest),
+                progress: (quest as Quest).progress,
+                status: (quest as Quest).status,
+              };
+            }
+            state.dailyQuests = migrated as Record<QuestId, Quest>;
           }
         }
       },
