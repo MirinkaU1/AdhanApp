@@ -381,8 +381,6 @@ export default function QuizScreen() {
   const { session, startSession, recordAnswer, nextQuestion, resetSession } =
     useQuizStore();
   const addCoins = useCoinsStore((s) => s.addCoins);
-  const setCoins = useCoinsStore((s) => s.setCoins);
-  const currentCoins = useCoinsStore((s) => s.coins);
 
   // Local UI state
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -423,11 +421,6 @@ export default function QuizScreen() {
     addCoins(session.coinsEarned, {
       reason: "quiz_correct_answer",
       referenceKey: `quiz_${category}_${session.startedAt}`,
-    }).then((success) => {
-      // Fallback: award locally if server call fails (offline / guest)
-      if (!success) {
-        setCoins(currentCoins + session.coinsEarned);
-      }
     });
   }, [session?.isComplete]);
 

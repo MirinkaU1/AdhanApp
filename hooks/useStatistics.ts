@@ -124,7 +124,7 @@ const isComplete = (status: PrayerStatus | undefined): boolean => {
 export function useStatistics(): Statistics {
   const { i18n } = useTranslation();
   const locale = i18n.language === "fr" ? fr : enUS;
-  const { logs } = usePrayerStore();
+  const logs = usePrayerStore((state) => state.logs);
 
   return useMemo(() => {
     const today = new Date();

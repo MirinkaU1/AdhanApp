@@ -148,14 +148,12 @@ const parseHijriRemote = (payload: any): HijriDate | null => {
 };
 
 export const usePrayerEngine = (): PrayerEngineResult => {
-  const {
-    calculationMethod,
-    madhab,
-    hijriOffset,
-    autoLocation,
-    autoHijriSync,
-    setHijriOffset,
-  } = usePrayerStore();
+  const calculationMethod = usePrayerStore((state) => state.calculationMethod);
+  const madhab = usePrayerStore((state) => state.madhab);
+  const hijriOffset = usePrayerStore((state) => state.hijriOffset);
+  const autoLocation = usePrayerStore((state) => state.autoLocation);
+  const autoHijriSync = usePrayerStore((state) => state.autoHijriSync);
+  const setHijriOffset = usePrayerStore((state) => state.setHijriOffset);
   const netInfo = useNetInfo();
   const { location, isLoading, error, hasPermission, isUsingDefault, refresh } =
     useCurrentLocation({ enabled: autoLocation });

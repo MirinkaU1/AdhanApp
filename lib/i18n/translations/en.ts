@@ -783,15 +783,15 @@ export default {
     didYouKnow: "Did you know?",
     nextQuestion: "Next question",
     seeResults: "See results",
-    randomBadge: "RANDOM MODE",
-    randomDesc: "{{count}} questions mixed from all categories",
+    randomBadge: "ALL CATEGORIES",
+    randomDesc: "{{count}} questions drawn from all categories",
     categories: {
       sourates: "Surahs of the Quran",
       prophetes: "The Prophets",
       histoire: "Islamic History",
       pilliers: "Pillars of Islam",
       vocabulaire: "Arabic Vocabulary",
-      random: "Random Mode",
+      random: "General Challenge",
     },
     results: {
       excellent: "Excellent! Mashallah!",

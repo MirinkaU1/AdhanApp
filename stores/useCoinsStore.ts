@@ -3,9 +3,9 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   awardCoinsServer,
+  awardQuizCoinsServer,
   type CoinAwardReason,
   fetchThemeInventory,
-  grantCoinsServer,
 } from "@/lib/themeEconomy";
 
 interface CoinsState {
@@ -39,11 +39,9 @@ const useCoinsStore = create<CoinsState>()(
       addCoins: async (amount, options) => {
         if (amount <= 0) return false;
 
-        const newBalance = await grantCoinsServer(
+        const newBalance = await awardQuizCoinsServer(
+          options?.referenceKey ?? `quiz_${Date.now()}`,
           amount,
-          options?.reason ?? "debug_grant",
-          options?.referenceKey,
-          options?.targetUserId,
         );
 
         if (newBalance === null) return false;

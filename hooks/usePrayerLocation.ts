@@ -38,19 +38,17 @@ type UsePrayerLocationResult = {
 
 export function usePrayerLocation(): UsePrayerLocationResult {
   const netInfo = useNetInfo();
-  const {
-    autoLocation,
-    location: storeLocation,
-    autoHijriSync,
-    calculationMethod,
-    hijriOffset,
-    setLocation,
-    setLoadingLocation,
-    setPrayerTimes,
-    setHijriDate,
-    setNextPrayer,
-    setHijriOffset,
-  } = usePrayerStore();
+  const autoLocation = usePrayerStore((state) => state.autoLocation);
+  const storeLocation = usePrayerStore((state) => state.location);
+  const autoHijriSync = usePrayerStore((state) => state.autoHijriSync);
+  const calculationMethod = usePrayerStore((state) => state.calculationMethod);
+  const hijriOffset = usePrayerStore((state) => state.hijriOffset);
+  const setLocation = usePrayerStore((state) => state.setLocation);
+  const setLoadingLocation = usePrayerStore((state) => state.setLoadingLocation);
+  const setPrayerTimes = usePrayerStore((state) => state.setPrayerTimes);
+  const setHijriDate = usePrayerStore((state) => state.setHijriDate);
+  const setNextPrayer = usePrayerStore((state) => state.setNextPrayer);
+  const setHijriOffset = usePrayerStore((state) => state.setHijriOffset);
 
   const {
     location: gpsLocation,

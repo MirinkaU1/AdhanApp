@@ -3,5 +3,17 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
+  },
+  "files.watcherExclude": {
+    "**/android/.gradle/**": true,
+    "**/android/app/build/**": true,
+    "**/android/build/**": true,
+    "**/node_modules/**/android/build/**": true
+  },
+  "search.exclude": {
+    "**/android/.gradle/**": true,
+    "**/android/app/build/**": true,
+    "**/android/build/**": true,
+    "**/node_modules/**/android/build/**": true
   }
 }

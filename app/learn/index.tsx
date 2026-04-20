@@ -117,9 +117,21 @@ export default function LearnScreen() {
               end={{ x: 1, y: 0 }}
               style={{ borderRadius: 20, padding: 20 }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 4,
+                    }}
+                  >
                     <View
                       style={{
                         backgroundColor: "rgba(255,255,255,0.2)",
@@ -130,7 +142,7 @@ export default function LearnScreen() {
                     >
                       <AppText
                         variant="label"
-                        style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}
+                        style={{ color: "#fff", fontSize: 10 }}
                       >
                         {t("quiz.randomBadge")}
                       </AppText>
@@ -138,7 +150,11 @@ export default function LearnScreen() {
                   </View>
                   <AppText
                     variant="h2"
-                    style={{ color: "#fff", fontWeight: "700", marginBottom: 4 }}
+                    style={{
+                      color: "#fff",
+                      fontFamily: "Outfit_700Bold",
+                      marginBottom: 4,
+                    }}
                   >
                     {t("quiz.categories.random")}
                   </AppText>

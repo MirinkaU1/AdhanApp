@@ -109,103 +109,34 @@ export const setActiveThemeServer = async (
 export const awardCoinsServer = async (
   reason: CoinAwardReason,
   referenceKey: string,
-  // userId n'est plus utilisé : l'identité est vérifiée côté Edge Function
-  // via le JWT. Le paramètre est conservé pour la compatibilité des appelants.
   _userId?: string,
 ): Promise<number | null> => {
-  // Récupérer le token JWT de la session courante.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const { data, error } = await supabase.rpc("award_coins", {
+    p_reason: reason,
+    p_reference_key: referenceKey,
+  });
 
-  if (!token) {
-    console.error("[themeEconomy] awardCoinsServer: no active session");
+  if (error) {
+    console.error("[themeEconomy] awardCoinsServer error:", error.message);
     return null;
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${SUPABASE_URL}/functions/v1/award-coins`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Le JWT authentifie l'utilisateur côté Edge Function.
-        Authorization: `Bearer ${token}`,
-        // La clé anon est requise par le gateway Supabase pour router la requête.
-        apikey: SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ reason, reference_key: referenceKey }),
-    });
-  } catch (err) {
-    console.error("[themeEconomy] awardCoinsServer fetch error:", err);
-    return null;
-  }
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(
-      `[themeEconomy] awardCoinsServer HTTP ${res.status}:`,
-      body,
-    );
-    return null;
-  }
-
-  const json = await res.json().catch(() => null);
-  return json?.balance != null ? Number(json.balance) : null;
+  return data != null ? Number(data) : null;
 };
 
-export const grantCoinsServer = async (
+export const awardQuizCoinsServer = async (
+  sessionKey: string,
   amount: number,
-  reason: string,
-  referenceKey?: string,
-  // targetUserId n'est plus accepté par l'Edge Function pour éviter l'escalade
-  // de privilèges : l'identité est toujours celle du JWT. Le paramètre est
-  // conservé pour la compatibilité des appelants mais ignoré côté serveur.
-  _targetUserId?: string,
 ): Promise<number | null> => {
-  // Récupérer le token JWT de la session courante.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const { data, error } = await supabase.rpc("award_quiz_session", {
+    p_session_key: sessionKey,
+    p_amount: amount,
+  });
 
-  if (!token) {
-    console.error("[themeEconomy] grantCoinsServer: no active session");
+  if (error) {
+    console.error("[themeEconomy] awardQuizCoinsServer error:", error.message);
     return null;
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${SUPABASE_URL}/functions/v1/grant-coins`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Le JWT authentifie l'utilisateur côté Edge Function.
-        Authorization: `Bearer ${token}`,
-        // La clé anon est requise par le gateway Supabase pour router la requête.
-        apikey: SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
-        amount,
-        reason,
-        reference_key: referenceKey ?? null,
-      }),
-    });
-  } catch (err) {
-    console.error("[themeEconomy] grantCoinsServer fetch error:", err);
-    return null;
-  }
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(
-      `[themeEconomy] grantCoinsServer HTTP ${res.status}:`,
-      body,
-    );
-    return null;
-  }
-
-  const json = await res.json().catch(() => null);
-  return json?.balance != null ? Number(json.balance) : null;
+  return data != null ? Number(data) : null;
 };
