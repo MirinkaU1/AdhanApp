@@ -204,6 +204,8 @@ function RootLayoutNav() {
           <Stack.Screen name="levels" options={{ headerShown: false }} />
           <Stack.Screen name="themes" options={{ headerShown: false }} />
           <Stack.Screen name="quran" options={{ headerShown: false }} />
+          <Stack.Screen name="quran/reader/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="learn" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{ presentation: "modal", headerShown: false }}
