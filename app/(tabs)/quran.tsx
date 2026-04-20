@@ -73,6 +73,7 @@ export default function QuranScreen() {
         router.push("/quran/dhikr");
         break;
       case "learn":
+        router.push("/learn" as any);
         break;
       case "quests":
         router.push("/quests");
