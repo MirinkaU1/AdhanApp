@@ -72,8 +72,13 @@ const useThemeStore = create<ThemeState>()(
 
         if (result && result.success) {
           // Succès serveur : mettre à jour l'état depuis la réponse autoritaire
+          const currentUnlockedThemeIds = get().unlockedThemeIds;
           const unlockedThemeIds = Array.from(
-            new Set([...FREE_THEME_IDS, ...result.unlockedThemeIds]),
+            new Set([
+              ...FREE_THEME_IDS,
+              ...currentUnlockedThemeIds,
+              ...result.unlockedThemeIds,
+            ]),
           );
           set({
             activeThemeId: unlockedThemeIds.includes(result.activeThemeId)
@@ -106,12 +111,31 @@ const useThemeStore = create<ThemeState>()(
         const inventory = await fetchThemeInventory(userId);
         if (!inventory) return;
 
-        const unlockedThemeIds = Array.from(
+        const currentState = get();
+        const serverUnlockedThemeIds = Array.from(
           new Set([...FREE_THEME_IDS, ...inventory.unlockedThemeIds]),
         );
-        const activeThemeId = unlockedThemeIds.includes(inventory.activeThemeId)
-          ? inventory.activeThemeId
-          : "default";
+        const serverUnlockedSet = new Set(serverUnlockedThemeIds);
+
+        const unlockedThemeIds = Array.from(
+          new Set([
+            ...FREE_THEME_IDS,
+            ...currentState.unlockedThemeIds,
+            ...inventory.unlockedThemeIds,
+          ]),
+        );
+
+        const previousActiveIsLocalOnly =
+          currentState.unlockedThemeIds.includes(currentState.activeThemeId) &&
+          !serverUnlockedSet.has(currentState.activeThemeId);
+
+        const activeThemeId = previousActiveIsLocalOnly
+          ? currentState.activeThemeId
+          : unlockedThemeIds.includes(inventory.activeThemeId)
+            ? inventory.activeThemeId
+            : unlockedThemeIds.includes(currentState.activeThemeId)
+              ? currentState.activeThemeId
+              : "default";
 
         set({
           activeThemeId,

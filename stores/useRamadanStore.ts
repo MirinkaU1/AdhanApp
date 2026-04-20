@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
+import useThemeStore from "@/stores/useThemeStore";
+
+/** Thèmes débloqués automatiquement pendant le Ramadan */
+const RAMADAN_THEME_IDS = ["arabesque"];
 
 interface RamadanState {
   isRamadanMode: boolean;
@@ -23,19 +27,33 @@ export const useRamadanStore = create<RamadanState>()(
       moonCoins: 0,
       hasSeenRamadanWelcome: false,
 
-      toggleRamadanMode: () =>
+      toggleRamadanMode: () => {
+        const next = !get().isRamadanMode;
         set((state) => ({
-          isRamadanMode: !state.isRamadanMode,
+          isRamadanMode: next,
           hasSeenRamadanWelcome: state.isRamadanMode
             ? false
             : state.hasSeenRamadanWelcome,
-        })),
+        }));
+        if (next) {
+          // Débloque les thèmes exclusifs Ramadan
+          RAMADAN_THEME_IDS.forEach((id) =>
+            useThemeStore.getState().unlockTheme(id),
+          );
+        }
+      },
 
-      setRamadanMode: (value) =>
+      setRamadanMode: (value) => {
         set((state) => ({
           isRamadanMode: value,
           hasSeenRamadanWelcome: value ? state.hasSeenRamadanWelcome : false,
-        })),
+        }));
+        if (value) {
+          RAMADAN_THEME_IDS.forEach((id) =>
+            useThemeStore.getState().unlockTheme(id),
+          );
+        }
+      },
 
       markWelcomeSeen: () => set({ hasSeenRamadanWelcome: true }),
 
@@ -54,7 +72,9 @@ export const useRamadanStore = create<RamadanState>()(
 
       syncMoonCoins: async () => {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (!user) return;
           await supabase.from("ramadan_progress").upsert(
             {
@@ -71,7 +91,9 @@ export const useRamadanStore = create<RamadanState>()(
 
       loadMoonCoins: async () => {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (!user) return;
           const { data } = await supabase
             .from("ramadan_progress")
@@ -94,6 +116,12 @@ export const useRamadanStore = create<RamadanState>()(
         moonCoins: state.moonCoins,
         hasSeenRamadanWelcome: state.hasSeenRamadanWelcome,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state?.isRamadanMode) return;
+        RAMADAN_THEME_IDS.forEach((id) =>
+          useThemeStore.getState().unlockTheme(id),
+        );
+      },
     },
   ),
 );

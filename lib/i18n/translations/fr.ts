@@ -279,6 +279,10 @@ export default {
     allOwnedDesc: "Vous possédez tous les thèmes disponibles.",
     unlockLevel: "Se débloque au niveau {{level}}",
     unlockLevelShort: "Niv. {{level}}",
+    availableInShop: "Disponible dans la boutique",
+    availableAtLevel: "Disponible au niveau {{level}}",
+    availableDuringEvent: "Disponible pendant l'évènement {{event}}",
+    filterOwnedOnly: "Possédés uniquement",
     unlockCoins: "{{count}} pièces",
     eventDesc: "Disponible lors d'un évènement",
     buy: "Acheter",
@@ -314,6 +318,25 @@ export default {
       name: "Nuit étoilée",
       desc: "Indigo nuit avec étoiles à huit branches",
     },
+    arabesque: {
+      name: "Arabesque",
+      desc: "Thème exclusif Ramadan — pierre sombre ornée d'arabesques traditionnelles",
+    },
+  },
+
+  // Avatars
+  avatars: {
+    confirmPurchase: "Acheter l'avatar",
+    confirmPurchaseDesc: "Acheter cet avatar pour {{price}} pièces ?",
+    notEnoughCoinsDesc:
+      "Il vous manque {{need}} pièce(s). Accomplissez des quêtes pour en gagner.",
+    buy: "Acheter",
+    avatar01: "Classique",
+    avatar02: "Élégant",
+    avatar03: "Mystique",
+    avatar04: "Guerrier",
+    avatar05: "Sage",
+    avatar06: "Légendaire",
   },
 
   // Notifications

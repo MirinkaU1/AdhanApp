@@ -1,9 +1,15 @@
-import React from "react";
-import { View, ActivityIndicator, Text } from "react-native";
+import React, { useMemo } from "react";
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { ThemePattern } from "@/components/ThemePattern";
 
 type LoaderVariant = "fullscreen" | "overlay" | "inline";
 type LoaderSize = "small" | "medium" | "large";
@@ -33,6 +39,22 @@ export default function AppLoader({
 }: AppLoaderProps) {
   const isDark = useIsDark();
   const appTheme = useAppTheme();
+  const { width, height } = useWindowDimensions();
+
+  const loaderPattern = useMemo(() => {
+    const pattern = appTheme.pattern;
+    if (!pattern) return null;
+
+    // Evite les crash/perf issues sur Expo Go avec les SVG très lourds en fullscreen.
+    if (pattern.type === "svg") {
+      return {
+        ...pattern,
+        opacity: Math.min(pattern.opacity, 0.1),
+      };
+    }
+
+    return pattern;
+  }, [appTheme.pattern]);
 
   // ── Inline ───────────────────────────────────────────────────────────────
   if (variant === "inline") {
@@ -43,7 +65,9 @@ export default function AppLoader({
           color={isDark ? "#2DD4BF" : appTheme.primary}
         />
         {message && (
-          <Text className={`font-outfit-regular text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          <Text
+            className={`font-outfit-regular text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}
+          >
             {message}
           </Text>
         )}
@@ -65,14 +89,22 @@ export default function AppLoader({
       >
         <View
           className={`rounded-2xl p-6 items-center gap-3 ${isDark ? "bg-card-dark" : "bg-card-light"}`}
-          style={{ minWidth: 96, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}
+          style={{
+            minWidth: 96,
+            shadowColor: "#000",
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
         >
           <ActivityIndicator
             size={RN_SIZE[size]}
             color={isDark ? "#2DD4BF" : appTheme.primary}
           />
           {message && (
-            <Text className={`font-outfit-medium text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+            <Text
+              className={`font-outfit-medium text-sm ${isDark ? "text-slate-300" : "text-slate-600"}`}
+            >
               {message}
             </Text>
           )}
@@ -84,10 +116,18 @@ export default function AppLoader({
   // ── Fullscreen (default) ─────────────────────────────────────────────────
   return (
     <View className="flex-1 items-center justify-center">
+      {/* Gradient du thème actif */}
       <LinearGradient
         colors={appTheme.headerGradient}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
+
+      {/* Motif du thème (si défini) */}
+      {loaderPattern && (
+        <ThemePattern pattern={loaderPattern} width={width} height={height} />
+      )}
+
+      {/* Spinner + message */}
       <ActivityIndicator size={RN_SIZE[size]} color="#ffffff" />
       {message && (
         <Text className="font-outfit-regular text-white/70 text-base mt-4">

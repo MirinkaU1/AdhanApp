@@ -2,6 +2,7 @@
  * Boutique de thèmes — accessible via le badge pièces sur l'accueil
  */
 import {
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -21,8 +22,11 @@ import useThemeStore from "@/stores/useThemeStore";
 import useCoinsStore from "@/stores/useCoinsStore";
 import useQuestStore from "@/stores/useQuestStore";
 import useAuthStore from "@/stores/useAuthStore";
+import useRamadanStore from "@/stores/useRamadanStore";
 import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
 import { ThemePattern } from "@/components/ThemePattern";
+import { PRESET_AVATARS, type PresetAvatar } from "@/lib/avatarService";
+import useAvatarStore from "@/stores/useAvatarStore";
 
 type ShopCategory = "all" | "themes" | "avatars" | "qiblaSkins" | "others";
 
@@ -36,16 +40,16 @@ function withAlpha(hex: string, alpha: number) {
 }
 
 // ─────────────────────────────────────────────
-// Carte thème boutique (2 colonnes)
+// Carte avatar boutique (2 colonnes)
 // ─────────────────────────────────────────────
 
-function ShopThemeCard({
-  theme,
+function ShopAvatarCard({
+  avatar,
   isOwned,
   onPurchase,
   cardWidth,
 }: {
-  theme: AppTheme;
+  avatar: PresetAvatar;
   isOwned: boolean;
   onPurchase: () => void;
   cardWidth: number;
@@ -56,11 +60,185 @@ function ShopThemeCard({
   const { coins } = useCoinsStore();
 
   const isLevelLocked =
-    theme.unlock.type === "level" && level < theme.unlock.level;
+    avatar.unlock.type === "level" &&
+    level < (avatar.unlock as { type: "level"; level: number }).level;
+  const price =
+    avatar.unlock.type === "coins"
+      ? (avatar.unlock as { type: "coins"; price: number }).price
+      : null;
+
+  const canAfford = price !== null && coins >= price;
+
+  return (
+    <Pressable
+      onPress={!isOwned && !isLevelLocked ? onPurchase : undefined}
+      style={{ width: cardWidth }}
+      className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+    >
+      {/* Image de l'avatar */}
+      <View className="items-center pt-5 pb-3">
+        <View
+          className="w-20 h-20 rounded-full overflow-hidden border-2"
+          style={{ borderColor: isOwned ? "#0F766E" : "#CBD5E1" }}
+        >
+          <Image
+            source={avatar.source}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+          {!isOwned && (
+            <View
+              className="absolute inset-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "rgba(0,0,0,0.40)" }}
+            >
+              <MaterialIconsRound name="lock" size={20} color="#FFFFFF" />
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Infos */}
+      <View className="px-3 pb-4 items-center gap-2">
+        {isOwned ? (
+          <View
+            className="flex-row items-center gap-1 px-2.5 py-1 rounded-full"
+            style={{
+              backgroundColor: isDark ? "rgba(20,83,45,0.35)" : "#DCFCE7",
+            }}
+          >
+            <MaterialIconsRound name="check-circle" size={13} color="#22C55E" />
+            <Text
+              className="font-outfit-bold text-xs"
+              style={{ color: isDark ? "#86EFAC" : "#15803D" }}
+            >
+              {t("themes.obtained", "Obtenu")}
+            </Text>
+          </View>
+        ) : isLevelLocked ? (
+          <View
+            className="flex-row items-center gap-1 px-2.5 py-1 rounded-full"
+            style={{
+              backgroundColor: isDark ? "rgba(99,102,241,0.18)" : "#EEF2FF",
+            }}
+          >
+            <MaterialIconsRound
+              name="military-tech"
+              size={13}
+              color="#818CF8"
+            />
+            <Text
+              className="font-outfit-bold text-xs"
+              style={{ color: isDark ? "#A5B4FC" : "#4338CA" }}
+            >
+              {t("themes.unlockLevelShort", {
+                level: (avatar.unlock as { type: "level"; level: number })
+                  .level,
+              })}
+            </Text>
+          </View>
+        ) : (
+          <Pressable
+            onPress={onPurchase}
+            className="flex-row items-center gap-1 px-3 py-1.5 rounded-full"
+            style={{
+              backgroundColor: canAfford
+                ? isDark
+                  ? "rgba(217,119,6,0.22)"
+                  : "#FEF3C7"
+                : isDark
+                  ? "rgba(100,116,139,0.22)"
+                  : "#F1F5F9",
+            }}
+          >
+            <MaterialIconsRound
+              name="toll"
+              size={13}
+              color={canAfford ? "#D97706" : "#94A3B8"}
+            />
+            <Text
+              className="font-outfit-bold text-xs"
+              style={{ color: canAfford ? "#D97706" : "#94A3B8" }}
+            >
+              {price}
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Grille d'avatars (2 colonnes)
+// ─────────────────────────────────────────────
+
+function AvatarGrid({
+  avatars,
+  isAvatarOwned,
+  onPurchase,
+  cardWidth,
+  gap,
+}: {
+  avatars: PresetAvatar[];
+  isAvatarOwned: (id: string) => boolean;
+  onPurchase: (avatar: PresetAvatar) => void;
+  cardWidth: number;
+  gap: number;
+}) {
+  const rows: PresetAvatar[][] = [];
+  for (let i = 0; i < avatars.length; i += 2) {
+    rows.push(avatars.slice(i, i + 2));
+  }
+  return (
+    <View style={{ gap }}>
+      {rows.map((row, ri) => (
+        <View key={ri} className="flex-row" style={{ gap }}>
+          {row.map((avatar) => (
+            <ShopAvatarCard
+              key={avatar.id}
+              avatar={avatar}
+              isOwned={isAvatarOwned(avatar.id)}
+              onPurchase={() => onPurchase(avatar)}
+              cardWidth={cardWidth}
+            />
+          ))}
+          {/* Remplissage si nombre impair */}
+          {row.length === 1 && <View style={{ width: cardWidth }} />}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Carte thème boutique (2 colonnes)
+// ─────────────────────────────────────────────
+
+function ShopThemeCard({
+  theme,
+  isOwned,
+  isEventActive,
+  onPurchase,
+  cardWidth,
+}: {
+  theme: AppTheme;
+  isOwned: boolean;
+  isEventActive: boolean;
+  onPurchase: () => void;
+  cardWidth: number;
+}) {
+  const { t } = useTranslation();
+  const isDark = useIsDark();
+  const { level } = useQuestStore();
+  const { coins } = useCoinsStore();
+
+  const isLevelLocked =
+    theme.unlock.type === "level" && !isOwned && level < theme.unlock.level;
   const isEvent = theme.unlock.type === "event";
+  const isEventLocked = isEvent && !isOwned && !isEventActive;
   const canAfford =
     theme.unlock.type === "coins" ? coins >= theme.unlock.price : false;
-  const isLocked = isLevelLocked || isEvent;
+  const isLocked = isLevelLocked || isEventLocked;
 
   return (
     <View
@@ -144,13 +322,16 @@ function ShopThemeCard({
           style={{ fontSize: 10 }}
           numberOfLines={1}
         >
-          {isLevelLocked
-            ? t("themes.unlockLevel", {
-                level: (theme.unlock as { type: "level"; level: number }).level,
-              })
-            : isEvent
-              ? t("themes.eventDesc")
-              : t(theme.descriptionKey)}
+          {isOwned
+            ? t(theme.descriptionKey)
+            : isLevelLocked
+              ? t("themes.unlockLevel", {
+                  level: (theme.unlock as { type: "level"; level: number })
+                    .level,
+                })
+              : isEvent
+                ? t("themes.eventDesc")
+                : t(theme.descriptionKey)}
         </Text>
 
         {/* Bouton achat ou verrou */}
@@ -214,6 +395,23 @@ function ShopThemeCard({
               </Text>
             </Pressable>
           )
+        ) : isOwned ? (
+          <View
+            className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1"
+            style={{
+              backgroundColor: isDark ? "rgba(34,197,94,0.18)" : "#DCFCE7",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(34,197,94,0.35)" : "#86EFAC",
+            }}
+          >
+            <MaterialIconsRound name="check-circle" size={12} color="#16A34A" />
+            <Text
+              className="font-outfit-bold"
+              style={{ fontSize: 11, color: "#16A34A" }}
+            >
+              {t("themes.obtained")}
+            </Text>
+          </View>
         ) : (
           <View
             className="mt-2 rounded-xl py-1.5 flex-row items-center justify-center gap-1"
@@ -246,12 +444,14 @@ function ShopThemeCard({
 function ThemeGrid({
   themes,
   isThemeOwned,
+  isEventActive,
   onPurchase,
   cardWidth,
   gap,
 }: {
   themes: AppTheme[];
   isThemeOwned: (themeId: string) => boolean;
+  isEventActive: (theme: AppTheme) => boolean;
   onPurchase: (theme: AppTheme) => void;
   cardWidth: number;
   gap: number;
@@ -270,6 +470,7 @@ function ThemeGrid({
               key={theme.id}
               theme={theme}
               isOwned={isThemeOwned(theme.id)}
+              isEventActive={isEventActive(theme)}
               onPurchase={() => onPurchase(theme)}
               cardWidth={cardWidth}
             />
@@ -340,18 +541,29 @@ export default function ThemesShopScreen() {
   const { user } = useAuthStore();
   const { coins } = useCoinsStore();
   const { isThemeUnlocked, purchaseTheme, setActiveTheme } = useThemeStore();
+  const { isRamadanMode } = useRamadanStore();
+  const { isAvatarUnlocked, purchaseAvatar } = useAvatarStore();
 
   const GRID_PADDING = 16;
   const GRID_GAP = 10;
   const cardWidth = (width - GRID_PADDING * 2 - GRID_GAP) / 2;
 
-  // Modals
+  // Modals thèmes
   const [confirmTheme, setConfirmTheme] = useState<AppTheme | null>(null);
   const [purchasedTheme, setPurchasedTheme] = useState<AppTheme | null>(null);
   const [showNoCoins, setShowNoCoins] = useState<{ need: number } | null>(null);
+  // Modals avatars
+  const [confirmAvatar, setConfirmAvatar] = useState<PresetAvatar | null>(null);
+  const [showNoCoinsAvatar, setShowNoCoinsAvatar] = useState<{
+    need: number;
+  } | null>(null);
+
   const [activeCategory, setActiveCategory] = useState<ShopCategory>("all");
 
-  const lockedThemes = APP_THEMES.filter((th) => !isThemeUnlocked(th.id));
+  const shopThemes = APP_THEMES.filter(
+    (theme) => theme.unlock.type !== "level",
+  );
+  const lockedShopThemes = shopThemes.filter((th) => !isThemeUnlocked(th.id));
 
   const handlePurchase = (theme: AppTheme) => {
     if (theme.unlock.type !== "coins") return;
@@ -384,9 +596,35 @@ export default function ThemesShopScreen() {
     setPurchasedTheme(null);
   };
 
-  const byCoins = APP_THEMES.filter((t) => t.unlock.type === "coins");
-  const byLevel = lockedThemes.filter((t) => t.unlock.type === "level");
-  const byEvent = lockedThemes.filter((t) => t.unlock.type === "event");
+  const handleAvatarPurchase = (avatar: PresetAvatar) => {
+    if (avatar.unlock.type !== "coins") return;
+    if (isAvatarUnlocked(avatar.id)) return;
+    const price = (avatar.unlock as { type: "coins"; price: number }).price;
+
+    if (coins < price) {
+      setShowNoCoinsAvatar({ need: price - coins });
+      return;
+    }
+    setConfirmAvatar(avatar);
+  };
+
+  const handleConfirmAvatarPurchase = () => {
+    if (!confirmAvatar || confirmAvatar.unlock.type !== "coins") return;
+    const price = (confirmAvatar.unlock as { type: "coins"; price: number })
+      .price;
+    purchaseAvatar(confirmAvatar.id, price);
+    setConfirmAvatar(null);
+  };
+
+  const byCoins = shopThemes.filter((t) => t.unlock.type === "coins");
+  const byEvent = shopThemes.filter((t) => t.unlock.type === "event");
+  const shopAvatars = PRESET_AVATARS.filter(
+    (avatar) => avatar.unlock.type !== "level",
+  );
+  const isThemeEventActive = (theme: AppTheme) =>
+    theme.unlock.type === "event" && theme.unlock.eventId === "ramadan"
+      ? isRamadanMode
+      : false;
 
   const categories: Array<{
     key: ShopCategory;
@@ -405,26 +643,27 @@ export default function ThemesShopScreen() {
   ];
 
   const comingSoonDescriptionByCategory: Record<
-    Exclude<ShopCategory, "themes" | "all">,
+    Exclude<ShopCategory, "themes" | "all" | "avatars">,
     string
   > = {
-    avatars: t("themes.comingSoonAvatars"),
     qiblaSkins: t("themes.comingSoonQiblaSkins"),
     others: t("themes.comingSoonOthers"),
   };
 
   const shouldShowThemes =
     activeCategory === "themes" || activeCategory === "all";
+  const shouldShowAvatars =
+    activeCategory === "avatars" || activeCategory === "all";
   const activeTabBackground = withAlpha(appTheme.primary, isDark ? 0.24 : 0.12);
   const activeTabBorder = withAlpha(appTheme.primary, isDark ? 0.48 : 0.3);
   const activeTabText = isDark ? appTheme.accent : appTheme.primary;
 
-  const comingSoonCategories: Array<Exclude<ShopCategory, "themes" | "all">> =
+  const comingSoonCategories: Array<
+    Exclude<ShopCategory, "themes" | "all" | "avatars">
+  > =
     activeCategory === "all"
-      ? ["avatars", "qiblaSkins", "others"]
-      : activeCategory === "avatars" ||
-          activeCategory === "qiblaSkins" ||
-          activeCategory === "others"
+      ? ["qiblaSkins", "others"]
+      : activeCategory === "qiblaSkins" || activeCategory === "others"
         ? [activeCategory]
         : [];
 
@@ -531,7 +770,7 @@ export default function ThemesShopScreen() {
           </View>
         </ScrollView>
 
-        {shouldShowThemes && lockedThemes.length === 0 && (
+        {shouldShowThemes && lockedShopThemes.length === 0 && (
           <View className="items-center justify-center py-8">
             <MaterialIconsRound
               name="check-circle"
@@ -555,22 +794,8 @@ export default function ThemesShopScreen() {
             <ThemeGrid
               themes={byCoins}
               isThemeOwned={isThemeUnlocked}
+              isEventActive={isThemeEventActive}
               onPurchase={handlePurchase}
-              cardWidth={cardWidth}
-              gap={GRID_GAP}
-            />
-          </>
-        )}
-
-        {shouldShowThemes && byLevel.length > 0 && (
-          <>
-            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
-              {t("themes.byLevel")}
-            </Text>
-            <ThemeGrid
-              themes={byLevel}
-              isThemeOwned={isThemeUnlocked}
-              onPurchase={() => {}}
               cardWidth={cardWidth}
               gap={GRID_GAP}
             />
@@ -585,7 +810,24 @@ export default function ThemesShopScreen() {
             <ThemeGrid
               themes={byEvent}
               isThemeOwned={isThemeUnlocked}
+              isEventActive={isThemeEventActive}
               onPurchase={() => {}}
+              cardWidth={cardWidth}
+              gap={GRID_GAP}
+            />
+          </>
+        )}
+
+        {/* ─── Section Avatars ─── */}
+        {shouldShowAvatars && (
+          <>
+            <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base mb-3 mt-2">
+              {t("themes.categoryAvatars")}
+            </Text>
+            <AvatarGrid
+              avatars={shopAvatars}
+              isAvatarOwned={isAvatarUnlocked}
+              onPurchase={handleAvatarPurchase}
               cardWidth={cardWidth}
               gap={GRID_GAP}
             />
@@ -665,7 +907,7 @@ export default function ThemesShopScreen() {
         onDismiss={() => setPurchasedTheme(null)}
       />
 
-      {/* Modal solde insuffisant */}
+      {/* Modal solde insuffisant (thèmes) */}
       <AlertDialog
         visible={showNoCoins !== null}
         title={t("themes.notEnoughCoins")}
@@ -684,6 +926,58 @@ export default function ThemesShopScreen() {
           },
         ]}
         onDismiss={() => setShowNoCoins(null)}
+      />
+
+      {/* Modal confirmation achat avatar */}
+      <AlertDialog
+        visible={confirmAvatar !== null}
+        title={t("avatars.confirmPurchase", "Acheter l'avatar")}
+        message={
+          confirmAvatar && confirmAvatar.unlock.type === "coins"
+            ? t("avatars.confirmPurchaseDesc", {
+                price: (
+                  confirmAvatar.unlock as { type: "coins"; price: number }
+                ).price,
+                defaultValue: `Acheter cet avatar pour ${(confirmAvatar.unlock as { type: "coins"; price: number }).price} pièces ?`,
+              })
+            : ""
+        }
+        icon="face"
+        iconColor="#D97706"
+        buttons={[
+          {
+            text: t("common.cancel"),
+            style: "default",
+            onPress: () => setConfirmAvatar(null),
+          },
+          {
+            text: t("avatars.buy", "Acheter"),
+            style: "primary",
+            onPress: handleConfirmAvatarPurchase,
+          },
+        ]}
+        onDismiss={() => setConfirmAvatar(null)}
+      />
+
+      {/* Modal solde insuffisant (avatars) */}
+      <AlertDialog
+        visible={showNoCoinsAvatar !== null}
+        title={t("themes.notEnoughCoins")}
+        message={
+          showNoCoinsAvatar
+            ? t("themes.notEnoughCoinsDesc", { need: showNoCoinsAvatar.need })
+            : ""
+        }
+        icon="toll"
+        iconColor="#EF4444"
+        buttons={[
+          {
+            text: t("common.ok"),
+            style: "default",
+            onPress: () => setShowNoCoinsAvatar(null),
+          },
+        ]}
+        onDismiss={() => setShowNoCoinsAvatar(null)}
       />
     </View>
   );

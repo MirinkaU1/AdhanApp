@@ -5,6 +5,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -14,9 +15,10 @@ import MaterialIconsRound, {
 import useThemeStore, { ThemeMode } from "@/stores/useThemeStore";
 import useCoinsStore from "@/stores/useCoinsStore";
 import useAuthStore from "@/stores/useAuthStore";
+import useRamadanStore from "@/stores/useRamadanStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { APP_THEMES } from "@/constants/appThemes";
+import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
 import { ThemePattern } from "@/components/ThemePattern";
 
 // ─────────────────────────────────────────────
@@ -77,7 +79,11 @@ function ActiveThemePreview({ themeId }: { themeId: string }) {
         style={{ height: 120, padding: 16, justifyContent: "space-between" }}
       >
         {theme.pattern && (
-          <ThemePattern pattern={theme.pattern} width={screenWidth - 32} height={120} />
+          <ThemePattern
+            pattern={theme.pattern}
+            width={screenWidth - 32}
+            height={120}
+          />
         )}
         {/* Pastilles couleur */}
         <View className="flex-row gap-2.5">
@@ -136,24 +142,41 @@ function ActiveThemePreview({ themeId }: { themeId: string }) {
 // ─────────────────────────────────────────────
 
 function CollectionCard({
-  themeId,
+  theme,
+  isOwned,
   isActive,
+  isEventActive,
   onSelect,
   cardWidth,
 }: {
-  themeId: string;
+  theme: AppTheme;
+  isOwned: boolean;
   isActive: boolean;
+  isEventActive: boolean;
   onSelect: () => void;
   cardWidth: number;
 }) {
   const { t } = useTranslation();
   const isDark = useIsDark();
-  const theme = APP_THEMES.find((th) => th.id === themeId);
-  if (!theme) return null;
+  const isLocked = !isOwned;
+
+  const lockMessage =
+    theme.unlock.type === "coins"
+      ? t("themes.availableInShop")
+      : theme.unlock.type === "level"
+        ? t("themes.availableAtLevel", { level: theme.unlock.level })
+        : theme.unlock.type === "event"
+          ? t("themes.availableDuringEvent", { event: theme.unlock.eventName })
+          : t(theme.descriptionKey);
+
+  const lockBadgeLabel =
+    theme.unlock.type === "event" && isEventActive
+      ? t("themes.event")
+      : t("themes.locked");
 
   return (
     <Pressable
-      onPress={onSelect}
+      onPress={isOwned ? onSelect : undefined}
       className="active:opacity-80"
       style={{
         width: cardWidth,
@@ -161,6 +184,7 @@ function CollectionCard({
         overflow: "hidden",
         borderWidth: isActive ? 2 : 1,
         borderColor: isActive ? theme.accent : isDark ? "#334155" : "#E2E8F0",
+        opacity: isLocked ? 0.82 : 1,
       }}
     >
       {/* Preview gradient */}
@@ -191,7 +215,7 @@ function CollectionCard({
         </View>
 
         {/* Badge actif */}
-        {isActive && (
+        {isActive && isOwned && (
           <View
             className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full"
             style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
@@ -202,6 +226,21 @@ function CollectionCard({
               style={{ fontSize: 10 }}
             >
               {t("themes.active")}
+            </Text>
+          </View>
+        )}
+
+        {isLocked && (
+          <View
+            className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          >
+            <MaterialIconsRound name="lock" size={10} color="#fff" />
+            <Text
+              className="font-outfit-bold text-white"
+              style={{ fontSize: 10 }}
+            >
+              {lockBadgeLabel}
             </Text>
           </View>
         )}
@@ -222,24 +261,46 @@ function CollectionCard({
         <View
           className="mt-1.5 rounded-lg py-1 items-center"
           style={{
-            backgroundColor: isActive
-              ? isDark
-                ? "rgba(217,119,6,0.2)"
-                : "#FEF3C7"
+            backgroundColor: isOwned
+              ? isActive
+                ? isDark
+                  ? "rgba(217,119,6,0.2)"
+                  : "#FEF3C7"
+                : isDark
+                  ? "#334155"
+                  : "#F1F5F9"
               : isDark
-                ? "#334155"
-                : "#F1F5F9",
+                ? "#0F172A"
+                : "#F8FAFC",
+            borderWidth: isOwned ? 0 : 1,
+            borderColor: isDark ? "#334155" : "#E2E8F0",
           }}
         >
-          <Text
-            className="font-outfit-bold"
-            style={{
-              fontSize: 11,
-              color: isActive ? "#D97706" : isDark ? "#94A3B8" : "#475569",
-            }}
-          >
-            {isActive ? t("themes.applied") : t("themes.apply")}
-          </Text>
+          {isOwned ? (
+            <Text
+              className="font-outfit-bold"
+              style={{
+                fontSize: 11,
+                color: isActive ? "#D97706" : isDark ? "#94A3B8" : "#475569",
+              }}
+            >
+              {isActive ? t("themes.applied") : t("themes.apply")}
+            </Text>
+          ) : (
+            <View className="flex-row items-center gap-1.5 px-1.5">
+              <MaterialIconsRound name="lock" size={11} color="#94A3B8" />
+              <Text
+                className="font-outfit-medium text-center"
+                style={{
+                  fontSize: 10,
+                  color: isDark ? "#CBD5E1" : "#64748B",
+                }}
+                numberOfLines={2}
+              >
+                {lockMessage}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </Pressable>
@@ -264,8 +325,17 @@ export default function ThemeScreen() {
     isThemeUnlocked,
   } = useThemeStore();
   const { coins } = useCoinsStore();
+  const { isRamadanMode } = useRamadanStore();
+  const [showOwnedOnly, setShowOwnedOnly] = useState(false);
 
-  const ownedThemes = APP_THEMES.filter((th) => isThemeUnlocked(th.id));
+  const collectionThemes = showOwnedOnly
+    ? APP_THEMES.filter((th) => isThemeUnlocked(th.id))
+    : APP_THEMES;
+
+  const isThemeEventActive = (theme: AppTheme) =>
+    theme.unlock.type === "event" && theme.unlock.eventId === "ramadan"
+      ? isRamadanMode
+      : false;
 
   // Taille des cartes pour la grille 2 colonnes
   const GRID_PADDING = 16;
@@ -273,9 +343,9 @@ export default function ThemeScreen() {
   const cardWidth = (width - GRID_PADDING * 2 - GRID_GAP) / 2;
 
   // Construire les paires pour la grille
-  const themePairs: (typeof ownedThemes)[] = [];
-  for (let i = 0; i < ownedThemes.length; i += 2) {
-    themePairs.push(ownedThemes.slice(i, i + 2));
+  const themePairs: AppTheme[][] = [];
+  for (let i = 0; i < collectionThemes.length; i += 2) {
+    themePairs.push(collectionThemes.slice(i, i + 2));
   }
 
   return (
@@ -410,49 +480,103 @@ export default function ThemeScreen() {
           <Text className="font-outfit-bold text-text-primary-light dark:text-text-primary-dark text-base">
             {t("themes.myCollection")}
           </Text>
-          {/* Lien vers boutique */}
-          <Pressable
-            onPress={() => router.push("/themes")}
-            className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full active:opacity-70"
-            style={{
-              backgroundColor: isDark ? "rgba(217,119,6,0.15)" : "#FEF3C7",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(217,119,6,0.3)" : "#FDE68A",
-            }}
-          >
-            <MaterialIconsRound name="toll" size={13} color="#D97706" />
-            <Text
-              className="font-outfit-bold text-xs"
-              style={{ color: "#D97706" }}
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <Pressable
+              onPress={() => setShowOwnedOnly((prev) => !prev)}
+              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full active:opacity-70"
+              style={{
+                backgroundColor: showOwnedOnly
+                  ? isDark
+                    ? "rgba(34,197,94,0.2)"
+                    : "#DCFCE7"
+                  : isDark
+                    ? "#1E293B"
+                    : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: showOwnedOnly
+                  ? isDark
+                    ? "rgba(34,197,94,0.35)"
+                    : "#86EFAC"
+                  : isDark
+                    ? "#334155"
+                    : "#E2E8F0",
+              }}
             >
-              {coins}
-            </Text>
-            <MaterialIconsRound name="storefront" size={13} color="#D97706" />
-          </Pressable>
+              <MaterialIconsRound
+                name={showOwnedOnly ? "check-box" : "check-box-outline-blank"}
+                size={13}
+                color={showOwnedOnly ? "#16A34A" : "#64748B"}
+              />
+              <Text
+                className="font-outfit-medium text-xs"
+                style={{ color: showOwnedOnly ? "#16A34A" : "#64748B" }}
+              >
+                {t("themes.filterOwnedOnly")}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/themes")}
+              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full active:opacity-70"
+              style={{
+                backgroundColor: isDark ? "rgba(217,119,6,0.15)" : "#FEF3C7",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(217,119,6,0.3)" : "#FDE68A",
+              }}
+            >
+              <MaterialIconsRound name="toll" size={13} color="#D97706" />
+              <Text
+                className="font-outfit-bold text-xs"
+                style={{ color: "#D97706" }}
+              >
+                {coins}
+              </Text>
+              <MaterialIconsRound name="storefront" size={13} color="#D97706" />
+            </Pressable>
+          </View>
         </View>
 
-        {/* Grille 2 colonnes */}
-        {themePairs.map((pair, rowIndex) => (
+        {collectionThemes.length === 0 ? (
           <View
-            key={rowIndex}
-            className="flex-row mb-3"
-            style={{ gap: GRID_GAP }}
+            className="rounded-2xl p-4"
+            style={{
+              backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
+              borderWidth: 1,
+              borderColor: isDark ? "#334155" : "#E2E8F0",
+            }}
           >
-            {pair.map((theme) => (
-              <CollectionCard
-                key={theme.id}
-                themeId={theme.id}
-                isActive={activeThemeId === theme.id}
-                onSelect={() => {
-                  void setActiveTheme(theme.id, user?.id);
-                }}
-                cardWidth={cardWidth}
-              />
-            ))}
-            {/* Remplir l'espace si nombre impair */}
-            {pair.length === 1 && <View style={{ width: cardWidth }} />}
+            <Text className="font-outfit-medium text-center text-text-secondary-light dark:text-text-secondary-dark">
+              {t("themes.emptyCollection")}
+            </Text>
           </View>
-        ))}
+        ) : (
+          themePairs.map((pair, rowIndex) => (
+            <View
+              key={rowIndex}
+              className="flex-row mb-3"
+              style={{ gap: GRID_GAP }}
+            >
+              {pair.map((theme) => {
+                const isOwned = isThemeUnlocked(theme.id);
+                return (
+                  <CollectionCard
+                    key={theme.id}
+                    theme={theme}
+                    isOwned={isOwned}
+                    isEventActive={isThemeEventActive(theme)}
+                    isActive={isOwned && activeThemeId === theme.id}
+                    onSelect={() => {
+                      if (!isOwned) return;
+                      void setActiveTheme(theme.id, user?.id);
+                    }}
+                    cardWidth={cardWidth}
+                  />
+                );
+              })}
+              {pair.length === 1 && <View style={{ width: cardWidth }} />}
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );

@@ -419,25 +419,30 @@ export default function DashboardScreen() {
 
               {/* Droite : lunes Ramadan + pièces + notifications */}
               <View className="flex-row items-center gap-2">
-                {/* Badge lunes Ramadan */}
-                {isRamadanMode && (
-                  <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/10 gap-1.5">
-                    <MaterialIconsRound
-                      name="nightlight"
-                      size={14}
-                      color="#FCD34D"
-                    />
-                    <Text className="text-white text-sm font-outfit-bold">
-                      {moonCoins}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Badge pièces — navigue vers les thèmes */}
+                {/* Badge monnaies — navigue vers les thèmes */}
                 <Pressable
                   onPress={() => router.push("/themes")}
                   className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/10 gap-1.5 active:opacity-70"
                 >
+                  {isRamadanMode && (
+                    <>
+                      <MaterialIconsRound
+                        name="nightlight"
+                        size={14}
+                        color="#FCD34D"
+                      />
+                      <Text className="text-white text-sm font-outfit-bold">
+                        {moonCoins}
+                      </Text>
+                      <View
+                        style={{
+                          width: 1,
+                          height: 12,
+                          backgroundColor: "rgba(255,255,255,0.35)",
+                        }}
+                      />
+                    </>
+                  )}
                   <MaterialIconsRound name="toll" size={14} color="#FCD34D" />
                   <Text className="text-white text-sm font-outfit-bold">
                     {coins}

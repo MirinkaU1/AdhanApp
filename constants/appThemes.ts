@@ -1,13 +1,39 @@
-export type PatternType = "dots" | "lines" | "diamonds" | "stars" | "lattice";
+import React from "react";
+import Pattern1 from "@/assets/images/paterns/patern1.svg";
+
+export type PatternType =
+  | "dots"
+  | "lines"
+  | "diamonds"
+  | "stars"
+  | "lattice"
+  | "svg";
 
 export interface AppThemePattern {
   type: PatternType;
   /** Overall opacity 0–1 */
   opacity: number;
-  /** Stroke/fill color, defaults to white */
+  /** Stroke/fill color for geometric patterns, defaults to white */
   color?: string;
-  /** Pattern cell size multiplier, defaults to 1 */
+  /** Pattern cell size multiplier for geometric patterns, defaults to 1 */
   scale?: number;
+  /**
+   * Composant SVG importé via react-native-svg-transformer.
+   * Utilisé uniquement quand type === "svg".
+   * Accepte width / height / opacity comme props SVG standard.
+   */
+  SvgComponent?: React.ComponentType<{
+    width?: number | string;
+    height?: number | string;
+    opacity?: number;
+    style?: any;
+  }>;
+  /**
+   * Ratio hauteur/largeur du viewBox SVG (h/w).
+   * Utilisé par ThemePattern pour calculer le rendu "cover" sans distorsion.
+   * Si absent, la valeur par défaut (1971.23/1828.76 ≈ 1.078) est utilisée.
+   */
+  svgAspectRatio?: number;
 }
 
 export type ThemeUnlock =
@@ -33,8 +59,8 @@ export interface AppTheme {
 export const APP_THEMES: AppTheme[] = [
   {
     id: "default",
-    nameKey: "themes.default.name" as const,
-    descriptionKey: "themes.default.desc" as const,
+    nameKey: "themes.default.name",
+    descriptionKey: "themes.default.desc",
     headerGradient: ["#115E59", "#0d4542"],
     primary: "#0f766e",
     accent: "#D97706",
@@ -50,7 +76,7 @@ export const APP_THEMES: AppTheme[] = [
     accent: "#0EA5E9",
     preview: ["#1E3A8A", "#1D4ED8", "#0EA5E9"],
     unlock: { type: "level", level: 3 },
-    pattern: { type: "lines", opacity: 0.10, color: "#7DD3FC", scale: 1.2 },
+    pattern: { type: "lines", opacity: 0.1, color: "#7DD3FC", scale: 1.2 },
   },
   {
     id: "forest",
@@ -99,34 +125,53 @@ export const APP_THEMES: AppTheme[] = [
     id: "golden",
     nameKey: "themes.golden.name",
     descriptionKey: "themes.golden.desc",
-    headerGradient: ["#78350F", "#92400E"] as [string, string],
+    headerGradient: ["#78350F", "#92400E"],
     primary: "#B45309",
     accent: "#FCD34D",
-    preview: ["#78350F", "#B45309", "#FCD34D"] as [string, string, string],
-    unlock: { type: "coins" as const, price: 40 },
-    pattern: { type: "dots" as PatternType, opacity: 0.18, color: "#FCD34D", scale: 1.5 },
+    preview: ["#78350F", "#B45309", "#FCD34D"],
+    unlock: { type: "coins", price: 40 },
+    pattern: { type: "dots", opacity: 0.18, color: "#FCD34D", scale: 1.5 },
   },
   {
     id: "lattice",
     nameKey: "themes.lattice.name",
     descriptionKey: "themes.lattice.desc",
-    headerGradient: ["#0C4A6E", "#0E7490"] as [string, string],
+    headerGradient: ["#0C4A6E", "#0E7490"],
     primary: "#0369A1",
     accent: "#38BDF8",
-    preview: ["#0C4A6E", "#0369A1", "#38BDF8"] as [string, string, string],
-    unlock: { type: "coins" as const, price: 60 },
-    pattern: { type: "lattice" as PatternType, opacity: 0.15, color: "#7DD3FC", scale: 1.2 },
+    preview: ["#0C4A6E", "#0369A1", "#38BDF8"],
+    unlock: { type: "coins", price: 60 },
+    pattern: { type: "lattice", opacity: 0.15, color: "#7DD3FC", scale: 1.2 },
   },
   {
     id: "starnight",
     nameKey: "themes.starnight.name",
     descriptionKey: "themes.starnight.desc",
-    headerGradient: ["#1E1B4B", "#2E1065"] as [string, string],
+    headerGradient: ["#1E1B4B", "#2E1065"],
     primary: "#4338CA",
     accent: "#A5B4FC",
-    preview: ["#1E1B4B", "#4338CA", "#A5B4FC"] as [string, string, string],
-    unlock: { type: "level" as const, level: 8 },
-    pattern: { type: "stars" as PatternType, opacity: 0.20, color: "#C7D2FE", scale: 1.0 },
+    preview: ["#1E1B4B", "#4338CA", "#A5B4FC"],
+    unlock: { type: "level", level: 8 },
+    pattern: { type: "stars", opacity: 0.2, color: "#C7D2FE", scale: 1.0 },
+  },
+  {
+    id: "arabesque",
+    nameKey: "themes.arabesque.name",
+    descriptionKey: "themes.arabesque.desc",
+    // Fond pierre sombre pour que le motif sable/ivoire ressorte
+    headerGradient: ["#1C1917", "#292524"],
+    primary: "#78716C",
+    accent: "#D6B896",
+    preview: ["#1C1917", "#78716C", "#D6B896"],
+    // Thème exclusif Ramadan
+    unlock: { type: "event", eventId: "ramadan", eventName: "Ramadan" },
+    pattern: {
+      type: "svg",
+      opacity: 0.22,
+      SvgComponent: Pattern1,
+      // viewBox du SVG hexagonal : 1828.76 × 1971.23 → ratio h/w ≈ 1.078
+      svgAspectRatio: 1971.23 / 1828.76,
+    },
   },
 ];
 

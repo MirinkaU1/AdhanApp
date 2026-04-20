@@ -276,6 +276,10 @@ export default {
     allOwnedDesc: "You own all available themes.",
     unlockLevel: "Unlocks at level {{level}}",
     unlockLevelShort: "Lvl. {{level}}",
+    availableInShop: "Available in the shop",
+    availableAtLevel: "Available at level {{level}}",
+    availableDuringEvent: "Available during the {{event}} event",
+    filterOwnedOnly: "Owned only",
     unlockCoins: "{{count}} coins",
     eventDesc: "Available during an event",
     buy: "Buy",
@@ -308,6 +312,25 @@ export default {
       name: "Starry Night",
       desc: "Midnight indigo with eight-pointed stars",
     },
+    arabesque: {
+      name: "Arabesque",
+      desc: "Exclusive Ramadan theme — dark stone adorned with traditional arabesque patterns",
+    },
+  },
+
+  // Avatars
+  avatars: {
+    confirmPurchase: "Buy avatar",
+    confirmPurchaseDesc: "Buy this avatar for {{price}} coins?",
+    notEnoughCoinsDesc:
+      "You need {{need}} more coin(s). Complete quests to earn more.",
+    buy: "Buy",
+    avatar01: "Classic",
+    avatar02: "Elegant",
+    avatar03: "Mystic",
+    avatar04: "Warrior",
+    avatar05: "Sage",
+    avatar06: "Legendary",
   },
 
   // Notifications

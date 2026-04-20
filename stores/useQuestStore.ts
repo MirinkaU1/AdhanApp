@@ -18,7 +18,7 @@ import useThemeStore from "@/stores/useThemeStore";
 import { APP_THEMES } from "@/constants/appThemes";
 import type { CoinAwardReason } from "@/lib/themeEconomy";
 
-// =====================================================
+// ==================================================a===
 // TYPES
 // =====================================================
 
@@ -34,9 +34,7 @@ export type QuestId =
 
 export type RamadanQuestId =
   // Hebdomadaires
-  | "ramadan_week_perfect"
-  | "ramadan_week_juz"
-  | "ramadan_week_surahs";
+  "ramadan_week_perfect" | "ramadan_week_juz" | "ramadan_week_surahs";
 
 export type QuestStatus = "locked" | "active" | "completed" | "claimed";
 
@@ -129,7 +127,10 @@ interface QuestStoreState {
   checkAndResetDailyQuests: () => void;
 
   // Ramadan weekly actions
-  updateRamadanQuestProgress: (questId: RamadanQuestId, progress: number) => void;
+  updateRamadanQuestProgress: (
+    questId: RamadanQuestId,
+    progress: number,
+  ) => void;
   claimRamadanQuestReward: (questId: RamadanQuestId) => boolean;
   resetWeeklyRamadanQuests: () => void;
   checkAndResetWeeklyQuests: () => void;
@@ -224,7 +225,10 @@ const getDateKey = () => format(new Date(), "yyyy-MM-dd");
 // Clé de semaine : année + numéro de semaine ISO (lundi → dimanche)
 const getWeekKey = () => format(new Date(), "yyyy-'W'II");
 
-const createDefaultRamadanWeeklyQuests = (): Record<RamadanQuestId, RamadanQuest> => ({
+const createDefaultRamadanWeeklyQuests = (): Record<
+  RamadanQuestId,
+  RamadanQuest
+> => ({
   ramadan_week_perfect: {
     id: "ramadan_week_perfect",
     titleKey: "quests.ramadan.weekPerfect.title",
@@ -590,9 +594,9 @@ const useQuestStore = create<QuestStoreState>()(
         const dailyCompleted = Object.values(state.dailyQuests).filter(
           (q) => q.status === "completed",
         ).length;
-        const ramadanCompleted = Object.values(state.ramadanWeeklyQuests).filter(
-          (q) => q.status === "completed",
-        ).length;
+        const ramadanCompleted = Object.values(
+          state.ramadanWeeklyQuests,
+        ).filter((q) => q.status === "completed").length;
         return dailyCompleted + ramadanCompleted;
       },
 
@@ -843,7 +847,11 @@ const useQuestStore = create<QuestStoreState>()(
         let justCompleted = false;
         set((state) => {
           const quest = state.ramadanWeeklyQuests[questId];
-          if (!quest || quest.status === "completed" || quest.status === "claimed") {
+          if (
+            !quest ||
+            quest.status === "completed" ||
+            quest.status === "claimed"
+          ) {
             return state;
           }
           const newProgress = Math.min(progress, quest.requirement);
@@ -863,7 +871,10 @@ const useQuestStore = create<QuestStoreState>()(
         // Toast "prête à réclamer" — affiche l'XP de la quête sans l'attribuer
         if (justCompleted) {
           const quest = get().ramadanWeeklyQuests[questId];
-          get().enqueueXpToast(quest?.xpReward ?? 0, `ramadan_quest_${questId}`);
+          get().enqueueXpToast(
+            quest?.xpReward ?? 0,
+            `ramadan_quest_${questId}`,
+          );
         }
       },
 
