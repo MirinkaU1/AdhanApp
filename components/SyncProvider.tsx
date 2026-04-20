@@ -23,10 +23,20 @@ import useThemeStore from "@/stores/useThemeStore";
 import { supabase } from "@/lib/supabase";
 
 export default function SyncProvider() {
-  const { user, isAuthenticated, updateXp, updateLevel } = useAuthStore();
-  const { fetchFromSupabase, status, dateKey } = usePrayerStore();
-  const { xp: questXp, level: questLevel, totalXpEarned } = useQuestStore();
-  const { loadFromSupabase, syncWithSupabase } = useQuranStore();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const updateXp = useAuthStore((state) => state.updateXp);
+  const updateLevel = useAuthStore((state) => state.updateLevel);
+
+  const fetchFromSupabase = usePrayerStore((state) => state.fetchFromSupabase);
+  const status = usePrayerStore((state) => state.status);
+  const dateKey = usePrayerStore((state) => state.dateKey);
+
+  const questXp = useQuestStore((state) => state.xp);
+  const questLevel = useQuestStore((state) => state.level);
+  const totalXpEarned = useQuestStore((state) => state.totalXpEarned);
+
+  const loadFromSupabase = useQuranStore((state) => state.loadFromSupabase);
   const appStateRef = useRef(AppState.currentState);
   const lastStreakSyncRef = useRef<string | null>(null);
   const lastQuranSyncRef = useRef<number>(0);

@@ -102,7 +102,10 @@ export default function DashboardScreen() {
 
   const router = useRouter();
   const { user } = useAuthStore();
-  const { times, status, hijriDate, togglePrayer } = usePrayerStore();
+  const times = usePrayerStore((state) => state.times);
+  const status = usePrayerStore((state) => state.status);
+  const hijriDate = usePrayerStore((state) => state.hijriDate);
+  const togglePrayer = usePrayerStore((state) => state.togglePrayer);
   const {
     level,
     xp,

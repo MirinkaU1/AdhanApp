@@ -790,15 +790,15 @@ export default {
     didYouKnow: "Le savais-tu ?",
     nextQuestion: "Question suivante",
     seeResults: "Voir les résultats",
-    randomBadge: "MODE ALÉATOIRE",
-    randomDesc: "{{count}} questions mélangées de toutes les catégories",
+    randomBadge: "TOUTES CATÉGORIES",
+    randomDesc: "{{count}} questions piochées dans toutes les catégories",
     categories: {
       sourates: "Sourates du Coran",
       prophetes: "Les Prophètes",
       histoire: "Histoire Islamique",
       pilliers: "Piliers de l'Islam",
       vocabulaire: "Vocabulaire Arabe",
-      random: "Mode Aléatoire",
+      random: "Défi Général",
     },
     results: {
       excellent: "Excellent ! Mashallah !",

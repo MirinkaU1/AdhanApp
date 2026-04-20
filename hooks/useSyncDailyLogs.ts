@@ -14,7 +14,8 @@ const createDefaultStatus = (): PrayerStatus => ({
 
 export const useSyncDailyLogs = () => {
   const syncInProgress = useRef(false);
-  const { logs, getDirtyDates, markSyncedDates } = usePrayerStore();
+  const getDirtyDates = usePrayerStore((state) => state.getDirtyDates);
+  const markSyncedDates = usePrayerStore((state) => state.markSyncedDates);
 
   const sync = useCallback(async () => {
     if (!supabase || syncInProgress.current) {
@@ -32,25 +33,28 @@ export const useSyncDailyLogs = () => {
     }
 
     syncInProgress.current = true;
-    const payload = dirtyDates.map((date) => {
-      const status = logs[date] ?? createDefaultStatus();
-      return {
-        user_id: data.user!.id,
-        date,
-        ...status,
-      };
-    });
+    try {
+      const { logs } = usePrayerStore.getState();
+      const payload = dirtyDates.map((date) => {
+        const status = logs[date] ?? createDefaultStatus();
+        return {
+          user_id: data.user!.id,
+          date,
+          ...status,
+        };
+      });
 
-    const { error } = await supabase
-      .from('daily_logs')
-      .upsert(payload, { onConflict: 'user_id,date' });
+      const { error } = await supabase
+        .from('daily_logs')
+        .upsert(payload, { onConflict: 'user_id,date' });
 
-    if (!error) {
-      markSyncedDates(dirtyDates);
+      if (!error) {
+        markSyncedDates(dirtyDates);
+      }
+    } finally {
+      syncInProgress.current = false;
     }
-
-    syncInProgress.current = false;
-  }, [getDirtyDates, logs, markSyncedDates]);
+  }, [getDirtyDates, markSyncedDates]);
 
   useEffect(() => {
     sync();
