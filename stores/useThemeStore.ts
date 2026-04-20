@@ -60,28 +60,50 @@ const useThemeStore = create<ThemeState>()(
         }
       },
 
-      purchaseTheme: async (id, _price, userId) => {
+      purchaseTheme: async (id, price, userId) => {
         if (get().isThemeUnlocked(id)) return false;
 
+        // ── Tentative serveur ──────────────────────────────────────────────
         const result = await purchaseThemeServer(
           id,
           userId,
           `theme_purchase:${id}`,
         );
-        if (!result || !result.success) return false;
 
-        const unlockedThemeIds = Array.from(
-          new Set([...FREE_THEME_IDS, ...result.unlockedThemeIds]),
+        if (result && result.success) {
+          // Succès serveur : mettre à jour l'état depuis la réponse autoritaire
+          const currentUnlockedThemeIds = get().unlockedThemeIds;
+          const unlockedThemeIds = Array.from(
+            new Set([
+              ...FREE_THEME_IDS,
+              ...currentUnlockedThemeIds,
+              ...result.unlockedThemeIds,
+            ]),
+          );
+          set({
+            activeThemeId: unlockedThemeIds.includes(result.activeThemeId)
+              ? result.activeThemeId
+              : "default",
+            unlockedThemeIds,
+          });
+          useCoinsStore.getState().setCoins(result.newBalance);
+          return true;
+        }
+
+        // ── Fallback local ─────────────────────────────────────────────────
+        // Le serveur a échoué (thème absent du catalogue DB, mode offline,
+        // utilisateur invité…). On traite l'achat localement.
+        console.warn(
+          `[ThemeStore] purchaseThemeServer failed for "${id}", falling back to local purchase`,
         );
+        const spent = useCoinsStore.getState().spendCoins(price);
+        if (!spent) return false; // Solde insuffisant localement
 
-        set({
-          activeThemeId: unlockedThemeIds.includes(result.activeThemeId)
-            ? result.activeThemeId
-            : "default",
-          unlockedThemeIds,
-        });
-        useCoinsStore.getState().setCoins(result.newBalance);
-
+        set((state) => ({
+          unlockedThemeIds: Array.from(
+            new Set([...state.unlockedThemeIds, id]),
+          ),
+        }));
         return true;
       },
 
@@ -89,12 +111,31 @@ const useThemeStore = create<ThemeState>()(
         const inventory = await fetchThemeInventory(userId);
         if (!inventory) return;
 
-        const unlockedThemeIds = Array.from(
+        const currentState = get();
+        const serverUnlockedThemeIds = Array.from(
           new Set([...FREE_THEME_IDS, ...inventory.unlockedThemeIds]),
         );
-        const activeThemeId = unlockedThemeIds.includes(inventory.activeThemeId)
-          ? inventory.activeThemeId
-          : "default";
+        const serverUnlockedSet = new Set(serverUnlockedThemeIds);
+
+        const unlockedThemeIds = Array.from(
+          new Set([
+            ...FREE_THEME_IDS,
+            ...currentState.unlockedThemeIds,
+            ...inventory.unlockedThemeIds,
+          ]),
+        );
+
+        const previousActiveIsLocalOnly =
+          currentState.unlockedThemeIds.includes(currentState.activeThemeId) &&
+          !serverUnlockedSet.has(currentState.activeThemeId);
+
+        const activeThemeId = previousActiveIsLocalOnly
+          ? currentState.activeThemeId
+          : unlockedThemeIds.includes(inventory.activeThemeId)
+            ? inventory.activeThemeId
+            : unlockedThemeIds.includes(currentState.activeThemeId)
+              ? currentState.activeThemeId
+              : "default";
 
         set({
           activeThemeId,

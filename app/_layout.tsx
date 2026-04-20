@@ -19,11 +19,9 @@ import {
   Outfit_600SemiBold,
   Outfit_700Bold,
 } from "@expo-google-fonts/outfit";
-import {
-  Amiri_400Regular,
-  Amiri_700Bold,
-} from "@expo-google-fonts/amiri";
+import { Amiri_400Regular, Amiri_700Bold } from "@expo-google-fonts/amiri";
 import { loadSavedLanguage } from "@/lib/i18n";
+import Constants from "expo-constants";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
 import useThemeStore from "@/stores/useThemeStore";
@@ -34,6 +32,9 @@ import SyncProvider from "@/components/SyncProvider";
 
 import { useColorScheme } from "nativewind";
 import { useQuranStore } from "@/stores/useQuranStore";
+import useRamadanStore from "@/stores/useRamadanStore";
+
+const isExpoGo = Constants.appOwnership === "expo";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -104,9 +105,10 @@ function RootLayoutNav() {
 
   // Enregistrer la tâche de rappel quotidien en arrière-plan
   useEffect(() => {
+    if (isExpoGo) return;
+
     const initBackgroundTasks = async () => {
       try {
-        // Import dynamique pour éviter les erreurs dans Expo Go
         const { registerDailyReminderTask, scheduleEveningReminder } =
           await import("@/utils/backgroundTasks");
         await registerDailyReminderTask();
@@ -149,6 +151,8 @@ function RootLayoutNav() {
           await useAuthStore.getState().refreshSession();
           // Charger la progression Quran depuis Supabase
           await useQuranStore.getState().loadFromSupabase();
+          // Charger les lunes Ramadan depuis Supabase
+          await useRamadanStore.getState().loadMoonCoins();
         }
       });
 

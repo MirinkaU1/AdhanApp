@@ -3,7 +3,19 @@ import { ReactNode } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
+
+const getDateKey = () => format(new Date(), "yyyy-MM-dd");
+const getWeekKey = () => format(new Date(), "yyyy-'W'II");
+
+const createDefaultReadingTracking = (): QuranReadingTracking => ({
+  dateKey: getDateKey(),
+  weekKey: getWeekKey(),
+  dailyVersesRead: 0,
+  weeklyVersesRead: 0,
+  weeklyDistinctSurahs: [],
+});
 
 export interface FavoriteVerse {
   surahId: number;
@@ -36,10 +48,19 @@ export interface QuranStats {
   lastReadDate: string | null;
 }
 
+export interface QuranReadingTracking {
+  dateKey: string;        // "yyyy-MM-dd" — reset quotidien
+  weekKey: string;        // "yyyy-'W'ww" — reset hebdomadaire
+  dailyVersesRead: number;
+  weeklyVersesRead: number;
+  weeklyDistinctSurahs: number[]; // IDs des sourates lues cette semaine
+}
+
 interface QuranState {
   progress: Record<number, SurahProgress>;
   favoriteVerses: FavoriteVerse[];
   stats: QuranStats;
+  readingTracking: QuranReadingTracking;
   lastPosition: {
     surahId: number;
     verseId: number;
@@ -57,6 +78,7 @@ interface QuranState {
   getSurahProgress: (surahId: number) => SurahProgress | null;
   getLastReading: () => SurahProgress | null;
   addReadingTime: (minutes: number) => void;
+  getReadingTracking: () => QuranReadingTracking;
   resetProgress: () => void;
   addToFavorites: (verse: Omit<FavoriteVerse, "addedAt">) => void;
   removeFromFavorites: (surahId: number, verseNumber: number) => void;
@@ -78,7 +100,10 @@ export const useQuranStore = create<QuranState>()(
         currentStreak: 0,
         lastReadDate: null,
       },
+      readingTracking: createDefaultReadingTracking(),
       lastPosition: null,
+
+      getReadingTracking: () => get().readingTracking,
 
       updateProgress: (surahId, verseId, totalVerses, surahName) => {
         const now = new Date().toISOString();
@@ -87,6 +112,33 @@ export const useQuranStore = create<QuranState>()(
         const versesRead = currentProgress
           ? [...new Set([...currentProgress.versesRead, verseId])]
           : [verseId];
+
+        // Tracking lecture quotidien/hebdomadaire
+        // On ne compte que les versets NOUVEAUX (pas déjà lus)
+        const isNewVerse = !currentProgress?.versesRead.includes(verseId);
+        if (isNewVerse) {
+          const today = getDateKey();
+          const thisWeek = getWeekKey();
+          const tracking = get().readingTracking;
+
+          // Reset si nouveau jour
+          const dailyReset = tracking.dateKey !== today;
+          // Reset si nouvelle semaine
+          const weeklyReset = tracking.weekKey !== thisWeek;
+
+          const newTracking: QuranReadingTracking = {
+            dateKey: today,
+            weekKey: thisWeek,
+            dailyVersesRead: dailyReset ? 1 : tracking.dailyVersesRead + 1,
+            weeklyVersesRead: weeklyReset ? 1 : tracking.weeklyVersesRead + 1,
+            weeklyDistinctSurahs: weeklyReset
+              ? [surahId]
+              : tracking.weeklyDistinctSurahs.includes(surahId)
+                ? tracking.weeklyDistinctSurahs
+                : [...tracking.weeklyDistinctSurahs, surahId],
+          };
+          set({ readingTracking: newTracking });
+        }
 
         const progress: SurahProgress = {
           surahId,
@@ -311,6 +363,13 @@ export const useQuranStore = create<QuranState>()(
     {
       name: "quran-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        progress: state.progress,
+        favoriteVerses: state.favoriteVerses,
+        stats: state.stats,
+        readingTracking: state.readingTracking,
+        lastPosition: state.lastPosition,
+      }),
     },
   ),
 );

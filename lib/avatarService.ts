@@ -6,15 +6,62 @@ import { decode as atob } from "base-64";
  * Service pour gérer les avatars (prédéfinis et custom)
  */
 
+export type AvatarUnlock =
+  | { type: "free" }
+  | { type: "level"; level: number }
+  | { type: "coins"; price: number };
+
+export interface PresetAvatar {
+  id: string;
+  source: number; // ImageSourcePropType (require)
+  nameKey: string;
+  unlock: AvatarUnlock;
+}
+
 // Avatars prédéfinis disponibles
-export const PRESET_AVATARS = [
-  { id: "01", source: require("@/assets/images/avatars/01.png") },
-  { id: "02", source: require("@/assets/images/avatars/02.png") },
-  { id: "03", source: require("@/assets/images/avatars/03.png") },
-  { id: "04", source: require("@/assets/images/avatars/04.png") },
-  { id: "05", source: require("@/assets/images/avatars/05.png") },
-  { id: "06", source: require("@/assets/images/avatars/06.png") },
+export const PRESET_AVATARS: PresetAvatar[] = [
+  {
+    id: "01",
+    source: require("@/assets/images/avatars/01.png"),
+    nameKey: "avatars.avatar01",
+    unlock: { type: "free" },
+  },
+  {
+    id: "02",
+    source: require("@/assets/images/avatars/02.png"),
+    nameKey: "avatars.avatar02",
+    unlock: { type: "free" },
+  },
+  {
+    id: "03",
+    source: require("@/assets/images/avatars/03.png"),
+    nameKey: "avatars.avatar03",
+    unlock: { type: "coins", price: 20 },
+  },
+  {
+    id: "04",
+    source: require("@/assets/images/avatars/04.png"),
+    nameKey: "avatars.avatar04",
+    unlock: { type: "coins", price: 30 },
+  },
+  {
+    id: "05",
+    source: require("@/assets/images/avatars/05.png"),
+    nameKey: "avatars.avatar05",
+    unlock: { type: "level", level: 5 },
+  },
+  {
+    id: "06",
+    source: require("@/assets/images/avatars/06.png"),
+    nameKey: "avatars.avatar06",
+    unlock: { type: "coins", price: 50 },
+  },
 ];
+
+// IDs toujours débloqués sans condition
+export const FREE_AVATAR_IDS = PRESET_AVATARS.filter(
+  (a) => a.unlock.type === "free",
+).map((a) => a.id);
 
 /**
  * Sélectionner un avatar prédéfini

@@ -17,6 +17,8 @@ import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import useAuthStore from "@/stores/useAuthStore";
+import useAvatarStore from "@/stores/useAvatarStore";
+import useCoinsStore from "@/stores/useCoinsStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { AvatarDrawer } from "@/components/ui";
@@ -33,6 +35,8 @@ export default function ProfileScreen() {
   const isDark = useIsDark();
   const appTheme = useAppTheme();
   const { user, updateProfile, isLoading, setAvatarLocal } = useAuthStore();
+  const { unlockedAvatarIds, purchaseAvatar } = useAvatarStore();
+  const { coins } = useCoinsStore();
 
   const [firstName, setFirstName] = useState(user?.name || "");
   const [birthDate, setBirthDate] = useState(user?.birthDate || "");
@@ -250,13 +254,10 @@ export default function ProfileScreen() {
         onClose={() => setIsAvatarSheetOpen(false)}
         onPickImage={pickImage}
         avatarOptions={PRESET_AVATARS}
-        onSelectAvatar={(source) => {
-          // Trouver l'ID de l'avatar sélectionné
-          const avatarId = PRESET_AVATARS.find((a) => a.source === source)?.id;
-          if (avatarId) {
-            handleSelectPresetAvatar(avatarId);
-          }
-        }}
+        unlockedAvatarIds={unlockedAvatarIds}
+        coins={coins}
+        onSelectAvatar={(avatarId) => handleSelectPresetAvatar(avatarId)}
+        onPurchaseAvatar={(avatarId, price) => purchaseAvatar(avatarId, price)}
         onRemoveAvatar={avatarSource ? handleRemoveAvatar : undefined}
         isLoading={isUploadingAvatar}
       />

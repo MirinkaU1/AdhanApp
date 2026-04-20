@@ -12,12 +12,13 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { format } from "date-fns";
+import useRamadanStore from "@/stores/useRamadanStore";
 import useCoinsStore from "@/stores/useCoinsStore";
 import useThemeStore from "@/stores/useThemeStore";
 import { APP_THEMES } from "@/constants/appThemes";
 import type { CoinAwardReason } from "@/lib/themeEconomy";
 
-// =====================================================
+// ==================================================a===
 // TYPES
 // =====================================================
 
@@ -31,6 +32,10 @@ export type QuestId =
   | "pray_on_time"
   | "first_prayer_today";
 
+export type RamadanQuestId =
+  // Hebdomadaires
+  "ramadan_week_perfect" | "ramadan_week_juz" | "ramadan_week_surahs";
+
 export type QuestStatus = "locked" | "active" | "completed" | "claimed";
 
 export interface Quest {
@@ -38,11 +43,25 @@ export interface Quest {
   titleKey: string;
   descriptionKey: string;
   xpReward: number;
+  coinReward: number;
   icon: string;
   requirement: number;
   progress: number;
   status: QuestStatus;
   isDaily: boolean;
+}
+
+export interface RamadanQuest {
+  id: RamadanQuestId;
+  titleKey: string;
+  descriptionKey: string;
+  xpReward: number;
+  moonReward: number;
+  icon: string;
+  requirement: number;
+  progress: number;
+  status: QuestStatus;
+  isWeekly: boolean;
 }
 
 export interface XpGain {
@@ -76,6 +95,10 @@ interface QuestStoreState {
   dailyQuests: Record<QuestId, Quest>;
   lastQuestResetDate: string;
 
+  // Ramadan Weekly Quests
+  ramadanWeeklyQuests: Record<RamadanQuestId, RamadanQuest>;
+  lastWeeklyResetDate: string;
+
   // Daily XP Tracking (évite les doubles)
   dailyXpTracking: DailyXpTracking;
 
@@ -102,6 +125,15 @@ interface QuestStoreState {
   completeQuest: (questId: QuestId) => void;
   resetDailyQuests: () => void;
   checkAndResetDailyQuests: () => void;
+
+  // Ramadan weekly actions
+  updateRamadanQuestProgress: (
+    questId: RamadanQuestId,
+    progress: number,
+  ) => void;
+  claimRamadanQuestReward: (questId: RamadanQuestId) => boolean;
+  resetWeeklyRamadanQuests: () => void;
+  checkAndResetWeeklyQuests: () => void;
   consumePendingXpGain: () => XpGain | null;
   consumePendingLevelUp: () => LevelUpNotification | null;
   getUnclaimedQuestsCount: () => number;
@@ -154,6 +186,16 @@ const QUEST_COIN_REWARD_REASONS: Record<QuestId, CoinAwardReason> = {
   complete_streak_7: "quest_complete_streak_7",
 };
 
+// Montants de pièces par quête — doit rester synchronisé avec la fonction SQL award_coins
+export const QUEST_COIN_REWARDS: Record<QuestId, number> = {
+  first_prayer_today: 3,
+  pray_fajr: 5,
+  pray_all_5: 15,
+  pray_on_time: 8,
+  complete_streak_3: 20,
+  complete_streak_7: 50,
+};
+
 // Noms des niveaux (rangs)
 export const LEVEL_NAMES: Record<number, string> = {
   1: "Débutant",
@@ -180,6 +222,50 @@ export const getLevelName = (level: number): string => {
 };
 
 const getDateKey = () => format(new Date(), "yyyy-MM-dd");
+// Clé de semaine : année + numéro de semaine ISO (lundi → dimanche)
+const getWeekKey = () => format(new Date(), "yyyy-'W'II");
+
+const createDefaultRamadanWeeklyQuests = (): Record<
+  RamadanQuestId,
+  RamadanQuest
+> => ({
+  ramadan_week_perfect: {
+    id: "ramadan_week_perfect",
+    titleKey: "quests.ramadan.weekPerfect.title",
+    descriptionKey: "quests.ramadan.weekPerfect.description",
+    xpReward: 200,
+    moonReward: 5,
+    icon: "emoji-events",
+    requirement: 7,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+  ramadan_week_juz: {
+    id: "ramadan_week_juz",
+    titleKey: "quests.ramadan.weekJuz.title",
+    descriptionKey: "quests.ramadan.weekJuz.description",
+    xpReward: 150,
+    moonReward: 3,
+    icon: "import-contacts",
+    requirement: 240,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+  ramadan_week_surahs: {
+    id: "ramadan_week_surahs",
+    titleKey: "quests.ramadan.weekSurahs.title",
+    descriptionKey: "quests.ramadan.weekSurahs.description",
+    xpReward: 100,
+    moonReward: 2,
+    icon: "library-books",
+    requirement: 10,
+    progress: 0,
+    status: "active",
+    isWeekly: true,
+  },
+});
 
 const createDefaultDailyXpTracking = (): DailyXpTracking => ({
   dateKey: getDateKey(),
@@ -200,6 +286,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.firstPrayer.title",
     descriptionKey: "quests.firstPrayer.description",
     xpReward: 15,
+    coinReward: QUEST_COIN_REWARDS.first_prayer_today,
     icon: "wb-sunny",
     requirement: 1,
     progress: 0,
@@ -211,6 +298,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayFajr.title",
     descriptionKey: "quests.prayFajr.description",
     xpReward: 25,
+    coinReward: QUEST_COIN_REWARDS.pray_fajr,
     icon: "dark-mode",
     requirement: 1,
     progress: 0,
@@ -222,6 +310,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayAll5.title",
     descriptionKey: "quests.prayAll5.description",
     xpReward: 75,
+    coinReward: QUEST_COIN_REWARDS.pray_all_5,
     icon: "star",
     requirement: 5,
     progress: 0,
@@ -233,6 +322,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.prayOnTime.title",
     descriptionKey: "quests.prayOnTime.description",
     xpReward: 30,
+    coinReward: QUEST_COIN_REWARDS.pray_on_time,
     icon: "schedule",
     requirement: 3,
     progress: 0,
@@ -244,6 +334,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.streak3.title",
     descriptionKey: "quests.streak3.description",
     xpReward: 100,
+    coinReward: QUEST_COIN_REWARDS.complete_streak_3,
     icon: "local-fire-department",
     requirement: 3,
     progress: 0,
@@ -255,6 +346,7 @@ const createDefaultDailyQuests = (): Record<QuestId, Quest> => ({
     titleKey: "quests.streak7.title",
     descriptionKey: "quests.streak7.description",
     xpReward: 250,
+    coinReward: QUEST_COIN_REWARDS.complete_streak_7,
     icon: "emoji-events",
     requirement: 7,
     progress: 0,
@@ -277,6 +369,8 @@ const useQuestStore = create<QuestStoreState>()(
       totalXpEarned: 0,
       dailyQuests: createDefaultDailyQuests(),
       lastQuestResetDate: getDateKey(),
+      ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+      lastWeeklyResetDate: getWeekKey(),
       dailyXpTracking: createDefaultDailyXpTracking(),
       pendingXpGains: [],
       xpHistory: [],
@@ -497,9 +591,13 @@ const useQuestStore = create<QuestStoreState>()(
 
       getUnclaimedQuestsCount: () => {
         const state = get();
-        return Object.values(state.dailyQuests).filter(
-          (quest) => quest.status === "completed",
+        const dailyCompleted = Object.values(state.dailyQuests).filter(
+          (q) => q.status === "completed",
         ).length;
+        const ramadanCompleted = Object.values(
+          state.ramadanWeeklyQuests,
+        ).filter((q) => q.status === "completed").length;
+        return dailyCompleted + ramadanCompleted;
       },
 
       updateQuestProgress: (questId: QuestId, progress: number) => {
@@ -743,6 +841,82 @@ const useQuestStore = create<QuestStoreState>()(
         });
       },
 
+      // ── Ramadan weekly quests ─────────────────────────────────────────────
+
+      updateRamadanQuestProgress: (questId, progress) => {
+        let justCompleted = false;
+        set((state) => {
+          const quest = state.ramadanWeeklyQuests[questId];
+          if (
+            !quest ||
+            quest.status === "completed" ||
+            quest.status === "claimed"
+          ) {
+            return state;
+          }
+          const newProgress = Math.min(progress, quest.requirement);
+          const isNowCompleted = newProgress >= quest.requirement;
+          if (isNowCompleted) justCompleted = true;
+          return {
+            ramadanWeeklyQuests: {
+              ...state.ramadanWeeklyQuests,
+              [questId]: {
+                ...quest,
+                progress: newProgress,
+                status: isNowCompleted ? "completed" : quest.status,
+              },
+            },
+          };
+        });
+        // Toast "prête à réclamer" — affiche l'XP de la quête sans l'attribuer
+        if (justCompleted) {
+          const quest = get().ramadanWeeklyQuests[questId];
+          get().enqueueXpToast(
+            quest?.xpReward ?? 0,
+            `ramadan_quest_${questId}`,
+          );
+        }
+      },
+
+      claimRamadanQuestReward: (questId) => {
+        let xpToAdd = 0;
+        let moonToAdd = 0;
+        set((state) => {
+          const quest = state.ramadanWeeklyQuests[questId];
+          if (!quest || quest.status !== "completed") return state;
+          xpToAdd = quest.xpReward;
+          moonToAdd = quest.moonReward;
+          return {
+            ramadanWeeklyQuests: {
+              ...state.ramadanWeeklyQuests,
+              [questId]: { ...quest, status: "claimed" as const },
+            },
+          };
+        });
+        if (xpToAdd > 0) {
+          get().addXp(xpToAdd, `ramadan_quest_${questId}`, true);
+          if (moonToAdd > 0) {
+            useRamadanStore.getState().addMoonCoins(moonToAdd);
+          }
+          return true;
+        }
+        return false;
+      },
+
+      resetWeeklyRamadanQuests: () => {
+        set({
+          ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+          lastWeeklyResetDate: getWeekKey(),
+        });
+      },
+
+      checkAndResetWeeklyQuests: () => {
+        const state = get();
+        if (state.lastWeeklyResetDate !== getWeekKey()) {
+          state.resetWeeklyRamadanQuests();
+        }
+      },
+
       // Réinitialiser toutes les données (appelé lors du logout)
       clearAllData: () => {
         console.log("[QuestStore] Clearing all data...");
@@ -753,6 +927,8 @@ const useQuestStore = create<QuestStoreState>()(
           totalXpEarned: 0,
           dailyQuests: createDefaultDailyQuests(),
           lastQuestResetDate: getDateKey(),
+          ramadanWeeklyQuests: createDefaultRamadanWeeklyQuests(),
+          lastWeeklyResetDate: getWeekKey(),
           dailyXpTracking: createDefaultDailyXpTracking(),
           pendingXpGains: [],
           xpHistory: [],
@@ -770,12 +946,35 @@ const useQuestStore = create<QuestStoreState>()(
         totalXpEarned: state.totalXpEarned,
         dailyQuests: state.dailyQuests,
         lastQuestResetDate: state.lastQuestResetDate,
+        ramadanWeeklyQuests: state.ramadanWeeklyQuests,
+        lastWeeklyResetDate: state.lastWeeklyResetDate,
         dailyXpTracking: state.dailyXpTracking,
         xpHistory: state.xpHistory,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state._hasHydrated = true;
+          // Migration : si les quêtes Ramadan persistées n'ont pas moonReward, on les réinitialise
+          const ramadanQuests = Object.values(state.ramadanWeeklyQuests ?? {});
+          if (ramadanQuests.some((q: any) => q.moonReward === undefined)) {
+            state.ramadanWeeklyQuests = createDefaultRamadanWeeklyQuests();
+          }
+          // Migration : si les quêtes normales persistées n'ont pas coinReward, on les reconstruits
+          const dailyQuests = Object.values(state.dailyQuests ?? {});
+          if (dailyQuests.some((q: any) => q.coinReward === undefined)) {
+            const defaults = createDefaultDailyQuests();
+            // Fusionner : conserver progress/status mais ajouter coinReward
+            const migrated: Record<string, Quest> = {};
+            for (const [id, quest] of Object.entries(state.dailyQuests ?? {})) {
+              const qid = id as QuestId;
+              migrated[qid] = {
+                ...(defaults[qid] ?? quest),
+                progress: (quest as Quest).progress,
+                status: (quest as Quest).status,
+              };
+            }
+            state.dailyQuests = migrated as Record<QuestId, Quest>;
+          }
         }
       },
     },

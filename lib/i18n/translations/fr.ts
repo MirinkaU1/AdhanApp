@@ -279,6 +279,10 @@ export default {
     allOwnedDesc: "Vous possédez tous les thèmes disponibles.",
     unlockLevel: "Se débloque au niveau {{level}}",
     unlockLevelShort: "Niv. {{level}}",
+    availableInShop: "Disponible dans la boutique",
+    availableAtLevel: "Disponible au niveau {{level}}",
+    availableDuringEvent: "Disponible pendant l'évènement {{event}}",
+    filterOwnedOnly: "Possédés uniquement",
     unlockCoins: "{{count}} pièces",
     eventDesc: "Disponible lors d'un évènement",
     buy: "Acheter",
@@ -302,6 +306,37 @@ export default {
     },
     midnight: { name: "Minuit", desc: "L'élégance du violet nocturne" },
     rose: { name: "Rose", desc: "La douceur et la délicatesse" },
+    golden: {
+      name: "Sable doré",
+      desc: "Tons chauds avec motif de points dorés",
+    },
+    lattice: {
+      name: "Moucharabieh",
+      desc: "Bleu profond avec motif géométrique islamique",
+    },
+    starnight: {
+      name: "Nuit étoilée",
+      desc: "Indigo nuit avec étoiles à huit branches",
+    },
+    arabesque: {
+      name: "Arabesque",
+      desc: "Thème exclusif Ramadan — pierre sombre ornée d'arabesques traditionnelles",
+    },
+  },
+
+  // Avatars
+  avatars: {
+    confirmPurchase: "Acheter l'avatar",
+    confirmPurchaseDesc: "Acheter cet avatar pour {{price}} pièces ?",
+    notEnoughCoinsDesc:
+      "Il vous manque {{need}} pièce(s). Accomplissez des quêtes pour en gagner.",
+    buy: "Acheter",
+    avatar01: "Classique",
+    avatar02: "Élégant",
+    avatar03: "Mystique",
+    avatar04: "Guerrier",
+    avatar05: "Sage",
+    avatar06: "Légendaire",
   },
 
   // Notifications
@@ -527,6 +562,7 @@ export default {
     level: "Niveau",
     totalXp: "XP Total",
     todayProgress: "Progression du jour",
+    coins: "Pièces",
     dailyQuests: "Quêtes Journalières",
     achievements: "Accomplissements",
     claim: "Réclamer",
@@ -560,6 +596,44 @@ export default {
       title: "Série d'une semaine",
       description: "Maintenez une série de 7 jours consécutifs",
     },
+    ramadan: {
+      weekPerfect: {
+        title: "Semaine parfaite",
+        description: "Accomplissez les 5 prières chaque jour pendant 7 jours",
+      },
+      weekJuz: {
+        title: "Juz de la semaine",
+        description: "Lisez au moins 240 versets cette semaine",
+      },
+      weekSurahs: {
+        title: "Tour du Coran",
+        description: "Lisez 10 sourates différentes cette semaine",
+      },
+    },
+  },
+
+  // Ramadan
+  ramadan: {
+    welcome: {
+      title: "Ramadan Mubarak",
+      subtitle: "Que ce mois béni soit source de paix et de grâce",
+      feature1: "Accomplissez vos 5 prières quotidiennes",
+      feature2: "Lisez le Coran et suivez votre progression",
+      feature3: "Complétez des quêtes et gagnez des lunes",
+      coinsTitle: "À quoi servent les lunes ?",
+      coinsUse1: "Débloquer des thèmes exclusifs Ramadan",
+      coinsUse2: "Obtenir des récompenses spéciales",
+      coinsUse3: "Plus de surprises à venir...",
+      moreInfo: "À quoi servent les lunes ?",
+      coinsInfo: "Vous avez {{count}} lune(s)",
+      start: "Bismillah, commençons !",
+      bottomNote: "Que Allah accepte vos adorations",
+    },
+    banner: {
+      title: "Ramadan Mubarak",
+      subtitle: "Évènement en cours",
+      quests: "Voir les quêtes",
+    },
   },
 
   // Notifications XP
@@ -569,6 +643,8 @@ export default {
     fajrBonus: "Bonus Fajr !",
     streakBonus: "Bonus série !",
     questCompleted: "Quête accomplie !",
+    ramadanQuestCompleted: "Quête Ramadan accomplie !",
+    readyToClaim: "Prête à réclamer !",
     levelUp: "Niveau supérieur !",
   },
 
