@@ -701,7 +701,7 @@ export default {
     invocations: "Invocations",
     learn: "Learn",
     quizQuests: "Quiz & Quests",
-    listSubtitle: "Read and meditate on the essential surahs",
+    listSubtitle: "Read and meditate on the essential surahs and earn rewards",
     completed: "completed",
     theQuran: "The Quran",
     bismillah: "In the name of Allah, the Most Gracious, the Most Merciful",

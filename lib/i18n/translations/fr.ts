@@ -777,7 +777,8 @@ export default {
   // Quiz / Mode Apprentissage
   quiz: {
     title: "Quiz Islamique",
-    subtitle: "Testez et enrichissez vos connaissances",
+    subtitle:
+      "Testez et enrichissez vos connaissances et gagnez des récompenses",
     chooseCategory: "Choisir une catégorie",
     infoBar: "{{count}} questions par quiz · Timer 15s · Anecdotes incluses",
     questionsCount: "{{count}} questions disponibles",
