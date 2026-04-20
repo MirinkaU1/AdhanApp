@@ -526,6 +526,7 @@ export default {
     completed: "Completed",
     claimed: "Claimed",
     info: "Earn XP by completing your prayers and taking on daily challenges.",
+    noQuests: "No quests in this category.",
     xpToNextLevel: "{{xp}} XP to level {{level}}",
     // Quests
     firstPrayer: {
@@ -688,5 +689,43 @@ export default {
     settingsSubtitle: "Customize your experience",
     beadStyle: "Bead style",
     tip: "The digital Tasbih helps you count your daily invocations. Simply tap the screen to count.",
+  },
+
+  // Quiz / Learning Mode
+  quiz: {
+    title: "Islamic Quiz",
+    subtitle: "Test and enrich your knowledge",
+    chooseCategory: "Choose a category",
+    infoBar: "{{count}} questions per quiz · 15s timer · Anecdotes included",
+    questionsCount: "{{count}} questions available",
+    playedCount: "Played {{count}} times",
+    best: "best",
+    question: "Question",
+    correct: "Correct! Mashallah!",
+    incorrect: "The correct answer was: {{answer}}",
+    timeUp: "Time's up! The answer was:",
+    didYouKnow: "Did you know?",
+    nextQuestion: "Next question",
+    seeResults: "See results",
+    randomBadge: "RANDOM MODE",
+    randomDesc: "{{count}} questions mixed from all categories",
+    categories: {
+      sourates: "Surahs of the Quran",
+      prophetes: "The Prophets",
+      histoire: "Islamic History",
+      pilliers: "Pillars of Islam",
+      vocabulaire: "Arabic Vocabulary",
+      random: "Random Mode",
+    },
+    results: {
+      excellent: "Excellent! Mashallah!",
+      great: "Great job! Keep it up!",
+      good: "Good! You're progressing!",
+      tryAgain: "Keep learning! You'll get it!",
+      scorePercent: "{{percent}}% correct answers",
+      coinsEarned: "coins earned",
+      replay: "Play again",
+      backToCategories: "Change category",
+    },
   },
 };

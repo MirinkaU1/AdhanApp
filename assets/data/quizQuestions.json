@@ -1,0 +1,436 @@
+{
+  "categories": [
+    {
+      "id": "sourates",
+      "icon": "menu-book",
+      "color": "#0D9488",
+      "gradient": ["#0D9488", "#0F766E"]
+    },
+    {
+      "id": "prophetes",
+      "icon": "star",
+      "color": "#7C3AED",
+      "gradient": ["#7C3AED", "#6D28D9"]
+    },
+    {
+      "id": "histoire",
+      "icon": "history-edu",
+      "color": "#EA580C",
+      "gradient": ["#EA580C", "#C2410C"]
+    },
+    {
+      "id": "pilliers",
+      "icon": "mosque",
+      "color": "#2563EB",
+      "gradient": ["#2563EB", "#1D4ED8"]
+    },
+    {
+      "id": "vocabulaire",
+      "icon": "translate",
+      "color": "#DC2626",
+      "gradient": ["#DC2626", "#B91C1C"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "s1",
+      "category": "sourates",
+      "question": "Combien de sourates contient le Saint Coran ?",
+      "options": ["100", "112", "114", "120"],
+      "correctIndex": 2,
+      "anecdote": "Le Coran contient exactement 114 sourates, allant de la plus longue Al-Baqara (286 versets) à la plus courte Al-Kawthar (3 versets). Ce nombre est resté inchangé depuis la compilation finale sous le calife Uthman ibn Affan."
+    },
+    {
+      "id": "s2",
+      "category": "sourates",
+      "question": "Quelle est la plus longue sourate du Coran ?",
+      "options": ["Al-Imran", "Al-Nisa", "Al-Baqara", "Al-Maidah"],
+      "correctIndex": 2,
+      "anecdote": "Al-Baqara (La Vache) est la plus longue sourate avec 286 versets. Elle contient Ayat al-Kursi (verset 255), considéré comme le verset le plus grand du Coran, et les deux derniers versets appelés Al-Baqqaratayn."
+    },
+    {
+      "id": "s3",
+      "category": "sourates",
+      "question": "Quelle est la plus courte sourate du Coran ?",
+      "options": ["Al-Ikhlas", "Al-Asr", "Al-Falaq", "Al-Kawthar"],
+      "correctIndex": 3,
+      "anecdote": "Al-Kawthar (L'Abondance) ne contient que 3 versets. Elle a été révélée pour consoler le Prophète ﷺ suite aux moqueries de ses ennemis. Al-Kawthar désigne un fleuve au Paradis promis au Prophète ﷺ."
+    },
+    {
+      "id": "s4",
+      "category": "sourates",
+      "question": "Combien de versets contient Al-Fatiha ?",
+      "options": ["5", "6", "7", "8"],
+      "correctIndex": 2,
+      "anecdote": "Al-Fatiha contient 7 versets et est récitée dans chaque rak'ah de la prière. Elle est surnommée 'Umm al-Kitab' (La Mère du Livre) et 'Umm al-Quran' (La Mère du Coran) pour son importance capitale."
+    },
+    {
+      "id": "s5",
+      "category": "sourates",
+      "question": "Quelle sourate est surnommée 'le cœur du Coran' ?",
+      "options": ["Al-Fatiha", "Al-Baqara", "Ya-Sin", "Al-Kahf"],
+      "correctIndex": 2,
+      "anecdote": "Ya-Sin (sourate 36) est surnommée 'Qalb al-Quran' (Le cœur du Coran) par le Prophète ﷺ. Il est recommandé de la réciter le vendredi et auprès des mourants pour faciliter le passage vers l'au-delà."
+    },
+    {
+      "id": "s6",
+      "category": "sourates",
+      "question": "Dans quelle sourate se trouve le célèbre Ayat al-Kursi ?",
+      "options": ["Al-Fatiha", "Al-Imran", "Al-Baqara", "Al-Ikhlas"],
+      "correctIndex": 2,
+      "anecdote": "Ayat al-Kursi est le verset 255 de Al-Baqara. Le Prophète ﷺ a dit que c'est le verset le plus grand du Coran. Celui qui le récite le soir est protégé jusqu'au matin, et celui qui le récite le matin est protégé jusqu'au soir."
+    },
+    {
+      "id": "s7",
+      "category": "sourates",
+      "question": "Combien de Juz (parties) contient le Coran ?",
+      "options": ["20", "25", "30", "40"],
+      "correctIndex": 2,
+      "anecdote": "Le Coran est divisé en 30 Juz (parties) de taille approximativement égale, ce qui permet aux croyants de le réciter entièrement en un mois, notamment durant le Ramadan. Chaque Juz est subdivisé en 2 Hizb, soit 60 Hizb au total."
+    },
+    {
+      "id": "s8",
+      "category": "sourates",
+      "question": "Quelle est la première sourate révélée au Prophète ﷺ ?",
+      "options": ["Al-Fatiha", "Al-Muzzammil", "Al-Alaq", "Al-Muddaththir"],
+      "correctIndex": 2,
+      "anecdote": "Les cinq premiers versets de la sourate Al-Alaq (\"Lis au nom de ton Seigneur...\") ont été les premiers mots révélés en l'an 610 dans la grotte de Hira. La révélation a duré 23 ans au total jusqu'à la mort du Prophète ﷺ."
+    },
+    {
+      "id": "s9",
+      "category": "sourates",
+      "question": "Quelle sourate est recommandée pour la protection contre le Dajjal ?",
+      "options": ["Al-Falaq", "Al-Kahf", "Ya-Sin", "Al-Mulk"],
+      "correctIndex": 1,
+      "anecdote": "Al-Kahf (La Caverne) est recommandée le vendredi. Le Prophète ﷺ a dit que quiconque mémorise les 10 premiers versets sera protégé du Dajjal. Elle contient l'histoire des Gens de la Caverne qui ont dormi 309 ans."
+    },
+    {
+      "id": "s10",
+      "category": "sourates",
+      "question": "Combien de sourates commencent par les lettres 'Alif Lam Mim' ?",
+      "options": ["3", "5", "6", "7"],
+      "correctIndex": 2,
+      "anecdote": "Six sourates commencent par 'Alif Lam Mim' : Al-Baqara, Al-Imran, Al-Ankabut, Al-Rum, Luqman et As-Sajda. Ces lettres font partie des 'Huruf Muqatta'at', des lettres mystérieuses dont le sens complet est connu d'Allah seul."
+    },
+    {
+      "id": "p1",
+      "category": "prophetes",
+      "question": "Combien de prophètes sont mentionnés par leur nom dans le Coran ?",
+      "options": ["20", "25", "30", "35"],
+      "correctIndex": 1,
+      "anecdote": "25 prophètes sont mentionnés nominalement dans le Coran, d'Adam à Muhammad ﷺ. Les savants estiment que le nombre total de prophètes envoyés à l'humanité est d'environ 124 000, et celui des messagers de 315."
+    },
+    {
+      "id": "p2",
+      "category": "prophetes",
+      "question": "Quel prophète est surnommé 'Khalilullah' (Ami intime d'Allah) ?",
+      "options": ["Musa", "Isa", "Ibrahim", "Muhammad"],
+      "correctIndex": 2,
+      "anecdote": "Ibrahim (Abraham) reçut le titre de Khalilullah pour sa foi inébranlable. Lorsqu'il fut jeté dans le feu par Nimrod, Allah ordonna au feu : 'Sois fraîcheur et paix pour Ibrahim.' Le feu obéit et Ibrahim en sortit indemne."
+    },
+    {
+      "id": "p3",
+      "category": "prophetes",
+      "question": "Quel prophète est réputé pour sa patience légendaire face à l'épreuve ?",
+      "options": ["Yunus", "Yusuf", "Ayyub", "Ibrahim"],
+      "correctIndex": 2,
+      "anecdote": "Ayyub (Job) fut éprouvé par une maladie pendant 18 ans, selon certaines traditions. Il perdit ses biens, ses enfants et sa santé, mais ne cessa jamais de remercier Allah. Sa patience est citée comme un exemple suprême dans le Coran."
+    },
+    {
+      "id": "p4",
+      "category": "prophetes",
+      "question": "Quel prophète a construit l'Arche pour survivre au déluge universel ?",
+      "options": ["Ibrahim", "Idris", "Nuh", "Hud"],
+      "correctIndex": 2,
+      "anecdote": "Nuh (Noé) prêcha son peuple pendant 950 ans sans obtenir que peu de réponses. Il construisit l'Arche sur ordre d'Allah pour sauver les croyants et une paire de chaque animal. Il est considéré comme le second Père de l'humanité."
+    },
+    {
+      "id": "p5",
+      "category": "prophetes",
+      "question": "Dans quelle ville est né le Prophète Muhammad ﷺ ?",
+      "options": ["Médine", "Taïf", "Jérusalem", "La Mecque"],
+      "correctIndex": 3,
+      "anecdote": "Le Prophète Muhammad ﷺ est né à La Mecque en l'an 570 de l'ère chrétienne, l'Année de l'Éléphant (Am al-Fil). Son père Abdullah est mort avant sa naissance, et sa mère Amina mourut alors qu'il n'avait que 6 ans."
+    },
+    {
+      "id": "p6",
+      "category": "prophetes",
+      "question": "Quel était le surnom du Prophète Muhammad ﷺ avant la révélation ?",
+      "options": ["Al-Fatih", "Al-Amine", "Al-Karim", "Al-Bashir"],
+      "correctIndex": 1,
+      "anecdote": "Avant même la révélation, les Mecquois lui donnèrent le titre d'Al-Amine (Le Fidèle, Le Digne de confiance) en raison de son intégrité exceptionnelle. Même ses ennemis lui confiaient leurs biens en dépôt pour leur garde."
+    },
+    {
+      "id": "p7",
+      "category": "prophetes",
+      "question": "Quel prophète fut sauvé du ventre d'une baleine ?",
+      "options": ["Ibrahim", "Musa", "Yunus", "Isa"],
+      "correctIndex": 2,
+      "anecdote": "Yunus (Jonas) quitta son peuple sans autorisation d'Allah et fut avalé par une grande baleine. Du fond des ténèbres, il supplia : 'Il n'y a de dieu que Toi, gloire à Toi ! J'ai été vraiment du nombre des injustes.' Allah l'exauça."
+    },
+    {
+      "id": "p8",
+      "category": "prophetes",
+      "question": "Quel prophète est né d'une mère sans père selon la croyance islamique ?",
+      "options": ["Yahya", "Idris", "Dawud", "Isa"],
+      "correctIndex": 3,
+      "anecdote": "Isa (Jésus) est né miraculeusement de Maryam (Marie) sans père. Dans l'Islam, il est un messager d'Allah et al-Masih (le Messie). Il reviendra à la fin des temps pour combattre le Dajjal et apportera la justice sur Terre."
+    },
+    {
+      "id": "p9",
+      "category": "prophetes",
+      "question": "Quel prophète reçut la Torah (Tawrat) de la part d'Allah ?",
+      "options": ["Ibrahim", "Dawud", "Musa", "Isa"],
+      "correctIndex": 2,
+      "anecdote": "Musa (Moïse) reçut la Torah sur le Mont Sinaï lors d'une conversation directe avec Allah. Il est l'un des cinq 'Ulu al-Azm', les prophètes de la plus haute résolution. Le Coran mentionne son histoire plus que celle de tout autre prophète."
+    },
+    {
+      "id": "p10",
+      "category": "prophetes",
+      "question": "Quel prophète est connu pour sa belle voix et les Psaumes (Zabur) ?",
+      "options": ["Sulayman", "Ibrahim", "Isa", "Dawud"],
+      "correctIndex": 3,
+      "anecdote": "Dawud (David) reçut les Zabur (Psaumes). Sa voix était si belle que lorsqu'il chantait les louanges d'Allah, les oiseaux et les montagnes chantaient avec lui. Il était aussi un roi puissant et habile forgeron qui confectionnait les cottes de mailles."
+    },
+    {
+      "id": "h1",
+      "category": "histoire",
+      "question": "En quelle année a eu lieu l'Hégire (migration vers Médine) ?",
+      "options": ["610", "615", "619", "622"],
+      "correctIndex": 3,
+      "anecdote": "L'Hégire de 622 ap. J.-C. est l'événement fondateur du calendrier islamique. Le Prophète ﷺ et ses compagnons quittèrent La Mecque pour Médine sous la menace des Quraysh. Umar ibn al-Khattab choisit plus tard cette date comme point de départ du calendrier hégirien."
+    },
+    {
+      "id": "h2",
+      "category": "histoire",
+      "question": "Qui fut le premier calife (successeur) après la mort du Prophète ﷺ ?",
+      "options": ["Umar ibn al-Khattab", "Ali ibn Abi Talib", "Uthman ibn Affan", "Abu Bakr As-Siddiq"],
+      "correctIndex": 3,
+      "anecdote": "Abu Bakr As-Siddiq fut désigné comme premier calife en 632 ap. J.-C. Son règne de seulement 2 ans fut crucial : il rassembla le Coran dans un seul volume et mena les guerres de Ridda contre les faux prophètes et les apostats."
+    },
+    {
+      "id": "h3",
+      "category": "histoire",
+      "question": "Quelle est la première mosquée construite dans l'histoire de l'Islam ?",
+      "options": ["Al-Masjid al-Nabawi", "Al-Masjid al-Haram", "Al-Masjid al-Aqsa", "Masjid Quba"],
+      "correctIndex": 3,
+      "anecdote": "Masjid Quba fut construite par le Prophète ﷺ dès son arrivée à Médine en 622. Le Prophète ﷺ a dit : 'Deux rak'ah priées à Masjid Quba équivalent à une Umra.' C'est la première mosquée de l'histoire islamique."
+    },
+    {
+      "id": "h4",
+      "category": "histoire",
+      "question": "En quelle année a débuté la révélation du Coran ?",
+      "options": ["600", "605", "610", "615"],
+      "correctIndex": 2,
+      "anecdote": "La première révélation eut lieu en 610 ap. J.-C. dans la grotte de Hira, lors du mois de Ramadan. C'est l'archange Jibril (Gabriel) qui apporta la révélation. Le Prophète ﷺ avait alors 40 ans."
+    },
+    {
+      "id": "h5",
+      "category": "histoire",
+      "question": "Lors de quelle bataille le Prophète ﷺ remporta sa première grande victoire ?",
+      "options": ["Uhud", "Khandaq", "Badr", "Khaybar"],
+      "correctIndex": 2,
+      "anecdote": "La bataille de Badr (624 ap. J.-C.) fut une victoire miraculeuse : 313 musulmans mal équipés vainquirent une armée mecquoise de ~1000 soldats bien armés. Allah envoya des anges pour aider les croyants. Le Coran y fait référence à plusieurs reprises."
+    },
+    {
+      "id": "h6",
+      "category": "histoire",
+      "question": "Quelle femme est la première épouse du Prophète ﷺ et Mère des Croyants ?",
+      "options": ["Aisha", "Hafsa", "Zaynab", "Khadija"],
+      "correctIndex": 3,
+      "anecdote": "Khadija bint Khuwaylid fut la première femme du Prophète ﷺ et la première personne à accepter l'Islam. Riche marchande de 40 ans, elle épousa Muhammad ﷺ à 25 ans. Elle le réconforta lors de la première révélation, disant : 'Allah ne t'humiliera jamais.'"
+    },
+    {
+      "id": "h7",
+      "category": "histoire",
+      "question": "Dans quelle grotte le Prophète ﷺ recevait-il la révélation ?",
+      "options": ["Grotte de Thawr", "Grotte de Hira", "Grotte d'Uhud", "Grotte d'Arafat"],
+      "correctIndex": 1,
+      "anecdote": "La grotte de Hira, située au sommet du Jabal al-Nour (Montagne de la Lumière), à 3 km de La Mecque, est le lieu de la première révélation. Le Prophète ﷺ s'y retirait régulièrement pour méditer avant de recevoir la prophétie."
+    },
+    {
+      "id": "h8",
+      "category": "histoire",
+      "question": "Quel nom porte le voyage nocturne du Prophète ﷺ de La Mecque à Jérusalem ?",
+      "options": ["Al-Miraj", "Al-Hijra", "Al-Isra", "Al-Ghazwa"],
+      "correctIndex": 2,
+      "anecdote": "Al-Isra est le voyage nocturne de La Mecque à Al-Masjid al-Aqsa à Jérusalem, suivi d'Al-Miraj, l'ascension aux cieux. Lors de ce voyage, les 5 prières quotidiennes furent prescrites, initialement fixées à 50 puis réduites à 5 sur l'intercession de Musa."
+    },
+    {
+      "id": "h9",
+      "category": "histoire",
+      "question": "Combien d'années a duré la période de révélation complète du Coran ?",
+      "options": ["15 ans", "20 ans", "23 ans", "30 ans"],
+      "correctIndex": 2,
+      "anecdote": "La révélation du Coran s'est étendue sur 23 ans : 13 ans à La Mecque et 10 ans à Médine. Les sourates mecquoises traitent principalement de la foi (aqida), tandis que les sourates médinoises abordent davantage la législation (fiqh) et l'organisation sociale."
+    },
+    {
+      "id": "h10",
+      "category": "histoire",
+      "question": "Combien de fois le Coran fut-il compilé sous forme de livre relié ?",
+      "options": ["Une seule fois", "Deux fois", "Trois fois", "Quatre fois"],
+      "correctIndex": 1,
+      "anecdote": "Le Coran fut compilé deux fois : d'abord sous Abu Bakr As-Siddiq après la bataille de Yamama, puis sous Uthman ibn Affan qui standardisa et distribua une version officielle dans tout l'Empire islamique, brûlant les versions divergentes pour préserver l'unité."
+    },
+    {
+      "id": "pi1",
+      "category": "pilliers",
+      "question": "Combien de piliers fondamentaux a l'Islam ?",
+      "options": ["3", "4", "5", "6"],
+      "correctIndex": 2,
+      "anecdote": "Les 5 piliers de l'Islam sont : la Shahada (témoignage de foi), la Salah (prière), la Zakat (aumône légale), le Sawm (jeûne du Ramadan) et le Hajj (pèlerinage à La Mecque). Ils forment la structure fondamentale de la pratique islamique."
+    },
+    {
+      "id": "pi2",
+      "category": "pilliers",
+      "question": "Quel est le premier pilier de l'Islam ?",
+      "options": ["La Salah (prière)", "La Zakat", "La Shahada", "Le Hajj"],
+      "correctIndex": 2,
+      "anecdote": "La Shahada ('Il n'y a de dieu qu'Allah, et Muhammad est Son messager') est la porte d'entrée dans l'Islam. C'est le premier acte du nouveau musulman. Cette déclaration contient deux parties : le tawhid (unicité d'Allah) et la reconnaissance de la prophétie."
+    },
+    {
+      "id": "pi3",
+      "category": "pilliers",
+      "question": "Combien de fois par jour un musulman accomplit-il la prière ?",
+      "options": ["3 fois", "4 fois", "5 fois", "7 fois"],
+      "correctIndex": 2,
+      "anecdote": "Les 5 prières quotidiennes sont : Fajr (aube), Dhuhr (midi), Asr (après-midi), Maghrib (coucher du soleil) et Isha (nuit). Elles ont été prescrites lors du voyage de Al-Isra wal-Miraj, réduites de 50 à 5 sur l'intercession du Prophète Musa."
+    },
+    {
+      "id": "pi4",
+      "category": "pilliers",
+      "question": "Quel est le taux obligatoire de la Zakat sur l'or et l'épargne ?",
+      "options": ["1%", "2,5%", "5%", "10%"],
+      "correctIndex": 1,
+      "anecdote": "La Zakat est fixée à 2,5% de l'épargne qui dépasse le Nisab (seuil minimum) conservée pendant une année lunaire complète. Elle est distribuée aux 8 catégories mentionnées dans le Coran (9:60), dont les pauvres, les nécessiteux et les voyageurs."
+    },
+    {
+      "id": "pi5",
+      "category": "pilliers",
+      "question": "Quel est le mois béni du jeûne obligatoire ?",
+      "options": ["Muharram", "Sha'ban", "Ramadan", "Dhul Hijja"],
+      "correctIndex": 2,
+      "anecdote": "Le Ramadan est le 9ème mois du calendrier lunaire hégirien. C'est en ce mois que le Coran a commencé à être révélé. Il contient la Nuit du Destin (Laylat al-Qadr), meilleure que mille mois, qui tombe dans les 10 dernières nuits impaires."
+    },
+    {
+      "id": "pi6",
+      "category": "pilliers",
+      "question": "Combien de rak'at obligatoires (fard) contient la prière de Dhuhr ?",
+      "options": ["2", "3", "4", "5"],
+      "correctIndex": 2,
+      "anecdote": "Dhuhr comporte 4 rak'at obligatoires. En voyage, la règle de Qasr (raccourcissement) permet de la réduire à 2 rak'at. Cette règle de facilitation illustre le principe de l'Islam : 'Allah veut pour vous la facilité, non la difficulté' (Coran 2:185)."
+    },
+    {
+      "id": "pi7",
+      "category": "pilliers",
+      "question": "Quel est le nom de l'ablution rituelle avant la prière ?",
+      "options": ["Ghusl", "Tayammum", "Wudu", "Istinja"],
+      "correctIndex": 2,
+      "anecdote": "Le Wudu consiste à se laver le visage, les mains jusqu'aux coudes, à passer la main mouillée sur la tête et à se laver les pieds jusqu'aux chevilles, selon l'ordre coranique (5:6). Le Prophète ﷺ a dit : 'La prière sans pureté n'est pas acceptée.'"
+    },
+    {
+      "id": "pi8",
+      "category": "pilliers",
+      "question": "Vers quelle ville les musulmans se tournent-ils pour la prière ?",
+      "options": ["Médine", "Jérusalem", "La Mecque", "Bagdad"],
+      "correctIndex": 2,
+      "anecdote": "La Qibla (direction de la prière) est La Mecque, plus précisément la Ka'ba (Al-Masjid al-Haram). Initialement, les musulmans se tournaient vers Jérusalem. La direction fut changée vers La Mecque en 624 ap. J.-C. lors d'une prière, comme mentionné dans le Coran (2:144)."
+    },
+    {
+      "id": "pi9",
+      "category": "pilliers",
+      "question": "Comment appelle-t-on l'aumône volontaire (non obligatoire) en Islam ?",
+      "options": ["Zakat", "Jizya", "Sadaqa", "Khums"],
+      "correctIndex": 2,
+      "anecdote": "La Sadaqa (aumône volontaire) se distingue de la Zakat (obligatoire). Le Prophète ﷺ a dit : 'Chaque bonne action est une sadaqa.' Même sourire à ton frère, enlever une pierre du chemin ou donner une date sont des sadaqas. Elle n'a pas de montant fixe."
+    },
+    {
+      "id": "pi10",
+      "category": "pilliers",
+      "question": "Quel est le nom de la circumambulation autour de la Ka'ba lors du Hajj ?",
+      "options": ["Sa'i", "Wuquf", "Tawaf", "Rami"],
+      "correctIndex": 2,
+      "anecdote": "Le Tawaf consiste à tourner 7 fois autour de la Ka'ba dans le sens antihoraire en commençant par la Pierre Noire (Al-Hajar al-Aswad). La Ka'ba est le symbole de l'unité de l'humanité vers Allah. Des millions de fidèles effectuent ce rite chaque année."
+    },
+    {
+      "id": "v1",
+      "category": "vocabulaire",
+      "question": "Que signifie le mot 'Islam' en arabe ?",
+      "options": ["Paix et prospérité", "Soumission et paix", "Foi et dévotion", "Justice et équité"],
+      "correctIndex": 1,
+      "anecdote": "Islam vient de la racine arabe 'S-L-M' qui donne 'Salam' (paix) et 'Aslama' (se soumettre). Ainsi, l'Islam signifie la 'soumission [à Allah] qui apporte la paix'. Un Muslim est 'celui qui se soumet', trouvant la paix dans cette soumission."
+    },
+    {
+      "id": "v2",
+      "category": "vocabulaire",
+      "question": "Que signifie le mot 'Quran' en arabe ?",
+      "options": ["Lumière divine", "La parole d'Allah", "Récitation et lecture", "Guide céleste"],
+      "correctIndex": 2,
+      "anecdote": "Quran vient du verbe arabe 'Qara'a' (lire, réciter). Il désigne donc le Livre qui est lu et récité. C'est la Parole d'Allah révélée à Muhammad ﷺ par l'intermédiaire de l'ange Jibril sur 23 ans. C'est le seul livre divin encore intact dans sa forme originale."
+    },
+    {
+      "id": "v3",
+      "category": "vocabulaire",
+      "question": "Que signifie 'Alhamdulillah' ?",
+      "options": ["Allah est le plus grand", "Gloire à Allah", "Louange à Allah", "Qu'Allah te bénisse"],
+      "correctIndex": 2,
+      "anecdote": "Alhamdulillah (الحمد لله) signifie 'Louange et remerciement à Allah'. C'est la phrase avec laquelle commence Al-Fatiha. Le Prophète ﷺ a dit : 'Alhamdulillah remplit la balance.' C'est aussi le dhikr recommandé après chaque prière."
+    },
+    {
+      "id": "v4",
+      "category": "vocabulaire",
+      "question": "Que signifie 'SubhanAllah' ?",
+      "options": ["Allah est grand", "Louange à Allah", "Qu'Allah bénisse", "Gloire à Allah"],
+      "correctIndex": 3,
+      "anecdote": "SubhanAllah (سبحان الله) signifie 'Gloire à Allah' ou 'Allah est exempt de toute imperfection'. C'est l'expression de l'émerveillement devant la création d'Allah. Le Prophète ﷺ a dit : 'Deux paroles légères sur la langue, lourdes sur la balance : SubhanAllah wal-Hamdulillah.'"
+    },
+    {
+      "id": "v5",
+      "category": "vocabulaire",
+      "question": "Que signifie le terme 'Halal' ?",
+      "options": ["Obligatoire", "Interdit", "Permis et licite", "Fortement recommandé"],
+      "correctIndex": 2,
+      "anecdote": "Halal (حلال) signifie 'permis, licite' en arabe. Son opposé est Haram (interdit). En Islam, les actes sont classés en 5 catégories : Fard (obligatoire), Mustahabb (recommandé), Mubah (neutre/permis), Makruh (déconseillé) et Haram (interdit)."
+    },
+    {
+      "id": "v6",
+      "category": "vocabulaire",
+      "question": "Que signifie 'Insha'Allah' en arabe ?",
+      "options": ["Merci à Allah", "Si Allah le veut", "Que la paix soit sur toi", "Allah est témoin"],
+      "correctIndex": 1,
+      "anecdote": "Insha'Allah (إن شاء الله) signifie 'Si Allah le veut'. Le Coran enjoint de l'utiliser pour les projets futurs : 'Ne dis pas de quelque chose : Je le ferai demain, sans ajouter : si Allah le veut.' (18:23-24). C'est une expression de la confiance en la volonté divine."
+    },
+    {
+      "id": "v7",
+      "category": "vocabulaire",
+      "question": "Qu'est-ce que la 'Sunnah' en Islam ?",
+      "options": ["Les versets coraniques", "La tradition et pratique du Prophète ﷺ", "Les lois islamiques écrites", "Les prières surérogatoires"],
+      "correctIndex": 1,
+      "anecdote": "La Sunnah désigne l'ensemble des paroles (hadith), actes et approbations tacites du Prophète ﷺ. Elle constitue avec le Coran les deux sources principales de la législation islamique. Les hadiths ont été minutieusement compilés et authentifiés par des savants comme Bukhari et Muslim."
+    },
+    {
+      "id": "v8",
+      "category": "vocabulaire",
+      "question": "Que signifie 'Tawakkul' en Islam ?",
+      "options": ["La patience dans l'épreuve", "La confiance et abandon en Allah", "La gratitude envers Allah", "Le repentir sincère"],
+      "correctIndex": 1,
+      "anecdote": "Tawakkul (توكل) signifie confier ses affaires à Allah après avoir pris les mesures nécessaires. Un homme demanda au Prophète ﷺ : 'Dois-je attacher mon chameau ou faire confiance à Allah ?' Il répondit : 'Attache-le, puis fais confiance à Allah.' L'action et la confiance vont ensemble."
+    },
+    {
+      "id": "v9",
+      "category": "vocabulaire",
+      "question": "Qu'est-ce que la 'Laylat al-Qadr' ?",
+      "options": ["La nuit du voyage du Prophète ﷺ", "La nuit du milieu du Sha'ban", "La Nuit du Destin dans le Ramadan", "La nuit de l'Aïd al-Fitr"],
+      "correctIndex": 2,
+      "anecdote": "Laylat al-Qadr (ليلة القدر), la Nuit du Destin, est 'meilleure que mille mois' selon le Coran (97:3). Elle tombe dans les dix dernières nuits impaires du Ramadan, probablement le 27ème. C'est la nuit où le Coran a commencé à être révélé et où les destins de l'année sont décidés."
+    },
+    {
+      "id": "v10",
+      "category": "vocabulaire",
+      "question": "Que désigne le terme 'Tawhid' en Islam ?",
+      "options": ["La prière collective du vendredi", "Le monothéisme et l'unicité d'Allah", "Le pèlerinage à La Mecque", "Le jeûne voluntaire"],
+      "correctIndex": 1,
+      "anecdote": "Le Tawhid (توحيد) est le concept central de l'Islam : l'unicité absolue d'Allah. Il se divise en trois niveaux : Tawhid al-Rububiyya (unicité de la seigneurie), Tawhid al-Uluhiyya (unicité du culte) et Tawhid al-Asma wa Sifat (unicité des noms et attributs). C'est le fondement de la foi islamique."
+    }
+  ]
+}
