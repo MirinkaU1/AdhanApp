@@ -113,7 +113,11 @@ export default function QiblaScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-bg-light dark:bg-bg-dark items-center justify-center">
-        <AppLoader variant="inline" size="large" message={t("common.loading")} />
+        <AppLoader
+          variant="inline"
+          size="large"
+          message={t("common.loading")}
+        />
       </View>
     );
   }
@@ -123,7 +127,11 @@ export default function QiblaScreen() {
     return (
       <View className="flex-1 bg-bg-light dark:bg-bg-dark items-center justify-center px-8">
         <View className="w-20 h-20 rounded-full bg-primary/20 items-center justify-center mb-6">
-          <MaterialIconsRound name="location-off" size={40} color={appTheme.primary} />
+          <MaterialIconsRound
+            name="location-off"
+            size={40}
+            color={appTheme.primary}
+          />
         </View>
         <AppText variant="h2" className="text-center mb-3">
           {t("qibla.permissionDenied")}
@@ -147,7 +155,11 @@ export default function QiblaScreen() {
     <View className="flex-1 bg-bg-light dark:bg-bg-dark">
       {/* Background gradient */}
       <LinearGradient
-        colors={[appTheme.headerGradient[0], appTheme.headerGradient[1], isDark ? "#0F172A" : "#F6F8F8"]}
+        colors={[
+          appTheme.headerGradient[0],
+          appTheme.headerGradient[1],
+          isDark ? "#0F172A" : "#F6F8F8",
+        ]}
         locations={[0, 0.35, 0.65]}
         className="absolute top-0 left-0 right-0"
         style={{ height: "60%" }}
@@ -220,8 +232,12 @@ export default function QiblaScreen() {
             <View className="absolute w-full h-full items-center justify-center">
               {/* N */}
               <Text
-                className="absolute font-outfit-bold text-primary dark:text-teal-200"
-                style={{ top: cardinalOffset, fontSize: fontSize.lg }}
+                className="absolute font-outfit-bold"
+                style={{
+                  top: cardinalOffset,
+                  fontSize: fontSize.lg,
+                  color: appTheme.primary,
+                }}
               >
                 {t("qibla.north")}
               </Text>
@@ -359,8 +375,8 @@ export default function QiblaScreen() {
 
         {/* Affichage de l'angle */}
         <Text
-          className="font-outfit-bold text-primary dark:text-teal-200 tracking-widest mb-2"
-          style={{ fontSize: fontSize["4xl"] }}
+          className="font-outfit-bold tracking-widest mb-2"
+          style={{ fontSize: fontSize["4xl"], color: appTheme.primary }}
         >
           {formatBearing(qiblaBearing)}
         </Text>
@@ -418,7 +434,9 @@ export default function QiblaScreen() {
             <MaterialIconsRound
               name={isAligned ? "check" : "screen-rotation"}
               size={iconSize.xs}
-              color={isAligned ? "#10B981" : isDark ? "#5EEAD4" : appTheme.primary}
+              color={
+                isAligned ? "#10B981" : isDark ? "#5EEAD4" : appTheme.primary
+              }
             />
           </View>
           <Text

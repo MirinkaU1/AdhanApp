@@ -54,20 +54,21 @@ serve(async (req: Request) => {
     const token = authHeader.replace("Bearer ", "");
 
     // -----------------------------------------------------------------------
-    // 2. Créer un client service_role pour les opérations privilégiées.
-    //    Ce client bypasse le RLS — ne jamais l'exposer côté client.
+    // 2. Vérifier le JWT via le client anon avec le JWT dans les headers.
+    //    Cette approche supporte HS256 ET ES256 (projets Supabase récents)
+    //    car la validation est déléguée au serveur Supabase Auth — contrairement
+    //    à serviceClient.auth.getUser(token) qui valide en local (HS256 only).
     // -----------------------------------------------------------------------
-    const serviceClient = createClient(
+    const anonClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } },
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false },
+      },
     );
 
-    // -----------------------------------------------------------------------
-    // 3. Vérifier le JWT et récupérer l'utilisateur authentifié.
-    //    On utilise getUser() qui valide le token côté Supabase Auth.
-    // -----------------------------------------------------------------------
-    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token);
+    const { data: { user }, error: authError } = await anonClient.auth.getUser();
 
     if (authError || !user) {
       return new Response(
@@ -75,6 +76,16 @@ serve(async (req: Request) => {
         { status: 401, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
       );
     }
+
+    // -----------------------------------------------------------------------
+    // 3. Créer un client service_role pour les opérations RPC privilégiées.
+    //    Ce client bypasse le RLS — ne jamais l'exposer côté client.
+    // -----------------------------------------------------------------------
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
+    );
 
     // -----------------------------------------------------------------------
     // 4. Parser et valider le body de la requête.

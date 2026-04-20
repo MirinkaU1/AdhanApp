@@ -276,6 +276,10 @@ export default {
     allOwnedDesc: "You own all available themes.",
     unlockLevel: "Unlocks at level {{level}}",
     unlockLevelShort: "Lvl. {{level}}",
+    availableInShop: "Available in the shop",
+    availableAtLevel: "Available at level {{level}}",
+    availableDuringEvent: "Available during the {{event}} event",
+    filterOwnedOnly: "Owned only",
     unlockCoins: "{{count}} coins",
     eventDesc: "Available during an event",
     buy: "Buy",
@@ -296,6 +300,37 @@ export default {
     sunset: { name: "Sunset", desc: "Warm and fiery hues" },
     midnight: { name: "Midnight", desc: "Elegant nocturnal purple" },
     rose: { name: "Rose", desc: "Softness and delicacy" },
+    golden: {
+      name: "Golden Sand",
+      desc: "Warm tones with golden dot pattern",
+    },
+    lattice: {
+      name: "Moucharabieh",
+      desc: "Deep blue with Islamic geometric lattice",
+    },
+    starnight: {
+      name: "Starry Night",
+      desc: "Midnight indigo with eight-pointed stars",
+    },
+    arabesque: {
+      name: "Arabesque",
+      desc: "Exclusive Ramadan theme — dark stone adorned with traditional arabesque patterns",
+    },
+  },
+
+  // Avatars
+  avatars: {
+    confirmPurchase: "Buy avatar",
+    confirmPurchaseDesc: "Buy this avatar for {{price}} coins?",
+    notEnoughCoinsDesc:
+      "You need {{need}} more coin(s). Complete quests to earn more.",
+    buy: "Buy",
+    avatar01: "Classic",
+    avatar02: "Elegant",
+    avatar03: "Mystic",
+    avatar04: "Warrior",
+    avatar05: "Sage",
+    avatar06: "Legendary",
   },
 
   // Notifications
@@ -520,6 +555,7 @@ export default {
     level: "Level",
     totalXp: "Total XP",
     todayProgress: "Today's Progress",
+    coins: "Coins",
     dailyQuests: "Daily Quests",
     achievements: "Achievements",
     claim: "Claim",
@@ -552,6 +588,44 @@ export default {
       title: "Week Streak",
       description: "Maintain a 7-day streak",
     },
+    ramadan: {
+      weekPerfect: {
+        title: "Perfect Week",
+        description: "Complete all 5 prayers every day for 7 days",
+      },
+      weekJuz: {
+        title: "Weekly Juz",
+        description: "Read at least 240 verses this week",
+      },
+      weekSurahs: {
+        title: "Quran Tour",
+        description: "Read 10 different surahs this week",
+      },
+    },
+  },
+
+  // Ramadan
+  ramadan: {
+    welcome: {
+      title: "Ramadan Mubarak",
+      subtitle: "May this blessed month bring peace and grace",
+      feature1: "Complete your 5 daily prayers",
+      feature2: "Read the Quran and track your progress",
+      feature3: "Complete quests and earn moon coins",
+      coinsTitle: "What are moons for?",
+      coinsUse1: "Unlock exclusive Ramadan themes",
+      coinsUse2: "Obtain special rewards",
+      coinsUse3: "More surprises coming...",
+      moreInfo: "What are moons for?",
+      coinsInfo: "You have {{count}} moon(s)",
+      start: "Bismillah, let's begin!",
+      bottomNote: "May Allah accept your worship",
+    },
+    banner: {
+      title: "Ramadan Mubarak",
+      subtitle: "Event in progress",
+      quests: "See quests",
+    },
   },
 
   // XP Notifications
@@ -561,6 +635,8 @@ export default {
     fajrBonus: "Fajr bonus!",
     streakBonus: "Streak bonus!",
     questCompleted: "Quest completed!",
+    ramadanQuestCompleted: "Ramadan quest completed!",
+    readyToClaim: "Ready to claim!",
     levelUp: "Level up!",
   },
 

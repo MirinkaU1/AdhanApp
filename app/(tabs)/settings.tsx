@@ -613,7 +613,7 @@ export default function ProfileScreen() {
 
           {/* Version */}
           <Text className="text-center font-outfit-bold text-xs text-text-secondary-light dark:text-text-secondary-dark mt-6">
-            Version 0.10.0
+            Version 0.10.1 (test)
           </Text>
         </View>
       </ScrollView>

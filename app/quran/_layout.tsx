@@ -6,6 +6,7 @@ export default function QuranLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="dhikr" />
       <Stack.Screen name="favorites" />
+      <Stack.Screen name="reader/[id]" />
     </Stack>
   );
 }
