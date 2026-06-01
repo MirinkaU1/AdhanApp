@@ -23,9 +23,9 @@ export const initRevenueCat = () => {
 // le webhook serveur sache à quel user_id Supabase rattacher l'achat
 // (sinon RC utilise un $RCAnonymousID:... aléatoire).
 export const loginRevenueCat = async (userId: string) => {
-  if (!isConfigured) initRevenueCat();
-  if (!isConfigured) return;
   try {
+    if (!isConfigured) initRevenueCat();
+    if (!isConfigured) return;
     await Purchases.logIn(userId);
   } catch (error) {
     console.warn('[RevenueCat] logIn error:', error);

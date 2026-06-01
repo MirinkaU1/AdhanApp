@@ -25,7 +25,6 @@ import Constants from "expo-constants";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
 import useThemeStore from "@/stores/useThemeStore";
-import { loginRevenueCat } from "@/lib/revenuecat";
 import XpToast from "@/components/XpToast";
 import LevelUpToast from "@/components/LevelUpToast";
 import NotificationProvider from "@/components/NotificationProvider";
@@ -159,21 +158,24 @@ function RootLayoutNav() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === "SIGNED_OUT") {
-          // Éviter la boucle: on nettoie localement sans rappeler signOut
-          useAuthStore.getState().clearAuth();
-        } else if (event === "SIGNED_IN" && session?.user) {
-          // Lier l'utilisateur RevenueCat à l'UUID Supabase pour que les
-          // achats arrivent au bon user dans le webhook serveur.
-          loginRevenueCat(session.user.id);
-          // Rafraîchir la session après connexion
-          await useAuthStore.getState().refreshSession();
-          // Charger la progression Quran depuis Supabase
-          await useQuranStore.getState().loadFromSupabase();
-          // Charger la progression Quiz depuis Supabase
-          await useQuizStore.getState().loadFromSupabase();
-          // Charger les lunes Ramadan depuis Supabase
-          await useRamadanStore.getState().loadMoonCoins();
+        try {
+          if (event === "SIGNED_OUT") {
+            // Éviter la boucle: on nettoie localement sans rappeler signOut
+            useAuthStore.getState().clearAuth();
+          } else if (event === "SIGNED_IN" && session?.user) {
+            // refreshSession lie déjà RevenueCat (loginRevenueCat y est appelé)
+            // — on n'appelle pas loginRevenueCat ici pour éviter deux logIn()
+            // simultanés sur le SDK natif (risque de crash en prod)
+            await useAuthStore.getState().refreshSession();
+            // Charger la progression Quran depuis Supabase
+            await useQuranStore.getState().loadFromSupabase();
+            // Charger la progression Quiz depuis Supabase
+            await useQuizStore.getState().loadFromSupabase();
+            // Charger les lunes Ramadan depuis Supabase
+            await useRamadanStore.getState().loadMoonCoins();
+          }
+        } catch (error) {
+          console.error('[onAuthStateChange] unhandled error:', error);
         }
       });
 
