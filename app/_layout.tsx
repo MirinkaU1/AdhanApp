@@ -25,14 +25,21 @@ import Constants from "expo-constants";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
 import useThemeStore from "@/stores/useThemeStore";
+import { loginRevenueCat } from "@/lib/revenuecat";
 import XpToast from "@/components/XpToast";
 import LevelUpToast from "@/components/LevelUpToast";
 import NotificationProvider from "@/components/NotificationProvider";
 import SyncProvider from "@/components/SyncProvider";
+import { subscribeWidgetToPrayerStore } from "@/lib/widgetBridge";
+// Import statique (module scope) : enregistre la TaskManager.defineTask des
+// actions de notification dès l'évaluation du bundle, y compris en lancement
+// headless quand l'app est tuée. Le module est garde-fou pour Expo Go.
+import { registerNotificationActionTask } from "@/utils/notificationActions";
 
 import { useColorScheme } from "nativewind";
 import { useQuranStore } from "@/stores/useQuranStore";
 import useRamadanStore from "@/stores/useRamadanStore";
+import useQuizStore from "@/stores/useQuizStore";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -113,12 +120,21 @@ function RootLayoutNav() {
           await import("@/utils/backgroundTasks");
         await registerDailyReminderTask();
         await scheduleEveningReminder();
+
+        // Traitement des boutons de notification quand l'app est tuée
+        await registerNotificationActionTask();
       } catch (error) {
         console.error("Erreur initialisation tâches arrière-plan:", error);
       }
     };
 
     initBackgroundTasks();
+  }, []);
+
+  // Pousser les horaires de prière vers les widgets home-screen Android
+  useEffect(() => {
+    if (isExpoGo) return;
+    return subscribeWidgetToPrayerStore();
   }, []);
 
   // Vérifier l'état d'authentification au démarrage
@@ -147,10 +163,15 @@ function RootLayoutNav() {
           // Éviter la boucle: on nettoie localement sans rappeler signOut
           useAuthStore.getState().clearAuth();
         } else if (event === "SIGNED_IN" && session?.user) {
+          // Lier l'utilisateur RevenueCat à l'UUID Supabase pour que les
+          // achats arrivent au bon user dans le webhook serveur.
+          loginRevenueCat(session.user.id);
           // Rafraîchir la session après connexion
           await useAuthStore.getState().refreshSession();
           // Charger la progression Quran depuis Supabase
           await useQuranStore.getState().loadFromSupabase();
+          // Charger la progression Quiz depuis Supabase
+          await useQuizStore.getState().loadFromSupabase();
           // Charger les lunes Ramadan depuis Supabase
           await useRamadanStore.getState().loadMoonCoins();
         }
@@ -204,7 +225,10 @@ function RootLayoutNav() {
           <Stack.Screen name="levels" options={{ headerShown: false }} />
           <Stack.Screen name="themes" options={{ headerShown: false }} />
           <Stack.Screen name="quran" options={{ headerShown: false }} />
-          <Stack.Screen name="quran/reader/[id]" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="quran/reader/[id]"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="learn" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"

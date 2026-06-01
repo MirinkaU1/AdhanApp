@@ -11,17 +11,33 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import { AppInput, AppButton } from "@/components/ui";
+import { AppInput, AppButton, GenderDrawer, AppSelect, AppDatePicker } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/stores/useAuthStore";
+import type { UserGender } from "@/stores/useAuthStore";
 export default function WelcomeScreen() {
   const { login } = useAuthStore();
+  const { t } = useTranslation();
 
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState<UserGender | null>(null);
+  const [isGenderDrawerOpen, setIsGenderDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstNameError, setFirstNameError] = useState("");
+  const [dateError, setDateError] = useState("");
+
+  const selectedGenderLabel =
+    gender === "male"
+      ? t("onboarding.genderMale")
+      : gender === "female"
+        ? t("onboarding.genderFemale")
+        : gender === "not_specified"
+          ? t("onboarding.genderNotSpecified")
+          : t("onboarding.genderSelect");
 
   const parseBirthDate = (dateStr: string): string | null => {
     if (!dateStr || dateStr.length !== 10) return null;
@@ -34,7 +50,12 @@ export default function WelcomeScreen() {
   };
 
   const handleContinue = () => {
-    if (step === 1 && firstName.trim()) {
+    if (step === 1) {
+      if (!firstName.trim()) {
+        setFirstNameError(t("onboarding.nameRequired"));
+        return;
+      }
+      setFirstNameError("");
       setStep(2);
     }
   };
@@ -46,13 +67,22 @@ export default function WelcomeScreen() {
   };
 
   const handleGuestLogin = async () => {
-    if (!firstName.trim()) return;
+    if (!firstName.trim()) {
+      setFirstNameError(t("onboarding.nameRequired"));
+      return;
+    }
+
+    if (birthDate && !isValidDate(birthDate)) {
+      setDateError(t("onboarding.invalidDate"));
+      return;
+    }
 
     setIsLoading(true);
 
     try {
       if (supabase) {
         const { data, error } = await supabase.auth.signInAnonymously();
+        const shouldLockGender = gender === "male" || gender === "female";
 
         if (error) {
           console.warn(
@@ -80,6 +110,8 @@ export default function WelcomeScreen() {
               id: data.user.id,
               username: firstName.trim(),
               birth_date: parseBirthDate(birthDate),
+              gender,
+              gender_locked: shouldLockGender,
               is_anonymous: true,
               xp: 0,
               level: 1,
@@ -95,37 +127,48 @@ export default function WelcomeScreen() {
             name: firstName.trim(),
             email: "",
             role: "user",
+            birthDate: birthDate || undefined,
             memberSince: new Date().toISOString(),
             isGuest: true,
             xp: 0,
             level: 1,
+            gender: gender || undefined,
+            genderLocked: shouldLockGender,
           });
         }
       } else {
+        const shouldLockGender = gender === "male" || gender === "female";
         login({
           id: `guest_${Date.now()}`,
           name: firstName.trim(),
           email: "",
           role: "user",
+          birthDate: birthDate || undefined,
           memberSince: new Date().toISOString(),
           isGuest: true,
           xp: 0,
           level: 1,
+          gender: gender || undefined,
+          genderLocked: shouldLockGender,
         });
       }
 
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Erreur connexion:", error);
+      const shouldLockGender = gender === "male" || gender === "female";
       login({
         id: `guest_${Date.now()}`,
         name: firstName.trim(),
         email: "",
         role: "user",
+        birthDate: birthDate || undefined,
         memberSince: new Date().toISOString(),
         isGuest: true,
         xp: 0,
         level: 1,
+        gender: gender || undefined,
+        genderLocked: shouldLockGender,
       });
       router.replace("/(tabs)");
     } finally {
@@ -157,7 +200,14 @@ export default function WelcomeScreen() {
   const isValidDate = (date: string) => {
     if (!date) return true;
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
-    return regex.test(date);
+    if (!regex.test(date)) return false;
+
+    const [day, month, year] = date.split("/").map(Number);
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (year < 1900 || year > new Date().getFullYear()) return false;
+
+    return true;
   };
 
   return (
@@ -186,10 +236,10 @@ export default function WelcomeScreen() {
             </View>
           </View>
           <Text className="text-4xl font-outfit-bold text-white mt-6">
-            MaPrière
+            {t("auth.appName")}
           </Text>
           <Text className="text-base font-outfit-regular text-white/70 mt-1">
-            Votre compagnon spirituel
+            {t("onboarding.tagline")}
           </Text>
         </View>
       </LinearGradient>
@@ -200,6 +250,15 @@ export default function WelcomeScreen() {
         className="flex-1 bg-gray-100 dark:bg-slate-900 -mt-8 rounded-t-[32px]"
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
+        <GenderDrawer
+          visible={isGenderDrawerOpen}
+          onClose={() => setIsGenderDrawerOpen(false)}
+          selectedGender={gender}
+          onSelectGender={setGender}
+          title={t("onboarding.genderTitle")}
+          subtitle={t("onboarding.genderSubtitle")}
+        />
+
         <ScrollView
           className="flex-1"
           contentContainerStyle={{
@@ -214,15 +273,11 @@ export default function WelcomeScreen() {
           <View className="flex-row items-center justify-center mb-6 gap-2">
             <View
               className={`h-2 rounded ${step === 1 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
-              style={
-                step === 1 ? { backgroundColor: "#115E59" } : undefined
-              }
+              style={step === 1 ? { backgroundColor: "#115E59" } : undefined}
             />
             <View
               className={`h-2 rounded ${step === 2 ? "w-6" : "w-2 bg-gray-300 dark:bg-slate-600"}`}
-              style={
-                step === 2 ? { backgroundColor: "#115E59" } : undefined
-              }
+              style={step === 2 ? { backgroundColor: "#115E59" } : undefined}
             />
           </View>
 
@@ -230,33 +285,37 @@ export default function WelcomeScreen() {
           {step === 1 && (
             <Animated.View entering={FadeIn.duration(300)}>
               <Text className="text-3xl font-outfit-bold text-slate-800 dark:text-slate-100 mb-2">
-                Bienvenue 👋
+                {t("onboarding.welcomeStep1Title")}
               </Text>
               <Text className="text-lg font-outfit-regular text-gray-500 dark:text-slate-400 mb-8">
-                Comment devons-nous vous appeler ?
+                {t("onboarding.welcomeStep1Subtitle")}
               </Text>
 
               {/* Input Prénom */}
               <AppInput
+                label={t("onboarding.firstNamePlaceholder")}
                 icon="person"
-                placeholder="Votre Prénom"
+                placeholder={t("onboarding.firstNamePlaceholder")}
                 value={firstName}
-                onChangeText={setFirstName}
+                onChangeText={(text) => {
+                  setFirstName(text);
+                  if (firstNameError) setFirstNameError("");
+                }}
                 autoCapitalize="words"
                 autoCorrect={false}
+                error={firstNameError}
                 containerClassName="mb-6"
               />
 
               {/* Bouton Continuer */}
               <AppButton
-                title="Continuer"
+                title={t("onboarding.continueButton")}
                 onPress={handleContinue}
                 variant="primary"
                 size="md"
                 icon="arrow-forward"
                 iconPosition="right"
                 fullWidth
-                disabled={!firstName.trim()}
               />
             </Animated.View>
           )}
@@ -278,31 +337,46 @@ export default function WelcomeScreen() {
                   className="text-base font-outfit-medium"
                   style={{ color: "#115E59" }}
                 >
-                  Retour
+                  {t("onboarding.backButton")}
                 </Text>
               </Pressable>
 
-              <Text className="text-3xl font-outfit-bold text-slate-800 dark:text-slate-100 mb-2">
-                Votre date de naissance 🎂
-              </Text>
-              <Text className="text-lg font-outfit-regular text-gray-500 dark:text-slate-400 mb-8">
-                Pour personnaliser votre expérience (optionnel)
+              <Text className="text-2xl font-outfit-bold mb-3 text-slate-800 dark:text-slate-100">
+                {t("onboarding.welcomeStep2Subtitle")}
               </Text>
 
               {/* Input Date */}
-              <AppInput
-                icon="cake"
-                placeholder="JJ/MM/AAAA"
+              <Text className="text-base font-outfit-medium text-slate-700 dark:text-slate-200 mb-3">
+                {t("onboarding.welcomeStep2Title")}
+              </Text>
+              <AppDatePicker
+                label={t("onboarding.welcomeStep2Title")}
                 value={birthDate}
-                onChangeText={handleDateChange}
-                keyboardType="numeric"
-                maxLength={10}
+                placeholder={t("onboarding.datePlaceholder")}
+                error={dateError}
+                maximumDate={new Date()}
+                minimumDate={new Date(1900, 0, 1)}
+                onChange={(date) => {
+                  setBirthDate(date || "");
+                  if (dateError) setDateError("");
+                }}
+                containerClassName="mb-6"
+              />
+
+              <Text className="text-base font-outfit-medium text-slate-700 dark:text-slate-200 mb-3">
+                {t("onboarding.welcomeStep2GenderTitle")}
+              </Text>
+              <AppSelect
+                icon="wc"
+                value={selectedGenderLabel}
+                placeholder={t("onboarding.genderSelect")}
+                onPress={() => setIsGenderDrawerOpen(true)}
                 containerClassName="mb-6"
               />
 
               {/* Bouton Commencer */}
               <AppButton
-                title="Commencer"
+                title={t("onboarding.start")}
                 onPress={handleGuestLogin}
                 variant="secondary"
                 icon="rocket-launch"
@@ -318,7 +392,7 @@ export default function WelcomeScreen() {
                 className="items-center py-4 mt-2"
               >
                 <Text className="text-base font-outfit-medium text-gray-500 dark:text-slate-400">
-                  Passer cette étape
+                  {t("onboarding.skipButton")}
                 </Text>
               </Pressable>
             </Animated.View>
@@ -328,7 +402,7 @@ export default function WelcomeScreen() {
           <View className="flex-row items-center my-6">
             <View className="flex-1 h-px bg-gray-300 dark:bg-slate-600" />
             <Text className="text-base font-outfit-regular text-gray-400 dark:text-slate-500 mx-4">
-              ou
+              {t("onboarding.or:", "ou")}
             </Text>
             <View className="flex-1 h-px bg-gray-300 dark:bg-slate-600" />
           </View>
@@ -336,25 +410,25 @@ export default function WelcomeScreen() {
           {/* Login Link */}
           <Pressable onPress={handleLogin} className="items-center py-3">
             <Text className="text-base font-outfit-regular text-gray-500 dark:text-slate-400">
-              Vous avez déjà un compte ?{" "}
+              {t("onboarding.alreadyHaveAccount")}{" "}
               <Text
                 className="font-outfit-semibold"
                 style={{ color: "#115E59" }}
               >
-                Se connecter
+                {t("onboarding.login")}
               </Text>
             </Text>
           </Pressable>
 
           {/* Terms */}
           <Text className="text-sm font-outfit-regular text-gray-400 dark:text-slate-500 text-center mt-6 leading-5">
-            En continuant, vous acceptez nos{" "}
+            {t("onboarding.terms")}{" "}
             <Text style={{ color: "#115E59" }}>
-              Conditions d'utilisation
+              {t("onboarding.termsOfService")}
             </Text>{" "}
-            et notre{" "}
+            {t("onboarding.and")}{" "}
             <Text style={{ color: "#115E59" }}>
-              Politique de confidentialité
+              {t("onboarding.privacyPolicy")}
             </Text>
           </Text>
         </ScrollView>

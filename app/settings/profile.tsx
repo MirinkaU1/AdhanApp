@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,14 +16,14 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
-import useAuthStore from "@/stores/useAuthStore";
+import useAuthStore, { type UserGender } from "@/stores/useAuthStore";
 import useAvatarStore from "@/stores/useAvatarStore";
 import useCoinsStore from "@/stores/useCoinsStore";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { AvatarDrawer } from "@/components/ui";
+import { AvatarDrawer, GenderDrawer, AppDatePicker } from "@/components/ui";
 import {
-  PRESET_AVATARS,
+  getPresetAvatarsForGender,
   selectPresetAvatar,
   uploadCustomAvatar,
   removeAvatar,
@@ -40,20 +40,63 @@ export default function ProfileScreen() {
 
   const [firstName, setFirstName] = useState(user?.name || "");
   const [birthDate, setBirthDate] = useState(user?.birthDate || "");
+  const [selectedGender, setSelectedGender] = useState<UserGender | null>(
+    user?.gender || null,
+  );
   const [avatarSource, setAvatarSource] = useState(
     getAvatarSource(user?.avatar_id, user?.avatar_url),
   );
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
+  const [isGenderDrawerOpen, setIsGenderDrawerOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const canEditGender = !(user?.genderLocked ?? false);
+  const canEditBirthDate = !user?.birthDate;
+  const avatarGenderFilter = selectedGender ?? user?.gender ?? null;
+  const availableAvatarOptions = useMemo(
+    () => getPresetAvatarsForGender(avatarGenderFilter),
+    [avatarGenderFilter],
+  );
+  const selectedGenderLabel =
+    selectedGender === "male"
+      ? t("settings.genderMale")
+      : selectedGender === "female"
+        ? t("settings.genderFemale")
+        : selectedGender === "not_specified"
+          ? t("settings.genderNotSpecified")
+          : t("settings.genderUnset");
+
   useEffect(() => {
     const nameChanged = firstName.trim() !== (user?.name || "").trim();
     const birthDateChanged = birthDate !== (user?.birthDate || "");
-    setHasChanges(nameChanged || birthDateChanged);
-  }, [firstName, birthDate, user?.name, user?.birthDate]);
+    const genderChanged =
+      selectedGender !== null && selectedGender !== (user?.gender ?? null);
+    setHasChanges(nameChanged || birthDateChanged || genderChanged);
+  }, [
+    firstName,
+    birthDate,
+    selectedGender,
+    user?.name,
+    user?.birthDate,
+    user?.gender,
+  ]);
+
+  useEffect(() => {
+    setFirstName(user?.name || "");
+    setBirthDate(user?.birthDate || "");
+    setSelectedGender(user?.gender || null);
+    setAvatarSource(getAvatarSource(user?.avatar_id, user?.avatar_url));
+  }, [
+    user?.id,
+    user?.name,
+    user?.birthDate,
+    user?.gender,
+    user?.avatar_id,
+    user?.avatar_url,
+  ]);
 
   const pickImage = async () => {
     try {
@@ -112,13 +155,20 @@ export default function ProfileScreen() {
     setErrorMessage("");
     setSuccessMessage("");
 
-    const updateData: { name?: string; birthDate?: string } = {};
+    const updateData: {
+      name?: string;
+      birthDate?: string;
+      gender?: UserGender;
+    } = {};
 
     if (firstName.trim() !== (user?.name || "").trim()) {
       updateData.name = firstName.trim();
     }
     if (birthDate !== (user?.birthDate || "")) {
       updateData.birthDate = birthDate;
+    }
+    if (selectedGender !== null && selectedGender !== (user?.gender ?? null)) {
+      updateData.gender = selectedGender;
     }
 
     console.log(
@@ -136,21 +186,6 @@ export default function ProfileScreen() {
       setTimeout(() => setSuccessMessage(""), 3000);
     } else {
       setErrorMessage(result.error || t("settings.profileUpdateError"));
-    }
-  };
-
-  // Formater la date de naissance pour l'affichage (JJ-MM-AAAA)
-  const formatBirthDateInput = (text: string) => {
-    // Supprimer tout sauf les chiffres
-    const numbers = text.replace(/\D/g, "");
-
-    // Formater en JJ-MM-AAAA
-    if (numbers.length <= 2) {
-      return numbers;
-    } else if (numbers.length <= 4) {
-      return `${numbers.slice(0, 2)}-${numbers.slice(2)}`;
-    } else {
-      return `${numbers.slice(0, 2)}-${numbers.slice(2, 4)}-${numbers.slice(4, 8)}`;
     }
   };
 
@@ -253,13 +288,20 @@ export default function ProfileScreen() {
         visible={isAvatarSheetOpen}
         onClose={() => setIsAvatarSheetOpen(false)}
         onPickImage={pickImage}
-        avatarOptions={PRESET_AVATARS}
+        avatarOptions={availableAvatarOptions}
         unlockedAvatarIds={unlockedAvatarIds}
         coins={coins}
         onSelectAvatar={(avatarId) => handleSelectPresetAvatar(avatarId)}
         onPurchaseAvatar={(avatarId, price) => purchaseAvatar(avatarId, price)}
         onRemoveAvatar={avatarSource ? handleRemoveAvatar : undefined}
         isLoading={isUploadingAvatar}
+      />
+
+      <GenderDrawer
+        visible={isGenderDrawerOpen}
+        onClose={() => setIsGenderDrawerOpen(false)}
+        selectedGender={selectedGender}
+        onSelectGender={setSelectedGender}
       />
 
       <KeyboardAvoidingView
@@ -374,35 +416,86 @@ export default function ProfileScreen() {
             {/* Séparateur */}
             <View className="h-px mx-4 bg-gray-200 dark:bg-slate-700" />
 
-            {/* Date de naissance */}
+            {/* Genre */}
             <View className="p-4">
               <Text
                 className="font-outfit-semibold uppercase mb-2 text-gray-500 dark:text-slate-400"
                 style={{ fontSize: 11, letterSpacing: 1 }}
               >
-                {t("settings.birthDate")}
+                {t("settings.gender")}
               </Text>
-              <View className="flex-row items-center rounded-xl px-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 h-14">
-                <MaterialIconsRound name="cake" size={22} color="#64748B" />
-                <TextInput
-                  value={birthDate}
-                  onChangeText={(text) =>
-                    setBirthDate(formatBirthDateInput(text))
-                  }
-                  placeholder="JJ-MM-AAAA"
-                  placeholderTextColor="#64748B"
+
+              <Pressable
+                onPress={() => canEditGender && setIsGenderDrawerOpen(true)}
+                disabled={!canEditGender}
+                className="flex-row items-center rounded-xl px-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 h-14"
+                style={{ opacity: canEditGender ? 1 : 0.6 }}
+              >
+                <MaterialIconsRound name="wc" size={22} color="#64748B" />
+                <Text
                   className="flex-1 font-outfit-medium px-3 text-slate-800 dark:text-slate-100"
-                  style={{ fontSize: 16, height: "100%" }}
-                  keyboardType="number-pad"
-                  maxLength={10}
+                  style={{ fontSize: 16 }}
+                >
+                  {selectedGenderLabel}
+                </Text>
+                <MaterialIconsRound
+                  name={canEditGender ? "expand-more" : "lock"}
+                  size={20}
+                  color="#64748B"
                 />
-                {birthDate !== (user?.birthDate || "") &&
-                birthDate.length === 10 ? (
-                  <View className="w-6 h-6 rounded-full items-center justify-center bg-amber-600">
-                    <MaterialIconsRound name="edit" size={14} color="#fff" />
+              </Pressable>
+
+              <Text
+                className="font-outfit-regular mt-2 px-1 text-gray-500 dark:text-slate-400"
+                style={{ fontSize: 12 }}
+              >
+                {canEditGender
+                  ? t("settings.genderEditableOnce")
+                  : t("settings.genderLockedDesc")}
+              </Text>
+            </View>
+
+            <View className="h-px mx-4 bg-gray-200 dark:bg-slate-700" />
+
+            {/* Date de naissance */}
+            <View className="p-4">
+              {canEditBirthDate ? (
+                <AppDatePicker
+                  label={t("settings.birthDate")}
+                  value={birthDate}
+                  onChange={(date) => setBirthDate(date || "")}
+                  containerClassName=""
+                  maximumDate={new Date()}
+                />
+              ) : (
+                <>
+                  <Text
+                    className="font-outfit-semibold uppercase mb-2 text-gray-500 dark:text-slate-400"
+                    style={{ fontSize: 11, letterSpacing: 1 }}
+                  >
+                    {t("settings.birthDate")}
+                  </Text>
+                  <View
+                    className="flex-row items-center rounded-xl px-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 h-14"
+                    style={{ opacity: 0.6 }}
+                  >
+                    <MaterialIconsRound name="cake" size={22} color="#64748B" />
+                    <Text
+                      className="flex-1 font-outfit-medium px-3 text-slate-800 dark:text-slate-100"
+                      style={{ fontSize: 16 }}
+                    >
+                      {birthDate}
+                    </Text>
+                    <MaterialIconsRound name="lock" size={18} color="#64748B" />
                   </View>
-                ) : null}
-              </View>
+                  <Text
+                    className="font-outfit-regular mt-2 px-1 text-gray-500 dark:text-slate-400"
+                    style={{ fontSize: 12 }}
+                  >
+                    {t("settings.birthDateLockedDesc")}
+                  </Text>
+                </>
+              )}
             </View>
 
             {/* Séparateur avec info email si disponible */}

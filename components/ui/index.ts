@@ -15,3 +15,6 @@ export { Switch } from "./switch";
 export { Switch as ModernSwitch } from "./switch";
 export { default as AlertDialog } from "./AlertDialog";
 export { default as AppLoader } from "./AppLoader";
+export { default as GenderDrawer } from "./GenderDrawer";
+export { default as AppSelect } from "./AppSelect";
+export { default as AppDatePicker } from "./AppDatePicker";

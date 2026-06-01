@@ -83,6 +83,13 @@ const APP_PREFERENCES: PreferenceItem[] = [
     iconColor: "#9333EA",
     labelKey: "settings.themes",
   },
+  {
+    id: "widgets",
+    icon: "widgets",
+    iconBgColor: "#E0F2FE",
+    iconColor: "#0EA5E9",
+    labelKey: "settings.widgets",
+  },
 ];
 
 const ACCOUNT_PREFERENCES: PreferenceItem[] = [
@@ -209,6 +216,9 @@ export default function ProfileScreen() {
       case "themes":
         router.push("/themes");
         break;
+      case "widgets":
+        router.push("/settings/widgets");
+        break;
       case "support":
         router.push("/support");
         break;
@@ -229,9 +239,7 @@ export default function ProfileScreen() {
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
     await logout();
-    setTimeout(() => {
-      router.replace("/auth/login");
-    }, 100);
+    router.replace("/auth/welcome");
   };
 
   // Rendu pour utilisateur NON connecté
@@ -605,7 +613,12 @@ export default function ProfileScreen() {
             title={t("settings.accountSupport")}
             items={ACCOUNT_PREFERENCES.filter((item) => {
               if (item.id === "password" && user?.isGuest) return false;
-              if (item.id === "debug" && user?.role !== "dev" && user?.role !== "tester") return false;
+              if (
+                item.id === "debug" &&
+                user?.role !== "dev" &&
+                user?.role !== "tester"
+              )
+                return false;
               return true;
             })}
             onItemPress={handlePreferencePress}
@@ -613,7 +626,7 @@ export default function ProfileScreen() {
 
           {/* Version */}
           <Text className="text-center font-outfit-bold text-xs text-text-secondary-light dark:text-text-secondary-dark mt-6">
-            Version 0.10.1 (test)
+            Version 0.10.2 (test build)
           </Text>
         </View>
       </ScrollView>

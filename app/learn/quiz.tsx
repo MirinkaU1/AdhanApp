@@ -5,7 +5,13 @@ import {
   StyleSheet,
   Animated,
 } from "react-native";
-import { useRef, useState, useEffect, useCallback } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
@@ -45,9 +51,26 @@ function getQuestionsForCategory(categoryId: string): QuizQuestion[] {
     categoryId === "random"
       ? (quizData.questions as QuizQuestion[])
       : (quizData.questions as QuizQuestion[]).filter(
-          (q) => q.category === categoryId
+          (q) => q.category === categoryId,
         );
-  return shuffleArray(pool).slice(0, QUESTIONS_PER_QUIZ);
+
+  return shuffleArray(pool)
+    .slice(0, QUESTIONS_PER_QUIZ)
+    .map((question) => {
+      const optionsWithOriginalIndex = question.options.map((label, index) => ({
+        label,
+        originalIndex: index,
+      }));
+      const shuffledOptions = shuffleArray(optionsWithOriginalIndex);
+
+      return {
+        ...question,
+        options: shuffledOptions.map((option) => option.label),
+        correctIndex: shuffledOptions.findIndex(
+          (option) => option.originalIndex === question.correctIndex,
+        ),
+      };
+    });
 }
 
 function getCategoryMeta(categoryId: string) {
@@ -160,8 +183,7 @@ function AnswerButton({
         <AppText
           variant="bodyMedium"
           style={{
-            color:
-              answered && (isCorrect || isSelected) ? "#fff" : textColor,
+            color: answered && (isCorrect || isSelected) ? "#fff" : textColor,
             fontWeight: "700",
             fontSize: 14,
           }}
@@ -384,7 +406,12 @@ export default function QuizScreen() {
 
   // Local UI state
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [timeExpired, setTimeExpired] = useState(false);
+  const [answeredQuestionId, setAnsweredQuestionId] = useState<string | null>(
+    null,
+  );
+  const [timeExpiredQuestionId, setTimeExpiredQuestionId] = useState<
+    string | null
+  >(null);
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
   const [coinsAwarded, setCoinsAwarded] = useState(false);
   const answeredRef = useRef(false);
@@ -394,8 +421,6 @@ export default function QuizScreen() {
   const categoryMeta = getCategoryMeta(category || "random");
   const categoryColor = categoryMeta.color;
   const categoryGradient = categoryMeta.gradient;
-
-  const answered = selectedAnswer !== null || timeExpired;
 
   // =====================================================
   // INITIALIZE SESSION
@@ -427,11 +452,13 @@ export default function QuizScreen() {
   // =====================================================
   // TIMER LOGIC
   // =====================================================
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!session || session.isComplete) return;
+    const currentQuestionId = session.questions[session.currentIndex]?.id;
 
     setSelectedAnswer(null);
-    setTimeExpired(false);
+    setAnsweredQuestionId(null);
+    setTimeExpiredQuestionId(null);
     setTimeLeft(TIMER_SECONDS);
     answeredRef.current = false;
 
@@ -449,7 +476,8 @@ export default function QuizScreen() {
           if (!answeredRef.current) {
             answeredRef.current = true;
             recordAnswer(null);
-            setTimeExpired(true);
+            setAnsweredQuestionId(currentQuestionId ?? null);
+            setTimeExpiredQuestionId(currentQuestionId ?? null);
           }
           if (timerRef.current) clearInterval(timerRef.current);
           timerAnim.stopAnimation();
@@ -470,14 +498,18 @@ export default function QuizScreen() {
   // =====================================================
   const handleSelectAnswer = useCallback(
     (index: number) => {
+      const currentQuestionId = session?.questions[session.currentIndex]?.id;
+      if (!currentQuestionId) return;
       if (answeredRef.current) return;
       answeredRef.current = true;
       if (timerRef.current) clearInterval(timerRef.current);
       timerAnim.stopAnimation();
       setSelectedAnswer(index);
+      setAnsweredQuestionId(currentQuestionId);
+      setTimeExpiredQuestionId(null);
       recordAnswer(index);
     },
-    [recordAnswer]
+    [session, recordAnswer],
   );
 
   const handleNext = useCallback(() => {
@@ -531,8 +563,12 @@ export default function QuizScreen() {
   const total = session.questions.length;
   const progress = (session.currentIndex + 1) / total;
   const letters = ["A", "B", "C", "D"];
+  const answered = answeredQuestionId === currentQ.id;
+  const timeExpired = timeExpiredQuestionId === currentQ.id;
+  const currentSelectedAnswer = answered ? selectedAnswer : null;
   const isCorrectAnswer =
-    selectedAnswer !== null && selectedAnswer === currentQ.correctIndex;
+    currentSelectedAnswer !== null &&
+    currentSelectedAnswer === currentQ.correctIndex;
   const isLastQuestion = session.currentIndex === total - 1;
 
   const timerColor = timerAnim.interpolate({
@@ -665,36 +701,39 @@ export default function QuizScreen() {
 
       {/* Content */}
       <ScrollView
+        key={currentQ.id}
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Question card */}
-        <AppCard className="p-5 mb-5">
-          <AppText
-            variant="body"
-            className="leading-7"
-            style={{ fontSize: 17, fontWeight: "500" }}
-          >
-            {currentQ.question}
-          </AppText>
-        </AppCard>
+        <View key={currentQ.id}>
+          {/* Question card */}
+          <AppCard className="p-5 mb-5">
+            <AppText
+              variant="body"
+              className="leading-7"
+              style={{ fontSize: 17, fontWeight: "500" }}
+            >
+              {currentQ.question}
+            </AppText>
+          </AppCard>
 
-        {/* Answer options */}
-        <View>
-          {currentQ.options.map((option, index) => (
-            <AnswerButton
-              key={index}
-              label={option}
-              index={index}
-              letter={letters[index]}
-              selectedAnswer={selectedAnswer}
-              correctIndex={currentQ.correctIndex}
-              answered={answered}
-              onPress={handleSelectAnswer}
-              isDark={isDark}
-            />
-          ))}
+          {/* Answer options */}
+          <View>
+            {currentQ.options.map((option, index) => (
+              <AnswerButton
+                key={`${currentQ.id}-${index}`}
+                label={option}
+                index={index}
+                letter={letters[index]}
+                selectedAnswer={currentSelectedAnswer}
+                correctIndex={currentQ.correctIndex}
+                answered={answered}
+                onPress={handleSelectAnswer}
+                isDark={isDark}
+              />
+            ))}
+          </View>
         </View>
 
         {/* Feedback + anecdote */}
@@ -725,10 +764,10 @@ export default function QuizScreen() {
                 {timeExpired
                   ? t("quiz.timeUp")
                   : isCorrectAnswer
-                  ? t("quiz.correct")
-                  : t("quiz.incorrect", {
-                      answer: currentQ.options[currentQ.correctIndex],
-                    })}
+                    ? t("quiz.correct")
+                    : t("quiz.incorrect", {
+                        answer: currentQ.options[currentQ.correctIndex],
+                      })}
               </AppText>
 
               {/* +2 coins badge on correct answer */}
@@ -811,7 +850,9 @@ export default function QuizScreen() {
                   variant="bodyMedium"
                   style={{ color: "#fff", fontWeight: "600" }}
                 >
-                  {isLastQuestion ? t("quiz.seeResults") : t("quiz.nextQuestion")}
+                  {isLastQuestion
+                    ? t("quiz.seeResults")
+                    : t("quiz.nextQuestion")}
                 </AppText>
                 <MaterialIconsRound
                   name={isLastQuestion ? "emoji-events" : "arrow-forward"}

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "@/lib/supabase";
 
 // =====================================================
 // CONSTANTS
@@ -48,6 +49,56 @@ interface QuizStoreState {
   nextQuestion: () => void;
   endSession: () => void;
   resetSession: () => void;
+  syncWithSupabase: () => Promise<void>;
+  loadFromSupabase: () => Promise<void>;
+  clearAllData: () => void;
+}
+
+function mergeQuizStats(
+  localStats: Record<string, QuizCategoryStats>,
+  remoteStats: Record<string, QuizCategoryStats>,
+): Record<string, QuizCategoryStats> {
+  const merged: Record<string, QuizCategoryStats> = {};
+  const categories = new Set([
+    ...Object.keys(localStats || {}),
+    ...Object.keys(remoteStats || {}),
+  ]);
+
+  categories.forEach((category) => {
+    const local = localStats[category];
+    const remote = remoteStats[category];
+
+    if (!local && remote) {
+      merged[category] = remote;
+      return;
+    }
+
+    if (!remote && local) {
+      merged[category] = local;
+      return;
+    }
+
+    if (local && remote) {
+      const bestScore = Math.max(local.bestScore || 0, remote.bestScore || 0);
+      const bestTotal =
+        bestScore === (local.bestScore || 0)
+          ? local.bestTotal || 0
+          : remote.bestTotal || 0;
+      const lastPlayedAtCandidate = Math.max(
+        local.lastPlayedAt || 0,
+        remote.lastPlayedAt || 0,
+      );
+
+      merged[category] = {
+        played: Math.max(local.played || 0, remote.played || 0),
+        bestScore,
+        bestTotal,
+        lastPlayedAt: lastPlayedAtCandidate > 0 ? lastPlayedAtCandidate : null,
+      };
+    }
+  });
+
+  return merged;
 }
 
 // =====================================================
@@ -128,6 +179,7 @@ const useQuizStore = create<QuizStoreState>()(
               },
             },
           });
+          void get().syncWithSupabase();
         } else {
           set({
             session: { ...session, currentIndex: nextIndex },
@@ -161,18 +213,78 @@ const useQuizStore = create<QuizStoreState>()(
             },
           },
         });
+        void get().syncWithSupabase();
       },
 
       resetSession: () => {
         set({ session: null });
+      },
+
+      syncWithSupabase: async () => {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) return;
+
+          await supabase.from("quiz_progress").upsert(
+            {
+              user_id: user.id,
+              stats: get().stats,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" },
+          );
+        } catch (error) {
+          console.error("Erreur sync quiz:", error);
+        }
+      },
+
+      loadFromSupabase: async () => {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const localStats = get().stats;
+          const { data, error } = await supabase
+            .from("quiz_progress")
+            .select("stats")
+            .eq("user_id", user.id)
+            .single();
+
+          if (error && error.code !== "PGRST116") {
+            throw error;
+          }
+
+          const remoteStats =
+            (data?.stats as Record<string, QuizCategoryStats> | null) || {};
+          const mergedStats = mergeQuizStats(localStats, remoteStats);
+
+          set({ stats: mergedStats });
+
+          if (
+            Object.keys(localStats).length > 0 ||
+            Object.keys(remoteStats).length > 0
+          ) {
+            await get().syncWithSupabase();
+          }
+        } catch (error) {
+          console.error("Erreur load quiz:", error);
+        }
+      },
+
+      clearAllData: () => {
+        set({ stats: {}, session: null });
       },
     }),
     {
       name: "quiz-store",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ stats: state.stats }),
-    }
-  )
+    },
+  ),
 );
 
 export default useQuizStore;

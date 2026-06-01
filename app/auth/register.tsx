@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
@@ -19,6 +20,7 @@ import { useIsDark } from "@/components/useColorScheme";
 export default function RegisterScreen() {
   const { signUpWithEmail, isLoading } = useAuthStore();
   const isDark = useIsDark();
+  const { t } = useTranslation();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,27 +33,27 @@ export default function RegisterScreen() {
     setErrorMessage("");
 
     if (!name.trim()) {
-      setErrorMessage("Veuillez entrer votre nom");
+      setErrorMessage(t("auth.registerNameRequired"));
       return;
     }
     if (!email.trim()) {
-      setErrorMessage("Veuillez entrer votre email");
+      setErrorMessage(t("auth.registerEmailRequired"));
       return;
     }
     if (!password) {
-      setErrorMessage("Veuillez entrer un mot de passe");
+      setErrorMessage(t("auth.registerPasswordRequired"));
       return;
     }
-    if (password.length < 6) {
-      setErrorMessage("Le mot de passe doit contenir au moins 6 caractères");
+    if (password.length < 8) {
+      setErrorMessage(t("auth.registerPasswordMin"));
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMessage("Les mots de passe ne correspondent pas");
+      setErrorMessage(t("auth.registerPasswordMismatch"));
       return;
     }
     if (!acceptTerms) {
-      setErrorMessage("Veuillez accepter les conditions d'utilisation");
+      setErrorMessage(t("auth.registerTermsRequired"));
       return;
     }
 
@@ -59,18 +61,18 @@ export default function RegisterScreen() {
 
     if (result.success) {
       Alert.alert(
-        "Compte créé ! 🎉",
-        "Vérifiez votre email pour confirmer votre inscription.",
+        t("auth.registerSuccessTitle"),
+        t("auth.registerSuccessMessage"),
         [{ text: "OK", onPress: () => router.replace("/(tabs)") }],
       );
     } else {
-      let errorMsg = result.error || "Une erreur est survenue";
+      let errorMsg = result.error || t("common.error");
       if (errorMsg.includes("already registered")) {
-        errorMsg = "Cet email est déjà utilisé";
+        errorMsg = t("auth.registerEmailAlreadyUsed");
       } else if (errorMsg.includes("invalid email")) {
-        errorMsg = "Format d'email invalide";
+        errorMsg = t("auth.registerInvalidEmail");
       } else if (errorMsg.includes("weak password")) {
-        errorMsg = "Mot de passe trop faible";
+        errorMsg = t("auth.registerWeakPassword");
       }
       setErrorMessage(errorMsg);
     }
@@ -107,10 +109,10 @@ export default function RegisterScreen() {
           </Pressable>
 
           <Text className="text-4xl font-outfit-bold text-white">
-            Créer un compte
+            {t("auth.registerTitle")}
           </Text>
           <Text className="text-base font-outfit-regular text-white/70 mt-1">
-            Commencez votre voyage spirituel
+            {t("auth.registerSubtitle")}
           </Text>
         </LinearGradient>
 
@@ -126,9 +128,9 @@ export default function RegisterScreen() {
         >
           {/* Nom complet */}
           <AppInput
-            label="Nom complet"
+            label={t("auth.registerFullName")}
             icon="person"
-            placeholder="Entrez votre nom"
+            placeholder={t("auth.registerFullNamePlaceholder")}
             value={name}
             onChangeText={setName}
             containerClassName="mb-4"
@@ -136,9 +138,9 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <AppInput
-            label="Email"
+            label={t("auth.email")}
             icon="mail"
-            placeholder="exemple@email.com"
+            placeholder={t("auth.registerEmailPlaceholder")}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -148,9 +150,9 @@ export default function RegisterScreen() {
 
           {/* Mot de passe */}
           <AppInput
-            label="Mot de passe"
+            label={t("auth.password")}
             icon="lock"
-            placeholder="••••••••"
+            placeholder={t("auth.registerPasswordPlaceholder")}
             value={password}
             onChangeText={setPassword}
             isPassword
@@ -159,9 +161,9 @@ export default function RegisterScreen() {
 
           {/* Confirmer mot de passe */}
           <AppInput
-            label="Confirmer mot de passe"
+            label={t("auth.registerConfirmPassword")}
             icon="verified-user"
-            placeholder="••••••••"
+            placeholder={t("auth.registerPasswordPlaceholder")}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             isPassword
@@ -189,14 +191,15 @@ export default function RegisterScreen() {
               )}
             </View>
             <Text className="flex-1 text-base font-outfit-medium text-gray-500 dark:text-slate-400 leading-5">
-              J'accepte les{" "}
+              {t("auth.registerAcceptTerms")}{" "}
               <Text
                 className="font-outfit-bold underline"
                 style={{ color: "#115E59" }}
               >
-                conditions d'utilisation
+                {t("auth.registerTermsOfService")}
               </Text>{" "}
-              et la politique de confidentialité.
+              {t("auth.registerAnd")}{" "}
+              {t("auth.registerPrivacyPolicy")}
             </Text>
           </Pressable>
 
@@ -207,7 +210,7 @@ export default function RegisterScreen() {
 
           {/* Bouton inscription */}
           <AppButton
-            title="S'inscrire"
+            title={t("auth.registerButton")}
             onPress={handleRegister}
             variant="secondary"
             icon="arrow-forward"
@@ -218,14 +221,14 @@ export default function RegisterScreen() {
           {/* Lien connexion */}
           <View className="flex-row justify-center items-center mt-8">
             <Text className="text-base font-outfit-medium text-gray-500 dark:text-slate-400">
-              Déjà un compte ?
+              {t("auth.registerAlreadyAccount")}
             </Text>
             <Pressable onPress={() => router.back()}>
               <Text
                 className="text-base font-outfit-bold ml-2"
                 style={{ color: "#115E59" }}
               >
-                Se connecter
+                {t("auth.registerLogin")}
               </Text>
             </Pressable>
           </View>

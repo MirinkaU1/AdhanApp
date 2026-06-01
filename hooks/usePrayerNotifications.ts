@@ -180,18 +180,31 @@ export const usePrayerNotifications = (options: {
   const handleNotificationResponse = useCallback(
     (response: {
       actionIdentifier: string;
-      notification: { request: { identifier: string } };
+      notification: {
+        request: {
+          identifier: string;
+          content?: { data?: Record<string, unknown> | null };
+        };
+      };
     }) => {
       if (!Notifications) return;
 
       const actionId = response.actionIdentifier;
-      const notificationId = response.notification.request.identifier;
+      const request = response.notification.request;
 
-      // Extraire le nom de la prière depuis l'ID (format: prayer-{name}-{date})
-      const match = notificationId.match(/^(?:prayer|reminder)-(\w+)-/);
-      if (!match) return;
+      // Source fiable : le nom de la prière est dans content.data.prayer
+      // (présent pour toutes les notifs : prière, rappel, test).
+      // Fallback : parser l'identifier (format prayer-{name}-{date}).
+      const dataPrayer = request.content?.data?.prayer;
+      const idMatch =
+        typeof request.identifier === "string"
+          ? request.identifier.match(/^(?:prayer|reminder)-(\w+)-/)
+          : null;
+      const prayerName = (dataPrayer ?? idMatch?.[1]) as
+        | PrayerName
+        | undefined;
 
-      const prayerName = match[1] as PrayerName;
+      if (!prayerName || !prayerLabels[prayerName]) return;
 
       if (actionId === "MARK_DONE") {
         // Marquer la prière comme faite dans le store
@@ -201,6 +214,10 @@ export const usePrayerNotifications = (options: {
         if (!state.status[prayerName]) {
           state.togglePrayer(prayerName, userId);
         }
+        // Retirer la notification du tiroir une fois traitée
+        Notifications.dismissNotificationAsync(request.identifier).catch(
+          () => {},
+        );
         console.log(
           `Prière ${prayerName} marquée comme faite via notification`,
         );

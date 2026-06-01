@@ -40,7 +40,7 @@ export default function PasswordScreen() {
     }
 
     // Validation nouveau mot de passe
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       setErrorMessage(t("settings.passwordTooShort"));
       return;
     }

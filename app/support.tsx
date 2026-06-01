@@ -17,7 +17,7 @@ import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { initRevenueCat } from "@/lib/revenuecat";
-import { supabase } from "@/lib/supabase";
+import useAuthStore from "@/stores/useAuthStore";
 import { useTranslation } from "react-i18next";
 
 // Types de dons avec leurs identifiants RevenueCat
@@ -111,25 +111,6 @@ export default function SupportScreen() {
     return pkg?.product.priceString || tier.priceHint;
   };
 
-  // Marquer l'utilisateur comme supporter dans Supabase
-  const markAsSupporter = async () => {
-    if (!supabase) return;
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("profiles")
-          .update({ is_supporter: true })
-          .eq("id", user.id);
-      }
-    } catch (error) {
-      console.log("Erreur marquage supporter:", error);
-    }
-  };
-
   // Gérer l'achat d'un don
   const handleDonation = async (tier: DonationTier) => {
     const pkg = packages.find((p) =>
@@ -137,9 +118,17 @@ export default function SupportScreen() {
     );
 
     if (!pkg) {
+      // Debug : afficher la liste des packages chargés pour comprendre
+      // pourquoi le tier demandé est introuvable.
+      console.log(
+        "[Support] Package not found. Looking for:",
+        tier.rcIdentifier,
+        "Available packages:",
+        packages.map((p) => p.identifier),
+      );
       setState((prev) => ({
         ...prev,
-        error: t("support.errorOccurred"),
+        error: `Produit "${tier.rcIdentifier}" introuvable (${packages.length} packages chargés). Vérifier la config RevenueCat.`,
       }));
       return;
     }
@@ -147,10 +136,14 @@ export default function SupportScreen() {
     setState({ loadingId: tier.id, success: false, error: null });
 
     try {
-      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      await Purchases.purchasePackage(pkg);
 
-      // Marquer comme supporter dans Supabase
-      await markAsSupporter();
+      // Le statut is_supporter est mis à jour côté serveur par le webhook
+      // RevenueCat (Edge Function revenuecat-webhook). On rafraîchit la
+      // session après un court délai pour récupérer la valeur à jour.
+      setTimeout(() => {
+        useAuthStore.getState().refreshSession().catch(() => {});
+      }, 2500);
 
       // Déclencher les confettis
       confettiRef.current?.start();
@@ -161,10 +154,17 @@ export default function SupportScreen() {
         // L'utilisateur a annulé, pas besoin d'afficher d'erreur
         setState({ loadingId: null, success: false, error: null });
       } else {
+        // Debug : log détaillé pour comprendre l'erreur RevenueCat
+        console.log("[Support] Purchase error:", {
+          code: error?.code,
+          message: error?.message,
+          userCancelled: error?.userCancelled,
+          underlyingErrorMessage: error?.underlyingErrorMessage,
+        });
         setState({
           loadingId: null,
           success: false,
-          error: t("support.errorOccurred"),
+          error: `${t("support.errorOccurred")}\n[${error?.code ?? "?"}] ${error?.message ?? error?.underlyingErrorMessage ?? ""}`,
         });
       }
     }

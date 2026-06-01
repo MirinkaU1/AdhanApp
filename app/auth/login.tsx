@@ -10,12 +10,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import MaterialIconsRound from "@/components/MaterialIconsRound";
 import { AppInput, AppButton, ErrorMessage } from "@/components/ui";
 import useAuthStore from "@/stores/useAuthStore";
 export default function LoginScreen() {
   const { signInWithEmail, isLoading } = useAuthStore();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,27 +29,26 @@ export default function LoginScreen() {
     setErrorMessage("");
 
     if (!email.trim()) {
-      setErrorMessage("Veuillez entrer votre email");
+      setErrorMessage(t("auth.loginEmailRequired"));
       return;
     }
     if (!password) {
-      setErrorMessage("Veuillez entrer votre mot de passe");
+      setErrorMessage(t("auth.loginPasswordRequired"));
       return;
     }
 
     const result = await signInWithEmail(email.trim(), password);
 
     if (result.success) {
-      // Redirection explicite vers la page principale après connexion réussie
       router.replace("/(tabs)");
     } else {
-      let errorMsg = result.error || "Une erreur est survenue";
+      let errorMsg = result.error || t("common.error");
       if (errorMsg.includes("Invalid login credentials")) {
-        errorMsg = "Email ou mot de passe incorrect";
+        errorMsg = t("auth.loginInvalidCredentials");
       } else if (errorMsg.includes("Email not confirmed")) {
-        errorMsg = "Veuillez confirmer votre email d'abord";
+        errorMsg = t("auth.loginEmailNotConfirmed");
       } else if (errorMsg.includes("invalid email")) {
-        errorMsg = "Format d'email invalide";
+        errorMsg = t("auth.loginInvalidEmail");
       }
       setErrorMessage(errorMsg);
     }
@@ -93,10 +94,10 @@ export default function LoginScreen() {
           </View>
 
           <Text className="text-white font-outfit-bold text-4xl mt-6">
-            MaPrière
+            {t("auth.appName")}
           </Text>
           <Text className="text-white/70 font-outfit-regular text-base mt-1">
-            Suivez votre chemin spirituel
+            {t("auth.loginTagline")}
           </Text>
         </LinearGradient>
 
@@ -111,15 +112,15 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text className="text-3xl font-outfit-bold text-slate-800 dark:text-slate-100 mb-2">
-            Bon retour
+            {t("auth.loginWelcomeBack")}
           </Text>
           <Text className="text-lg font-outfit-regular text-gray-500 dark:text-slate-400 mb-8">
-            Veuillez entrer vos coordonnées.
+            {t("auth.loginEnterCredentials")}
           </Text>
 
           {/* Email */}
           <AppInput
-            label="Email"
+            label={t("auth.email")}
             icon="mail"
             placeholder="votre@email.com"
             value={email}
@@ -131,7 +132,7 @@ export default function LoginScreen() {
 
           {/* Mot de passe */}
           <AppInput
-            label="Mot de passe"
+            label={t("auth.password")}
             icon="lock"
             placeholder="••••••••"
             value={password}
@@ -146,7 +147,7 @@ export default function LoginScreen() {
               className="text-base font-outfit-semibold"
               style={{ color: "#115E59" }}
             >
-              Mot de passe oublié ?
+              {t("auth.loginForgotPassword")}
             </Text>
           </Pressable>
 
@@ -157,7 +158,7 @@ export default function LoginScreen() {
 
           {/* Bouton connexion */}
           <AppButton
-            title="Se connecter"
+            title={t("auth.loginButton")}
             onPress={handleLogin}
             variant="secondary"
             loading={isLoading}
@@ -166,11 +167,11 @@ export default function LoginScreen() {
           {/* Lien inscription */}
           <View className="flex-row justify-center items-center mt-8">
             <Text className="text-base font-outfit-medium text-gray-500 dark:text-slate-400">
-              Vous n'avez pas de compte ?
+              {t("auth.loginNoAccount")}
             </Text>
             <Pressable onPress={() => router.push("/auth/register")}>
               <Text className="text-base font-outfit-bold text-amber-600 ml-2">
-                S'inscrire
+                {t("auth.loginSignUp")}
               </Text>
             </Pressable>
           </View>

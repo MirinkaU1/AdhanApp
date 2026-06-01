@@ -16,47 +16,73 @@ export interface PresetAvatar {
   source: number; // ImageSourcePropType (require)
   nameKey: string;
   unlock: AvatarUnlock;
+  gender: "male" | "female" | "all";
 }
+
+export type AvatarGenderFilter =
+  | "male"
+  | "female"
+  | "not_specified"
+  | null
+  | undefined;
 
 // Avatars prédéfinis disponibles
 export const PRESET_AVATARS: PresetAvatar[] = [
   {
     id: "01",
-    source: require("@/assets/images/avatars/01.png"),
+    source: require("@/assets/images/avatars/male_01.png"),
     nameKey: "avatars.avatar01",
     unlock: { type: "free" },
+    gender: "male",
   },
   {
     id: "02",
-    source: require("@/assets/images/avatars/02.png"),
+    source: require("@/assets/images/avatars/female_01.png"),
     nameKey: "avatars.avatar02",
     unlock: { type: "free" },
+    gender: "female",
   },
   {
     id: "03",
-    source: require("@/assets/images/avatars/03.png"),
+    source: require("@/assets/images/avatars/male_02.png"),
     nameKey: "avatars.avatar03",
     unlock: { type: "coins", price: 20 },
+    gender: "male",
   },
   {
     id: "04",
-    source: require("@/assets/images/avatars/04.png"),
+    source: require("@/assets/images/avatars/female_02.png"),
     nameKey: "avatars.avatar04",
     unlock: { type: "coins", price: 30 },
+    gender: "female",
   },
   {
     id: "05",
-    source: require("@/assets/images/avatars/05.png"),
+    source: require("@/assets/images/avatars/male_03.png"),
     nameKey: "avatars.avatar05",
     unlock: { type: "level", level: 5 },
+    gender: "male",
   },
   {
     id: "06",
-    source: require("@/assets/images/avatars/06.png"),
+    source: require("@/assets/images/avatars/female_03.png"),
     nameKey: "avatars.avatar06",
     unlock: { type: "coins", price: 50 },
+    gender: "female",
   },
 ];
+
+export const getPresetAvatarsForGender = (
+  gender: AvatarGenderFilter,
+): PresetAvatar[] => {
+  if (!gender || gender === "not_specified") {
+    return PRESET_AVATARS;
+  }
+
+  return PRESET_AVATARS.filter(
+    (avatar) => avatar.gender === "all" || avatar.gender === gender,
+  );
+};
 
 // IDs toujours débloqués sans condition
 export const FREE_AVATAR_IDS = PRESET_AVATARS.filter(

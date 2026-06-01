@@ -5,8 +5,10 @@ import {
   Text,
   View,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -101,6 +103,41 @@ export default function DebugScreen() {
   );
   const { user, isAuthenticated, hasHydrated } = useAuthStore();
   const { addCoins, coins } = useCoinsStore();
+  const [supporterLoadingId, setSupporterLoadingId] = useState<string | null>(
+    null,
+  );
+  const [supporterError, setSupporterError] = useState<string | null>(null);
+
+  // Simuler un don sans paiement réel via l'edge function dev-toggle-supporter.
+  // L'edge function vérifie le rôle côté serveur (dev/tester uniquement) et
+  // met is_supporter via service_role (bypass du trigger profiles).
+  const handleDevSupporter = async (
+    action: "bronze" | "silver" | "gold" | "revoke",
+  ) => {
+    setSupporterLoadingId(action);
+    setSupporterError(null);
+    try {
+      const body =
+        action === "revoke" ? { revoke: true } : { tier: action };
+
+      const { data, error } = await supabase.functions.invoke(
+        "dev-toggle-supporter",
+        { body },
+      );
+
+      if (error) throw error;
+
+      // Rafraîchir le state local pour voir le changement immédiatement
+      await useAuthStore.getState().refreshSession();
+
+      console.log("[dev-toggle-supporter] result:", data);
+    } catch (err: any) {
+      console.error("[dev-toggle-supporter] error:", err);
+      setSupporterError(err?.message ?? "Erreur inconnue");
+    } finally {
+      setSupporterLoadingId(null);
+    }
+  };
 
   // Guard : seuls dev et tester peuvent accéder
   useEffect(() => {
@@ -312,6 +349,113 @@ export default function DebugScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Section Simulation supporter (dev/tester uniquement) */}
+        <AppText variant="h3" className="mb-4">
+          Simulation paiement
+        </AppText>
+
+        <View
+          className="rounded-3xl p-4 mb-6 border-2"
+          style={{
+            borderColor: "#F59E0B",
+            backgroundColor: isDark ? "rgba(245, 158, 11, 0.08)" : "#FEF3C7",
+            borderStyle: "dashed",
+          }}
+        >
+          <View className="flex-row items-center gap-2 mb-2">
+            <MaterialIconsRound name="science" size={20} color="#F59E0B" />
+            <Text className="font-outfit-bold text-base text-amber-700 dark:text-amber-300">
+              {user?.role?.toUpperCase()} — Don simulé
+            </Text>
+          </View>
+
+          <Text className="font-outfit-regular text-[13px] text-amber-700/80 dark:text-amber-200/80 mb-3 leading-5">
+            Ne déclenche aucun paiement réel. Met à jour `is_supporter` côté
+            serveur via une edge function réservée dev/tester. Statut actuel :{" "}
+            <Text className="font-outfit-bold">
+              {user?.isSupporter ? "✅ supporter" : "❌ non supporter"}
+            </Text>
+          </Text>
+
+          {supporterError && (
+            <View className="bg-red-100 dark:bg-red-900/20 rounded-lg p-2 mb-3">
+              <Text className="font-outfit-medium text-xs text-red-700 dark:text-red-300">
+                {supporterError}
+              </Text>
+            </View>
+          )}
+
+          <View className="flex-row gap-2 flex-wrap">
+            {(
+              [
+                { id: "bronze", emoji: "🥉", color: "#CD7F32", label: "Bronze" },
+                {
+                  id: "silver",
+                  emoji: "🥈",
+                  color: "#C0C0C0",
+                  label: "Silver",
+                },
+                { id: "gold", emoji: "🥇", color: "#FFD700", label: "Gold" },
+              ] as const
+            ).map((tier) => {
+              const isLoading = supporterLoadingId === tier.id;
+              return (
+                <Pressable
+                  key={tier.id}
+                  onPress={() => handleDevSupporter(tier.id)}
+                  disabled={supporterLoadingId !== null}
+                  className="flex-row items-center gap-1.5 px-3 py-2 rounded-lg"
+                  style={{
+                    backgroundColor: tier.color,
+                    opacity:
+                      supporterLoadingId !== null && !isLoading ? 0.5 : 1,
+                  }}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Text>{tier.emoji}</Text>
+                      <Text
+                        className="font-outfit-semibold text-sm"
+                        style={{
+                          color: tier.id === "silver" ? "#1E293B" : "#fff",
+                        }}
+                      >
+                        {tier.label}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              onPress={() => handleDevSupporter("revoke")}
+              disabled={supporterLoadingId !== null}
+              className="flex-row items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500"
+              style={{
+                opacity:
+                  supporterLoadingId !== null &&
+                  supporterLoadingId !== "revoke"
+                    ? 0.5
+                    : 1,
+              }}
+            >
+              {supporterLoadingId === "revoke" ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <MaterialIconsRound name="block" size={16} color="#fff" />
+                  <Text className="font-outfit-semibold text-sm text-white">
+                    Révoquer
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        </View>
+
         {/* Section Notifications */}
         <AppText variant="h3" className="mb-4">
           {t("debug.notifications")}
@@ -568,11 +712,29 @@ export default function DebugScreen() {
 
         <View className="bg-card-light dark:bg-card-dark rounded-3xl overflow-hidden border border-border-light dark:border-border-dark mb-6">
           <Pressable
-            onPress={() => {
-              void addCoins(10, {
-                reason: "debug_manual",
-                referenceKey: `debug_manual:${Date.now()}`,
-              });
+            onPress={async () => {
+              // Bouton debug réservé dev/tester : passe par l'edge function
+              // grant-coins qui vérifie le rôle côté serveur (la voie
+              // award_quiz_session est désormais cappée à 3/jour).
+              try {
+                const { data, error } = await supabase.functions.invoke(
+                  "grant-coins",
+                  {
+                    body: {
+                      amount: 10,
+                      reason: "debug_manual",
+                      reference_key: `debug_manual:${Date.now()}`,
+                    },
+                  },
+                );
+                if (error) throw error;
+                if (typeof data?.balance === "number") {
+                  useCoinsStore.getState().setCoins(data.balance);
+                }
+              } catch (err) {
+                console.error("[debug.addCoins] error:", err);
+                Alert.alert("Erreur", String(err));
+              }
             }}
             className="p-4 flex-row items-center gap-3 active:opacity-70"
           >

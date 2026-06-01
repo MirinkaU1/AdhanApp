@@ -15,6 +15,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="location" />
       <Stack.Screen name="language" />
       <Stack.Screen name="theme" />
+      <Stack.Screen name="widgets" />
       <Stack.Screen name="debug" />
     </Stack>
   );

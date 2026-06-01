@@ -20,6 +20,7 @@ import usePrayerStore from "@/stores/usePrayerStore";
 import useQuestStore from "@/stores/useQuestStore";
 import { useQuranStore } from "@/stores/useQuranStore";
 import useThemeStore from "@/stores/useThemeStore";
+import useQuizStore from "@/stores/useQuizStore";
 import { supabase } from "@/lib/supabase";
 
 export default function SyncProvider() {
@@ -37,9 +38,11 @@ export default function SyncProvider() {
   const totalXpEarned = useQuestStore((state) => state.totalXpEarned);
 
   const loadFromSupabase = useQuranStore((state) => state.loadFromSupabase);
+  const loadQuizFromSupabase = useQuizStore((state) => state.loadFromSupabase);
   const appStateRef = useRef(AppState.currentState);
   const lastStreakSyncRef = useRef<string | null>(null);
   const lastQuranSyncRef = useRef<number>(0);
+  const lastQuizSyncRef = useRef<number>(0);
 
   // Hook de synchronisation réseau (gère online/offline)
   const { manualSync, hasPendingSync } = useSyncData();
@@ -51,6 +54,7 @@ export default function SyncProvider() {
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       loadFromSupabase();
+      loadQuizFromSupabase();
     }
   }, [isAuthenticated, user?.id]);
 
@@ -111,6 +115,11 @@ export default function SyncProvider() {
               await loadFromSupabase();
             }
 
+            if (now - lastQuizSyncRef.current > 30000) {
+              lastQuizSyncRef.current = now;
+              await loadQuizFromSupabase();
+            }
+
             await useThemeStore.getState().syncFromServer(user.id);
           }
         }
@@ -134,6 +143,7 @@ export default function SyncProvider() {
     manualSync,
     updateStreak,
     loadFromSupabase,
+    loadQuizFromSupabase,
   ]);
 
   // Calculer la streak quand le statut des prières change (toutes cochées)

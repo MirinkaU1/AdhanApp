@@ -6,6 +6,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { decode as atob } from "base-64";
 import useQuestStore from "@/stores/useQuestStore";
 import usePrayerStore from "@/stores/usePrayerStore";
+import { loginRevenueCat, logoutRevenueCat } from "@/lib/revenuecat";
 
 // Convertir YYYY-MM-DD (Supabase) vers JJ-MM-AAAA (affichage)
 const formatBirthDateFromDB = (
@@ -20,6 +21,8 @@ const formatBirthDateFromDB = (
 };
 
 export type UserRole = "user" | "tester" | "dev";
+export type UserGender = "male" | "female" | "not_specified";
+const VALID_GENDERS: UserGender[] = ["male", "female", "not_specified"];
 
 export interface User {
   id: string;
@@ -30,6 +33,9 @@ export interface User {
   avatar_id?: string; // ID de l'avatar prédéfini (01-06)
   avatar_url?: string; // URL custom depuis Supabase Storage
   birthDate?: string; // Format: JJ-MM-AAAA (affichage)
+  birthDateLocked?: boolean;
+  gender?: UserGender;
+  genderLocked?: boolean;
   memberSince: string;
   isGuest?: boolean;
   xp?: number;
@@ -68,6 +74,7 @@ interface AuthState {
     avatar_id?: string | null;
     avatar_url?: string | null;
     birthDate?: string;
+    gender?: UserGender;
   }) => Promise<{ success: boolean; error?: string }>;
   uploadAvatar: (
     imageUri: string,
@@ -121,6 +128,9 @@ const useAuthStore = create<AuthState>()(
           console.error("Logout error:", error);
         }
 
+        // Désassocier l'utilisateur RevenueCat
+        await logoutRevenueCat();
+
         // Nettoyer les données des autres stores
         const { clearAllData: clearQuestData } =
           await import("@/stores/useQuestStore").then((m) =>
@@ -138,11 +148,31 @@ const useAuthStore = create<AuthState>()(
           await import("@/stores/useThemeStore").then((m) =>
             m.default.getState(),
           );
+        const { clearAllData: clearQuizData } =
+          await import("@/stores/useQuizStore").then((m) =>
+            m.default.getState(),
+          );
+        const { clearAllData: clearAvatarData } =
+          await import("@/stores/useAvatarStore").then((m) =>
+            m.default.getState(),
+          );
+        const { clearAllData: clearQuranData } =
+          await import("@/stores/useQuranStore").then((m) =>
+            m.useQuranStore.getState(),
+          );
+        const { clearAllData: clearRamadanData } =
+          await import("@/stores/useRamadanStore").then((m) =>
+            m.useRamadanStore.getState(),
+          );
 
         clearQuestData();
         clearPrayerData();
         clearCoinsData();
         clearThemeData();
+        clearQuizData();
+        clearAvatarData();
+        clearQuranData();
+        clearRamadanData();
 
         get().clearAuth();
         console.log("[AuthStore] All user data cleared");
@@ -206,6 +236,7 @@ const useAuthStore = create<AuthState>()(
         avatar_id?: string | null; // ID de l'avatar prédéfini
         avatar_url?: string | null; // URL custom depuis Supabase Storage
         birthDate?: string;
+        gender?: UserGender;
       }) => {
         const currentUser = get().user;
         if (!currentUser) {
@@ -265,6 +296,31 @@ const useAuthStore = create<AuthState>()(
             }
           }
 
+          if (data.gender !== undefined) {
+            if (!VALID_GENDERS.includes(data.gender)) {
+              set({ isLoading: false });
+              return { success: false, error: "Genre invalide" };
+            }
+
+            if (
+              currentUser.genderLocked &&
+              currentUser.gender !== undefined &&
+              data.gender !== currentUser.gender
+            ) {
+              set({ isLoading: false });
+              return {
+                success: false,
+                error: "Le genre ne peut être modifié qu'une seule fois",
+              };
+            }
+
+            if (data.gender !== currentUser.gender) {
+              updateData.gender = data.gender;
+              updateData.gender_locked =
+                data.gender === "male" || data.gender === "female";
+            }
+          }
+
           console.log("[updateProfile] Updating with data:", updateData);
 
           // Utiliser upsert pour créer le profil s'il n'existe pas
@@ -307,6 +363,11 @@ const useAuthStore = create<AuthState>()(
                     : data.avatar
                   : currentUser.avatar,
               birthDate: data.birthDate ?? currentUser.birthDate,
+              gender: data.gender ?? currentUser.gender,
+              genderLocked:
+                data.gender !== undefined && data.gender !== currentUser.gender
+                  ? data.gender === "male" || data.gender === "female"
+                  : currentUser.genderLocked,
             },
             isLoading: false,
           });
@@ -682,6 +743,9 @@ const useAuthStore = create<AuthState>()(
               avatar_id: profile?.avatar_id || undefined,
               avatar_url: profile?.avatar_url || undefined,
               birthDate: formatBirthDateFromDB(profile?.birth_date),
+              gender:
+                (profile?.gender as UserGender | null | undefined) || undefined,
+              genderLocked: profile?.gender_locked ?? false,
               memberSince:
                 data.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],
@@ -923,6 +987,10 @@ const useAuthStore = create<AuthState>()(
           } = await supabase.auth.getSession();
 
           if (session?.user) {
+            // Lier l'utilisateur RevenueCat dès qu'on retrouve une session
+            // (cas de l'app rouverte avec session persistée)
+            loginRevenueCat(session.user.id);
+
             let { data: profile, error: profileError } = await supabase
               .from("profiles")
               .select("*")
@@ -954,6 +1022,9 @@ const useAuthStore = create<AuthState>()(
               avatar_id: profile?.avatar_id || undefined,
               avatar_url: profile?.avatar_url || undefined,
               birthDate: formatBirthDateFromDB(profile?.birth_date),
+              gender:
+                (profile?.gender as UserGender | null | undefined) || undefined,
+              genderLocked: profile?.gender_locked ?? false,
               memberSince:
                 session.user.created_at?.split("T")[0] ||
                 new Date().toISOString().split("T")[0],

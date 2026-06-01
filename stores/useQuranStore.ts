@@ -49,8 +49,8 @@ export interface QuranStats {
 }
 
 export interface QuranReadingTracking {
-  dateKey: string;        // "yyyy-MM-dd" — reset quotidien
-  weekKey: string;        // "yyyy-'W'ww" — reset hebdomadaire
+  dateKey: string; // "yyyy-MM-dd" — reset quotidien
+  weekKey: string; // "yyyy-'W'ww" — reset hebdomadaire
   dailyVersesRead: number;
   weeklyVersesRead: number;
   weeklyDistinctSurahs: number[]; // IDs des sourates lues cette semaine
@@ -86,6 +86,7 @@ interface QuranState {
   getAllFavorites: () => FavoriteVerse[];
   syncWithSupabase: () => Promise<void>;
   loadFromSupabase: () => Promise<void>;
+  clearAllData: () => void;
 }
 
 export const useQuranStore = create<QuranState>()(
@@ -272,10 +273,27 @@ export const useQuranStore = create<QuranState>()(
         });
       },
 
+      clearAllData: () => {
+        set({
+          progress: {},
+          favoriteVerses: [],
+          stats: {
+            totalReadingTime: 0,
+            totalVersesRead: 0,
+            totalSurahsRead: 0,
+            currentStreak: 0,
+            lastReadDate: null,
+          },
+          readingTracking: createDefaultReadingTracking(),
+          lastPosition: null,
+        });
+      },
+
       addToFavorites: (verse) => {
         const favorites = get().favoriteVerses;
         const exists = favorites.some(
-          (v) => v.surahId === verse.surahId && v.verseNumber === verse.verseNumber,
+          (v) =>
+            v.surahId === verse.surahId && v.verseNumber === verse.verseNumber,
         );
         if (exists) return;
 

@@ -2,9 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
-  TextInputProps,
   useWindowDimensions,
 } from "react-native";
 import MaterialIconsRound, {
@@ -12,33 +10,33 @@ import MaterialIconsRound, {
 } from "@/components/MaterialIconsRound";
 import { useIsDark } from "@/components/useColorScheme";
 
-interface AppInputProps extends Omit<TextInputProps, "style"> {
+interface AppSelectProps {
   label?: string;
   icon?: MaterialIconName;
+  value?: string;
+  placeholder?: string;
   error?: string;
   warning?: string;
-  isPassword?: boolean;
+  onPress: () => void;
   containerClassName?: string;
 }
 
-export default function AppInput({
+export default function AppSelect({
   label,
   icon,
+  value,
+  placeholder,
   error,
   warning,
-  isPassword = false,
+  onPress,
   containerClassName = "",
-  ...textInputProps
-}: AppInputProps) {
+}: AppSelectProps) {
   const isDark = useIsDark();
-  const [showPassword, setShowPassword] = useState(false);
   const { width } = useWindowDimensions();
 
-  // Responsive sizing based on screen width
   const isSmallScreen = width < 360;
   const isLargeScreen = width >= 414;
 
-  // Tailles responsives
   const labelSize = isSmallScreen ? 11 : isLargeScreen ? 14 : 12;
   const inputFontSize = isSmallScreen ? 14 : isLargeScreen ? 18 : 16;
   const errorSize = isSmallScreen ? 10 : isLargeScreen ? 13 : 11;
@@ -46,10 +44,14 @@ export default function AppInput({
   const inputHeight = isSmallScreen ? 52 : isLargeScreen ? 64 : 56;
   const horizontalPadding = isSmallScreen ? 14 : isLargeScreen ? 20 : 16;
 
-  // Couleurs dynamiques pour les éléments qui nécessitent des props inline
   const placeholderColor = isDark ? "#64748B" : "#94A3B8";
   const iconColor = isDark ? "#64748B" : "#94A3B8";
   const textColor = isDark ? "#F8FAFC" : "#1E293B";
+  const valueColor = value ? textColor : placeholderColor;
+
+  const hasError = !!error;
+  const hasWarning = !!warning && !hasError;
+  const hasValue = !!value;
 
   return (
     <View className={containerClassName}>
@@ -61,11 +63,12 @@ export default function AppInput({
           {label}
         </Text>
       )}
-      <View
+      <Pressable
+        onPress={onPress}
         className={`flex-row items-center bg-slate-100 dark:bg-slate-700 rounded-2xl border ${
-          error
+          hasError
             ? "border-red-500"
-            : warning
+            : hasWarning
               ? "border-amber-400"
               : "border-border-light dark:border-border-dark"
         }`}
@@ -74,28 +77,19 @@ export default function AppInput({
         {icon && (
           <MaterialIconsRound name={icon} size={iconSize} color={iconColor} />
         )}
-        <TextInput
-          className={`flex-1 h-full font-outfit-medium text-text-primary-light dark:text-text-primary-dark ${icon ? "px-3" : ""}`}
-          placeholderTextColor={placeholderColor}
-          secureTextEntry={isPassword && !showPassword}
-          style={{ color: textColor, fontSize: inputFontSize }}
-          {...textInputProps}
+        <Text
+          className={`flex-1 font-outfit-medium text-text-primary-light dark:text-text-primary-dark ${icon ? "px-3" : ""}`}
+          style={{ color: valueColor, fontSize: inputFontSize }}
+        >
+          {value || placeholder}
+        </Text>
+        <MaterialIconsRound
+          name="expand-more"
+          size={iconSize}
+          color={iconColor}
         />
-        {isPassword && (
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            className="p-1"
-          >
-            <MaterialIconsRound
-              name={showPassword ? "visibility" : "visibility-off"}
-              size={iconSize}
-              color={iconColor}
-            />
-          </Pressable>
-        )}
-      </View>
-      {error && (
+      </Pressable>
+      {hasError && (
         <Text
           className="font-outfit-medium text-red-500 mt-1 ml-1"
           style={{ fontSize: errorSize }}
@@ -103,7 +97,7 @@ export default function AppInput({
           {error}
         </Text>
       )}
-      {warning && (
+      {hasWarning && (
         <Text
           className="font-outfit-medium text-amber-500 mt-1 ml-1"
           style={{ fontSize: errorSize }}

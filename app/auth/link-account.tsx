@@ -38,7 +38,7 @@ export default function LinkAccountScreen() {
     }
 
     // Validation mot de passe
-    if (password.length < 6) {
+    if (password.length < 8) {
       setErrorMessage(t("settings.passwordTooShort"));
       return;
     }

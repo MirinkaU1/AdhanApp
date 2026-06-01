@@ -25,7 +25,10 @@ import useAuthStore from "@/stores/useAuthStore";
 import useRamadanStore from "@/stores/useRamadanStore";
 import { APP_THEMES, type AppTheme } from "@/constants/appThemes";
 import { ThemePattern } from "@/components/ThemePattern";
-import { PRESET_AVATARS, type PresetAvatar } from "@/lib/avatarService";
+import {
+  getPresetAvatarsForGender,
+  type PresetAvatar,
+} from "@/lib/avatarService";
 import useAvatarStore from "@/stores/useAvatarStore";
 
 type ShopCategory = "all" | "themes" | "avatars" | "qiblaSkins" | "others";
@@ -618,7 +621,7 @@ export default function ThemesShopScreen() {
 
   const byCoins = shopThemes.filter((t) => t.unlock.type === "coins");
   const byEvent = shopThemes.filter((t) => t.unlock.type === "event");
-  const shopAvatars = PRESET_AVATARS.filter(
+  const shopAvatars = getPresetAvatarsForGender(user?.gender).filter(
     (avatar) => avatar.unlock.type !== "level",
   );
   const isThemeEventActive = (theme: AppTheme) =>

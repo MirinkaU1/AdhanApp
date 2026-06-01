@@ -18,3 +18,26 @@ export const initRevenueCat = () => {
 
   return { isReady: true };
 };
+
+// Lier l'utilisateur RevenueCat à l'UUID Supabase. Indispensable pour que
+// le webhook serveur sache à quel user_id Supabase rattacher l'achat
+// (sinon RC utilise un $RCAnonymousID:... aléatoire).
+export const loginRevenueCat = async (userId: string) => {
+  if (!isConfigured) initRevenueCat();
+  if (!isConfigured) return;
+  try {
+    await Purchases.logIn(userId);
+  } catch (error) {
+    console.warn('[RevenueCat] logIn error:', error);
+  }
+};
+
+export const logoutRevenueCat = async () => {
+  if (!isConfigured) return;
+  try {
+    await Purchases.logOut();
+  } catch (error) {
+    // logOut() throws si l'user est déjà anonyme — on ignore
+    console.log('[RevenueCat] logOut (ok if already anonymous):', error);
+  }
+};

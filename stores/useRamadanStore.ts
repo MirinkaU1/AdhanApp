@@ -18,6 +18,7 @@ interface RamadanState {
   spendMoonCoins: (amount: number) => boolean;
   syncMoonCoins: () => Promise<void>;
   loadMoonCoins: () => Promise<void>;
+  clearAllData: () => void;
 }
 
 export const useRamadanStore = create<RamadanState>()(
@@ -106,6 +107,14 @@ export const useRamadanStore = create<RamadanState>()(
         } catch {
           // Silencieux
         }
+      },
+
+      clearAllData: () => {
+        set({
+          isRamadanMode: false,
+          moonCoins: 0,
+          hasSeenRamadanWelcome: false,
+        });
       },
     }),
     {
